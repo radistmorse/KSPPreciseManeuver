@@ -9,7 +9,7 @@ Window can use the KSP look:
 ![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-KSP-min.png?raw=true "KSP skin, minimum info") ![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-KSP-max.png?raw=true "KSP skin, maximum info")
 
 Or it can use the default Unity look:  
-![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-Umity-min.png?raw=true "Unity skin, minimum info") ![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-Unity-max.png?raw=true "Unity skin, maximum info")
+![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-Unity-min.png?raw=true "Unity skin, minimum info") ![Screenshot of the Precise Maneuver main window](/../screenshots/PreciseManeuver-Unity-max.png?raw=true "Unity skin, maximum info")
 
 NOTES:
 --------------
