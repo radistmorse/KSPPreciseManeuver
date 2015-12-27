@@ -65,10 +65,11 @@ internal class PreciseManeuver : MonoBehaviour {
             return;
 
         if (!FlightDriver.Pause && canShowNodeEditor) {
-            hotkeys.processKeyInput (mainWindow.currentNodeIdx);
+            hotkeys.processGlobalHotkeys ();
             if (config.showMainWindow) {
-                mainWindow.updateValues ();
+                hotkeys.processKeyInput (mainWindow.currentNodeIdx);
                 manager.updateNodes ();
+                mainWindow.updateValues ();
             }
         }
     }
@@ -80,14 +81,12 @@ internal class PreciseManeuver : MonoBehaviour {
         if (!patchedConicsUnlocked ())
             return;
 
-        if (config.showMainWindow) {
-            if (canShowNodeEditor) {
-                config.mainWindowPos = GUILayout.Window (mainWindowId, config.mainWindowPos, (id) => mainWindow.draw (),
-                                       "Precise Maneuver", GUILayout.ExpandHeight (true));
-            }
+        if (config.showMainWindow && canShowNodeEditor) {
+            config.mainWindowPos = GUILayout.Window (mainWindowId, config.mainWindowPos, (id) => mainWindow.draw (),
+                                                     "Precise Maneuver", GUILayout.ExpandHeight (true));
             if (config.showKeymapperWindow) {
                 config.keymapperWindowPos = GUILayout.Window (keymapperWindowId, config.keymapperWindowPos, (id) => hotkeys.drawKeymapperWindow (),
-                                            "Precise Maneuver Hotkeys", GUILayout.ExpandHeight (true));
+                                                              "Precise Maneuver Hotkeys", GUILayout.ExpandHeight (true));
             }
         }
     }

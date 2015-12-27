@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using KSP.IO;
 
@@ -67,6 +68,7 @@ internal class PreciseManeuverConfig {
 
   private int _increment = 0;
   internal double increment { get { return Math.Pow (10, _increment); } }
+  internal double incrementDeg { get { return Math.PI * Math.Pow (10, _increment) / 180; } }
   internal int incrementRaw {
     get {
       return _increment;
@@ -106,29 +108,62 @@ internal class PreciseManeuverConfig {
   internal enum HotkeyType {
     PROGINC,
     PROGDEC,
+    PROGZER,
     NORMINC,
     NORMDEC,
+    NORMZER,
     RADIINC,
     RADIDEC,
+    RADIZER,
     TIMEINC,
     TIMEDEC,
+    CIRCORB,
+    TURNOUP,
+    TURNODN,
     PAGEINC,
     PAGECON,
-    HIDEWIN
+    HIDEWIN,
+    SHOWORB,
+    SHOWEJC,
+    FOCTARG,
+    FOCVESL,
+    PLUSORB,
+    MINUORB,
+    PAGEX10,
+    NEXTMAN,
+    PREVMAN,
+    MNVRDEL
   };
 
-  private KeyCode[] hotkeys = { KeyCode.Keypad8,
-                                KeyCode.Keypad5,
-                                KeyCode.Keypad9,
-                                KeyCode.Keypad7,
-                                KeyCode.Keypad6,
-                                KeyCode.Keypad4,
-                                KeyCode.Keypad3,
-                                KeyCode.Keypad1,
-                                KeyCode.Keypad0,
-                                KeyCode.Keypad2,
-                                KeyCode.P
+  private KeyCode[] hotkeys = { KeyCode.Keypad8,    //PROGINC
+                                KeyCode.Keypad5,    //PROGDEC
+                                KeyCode.None,       //PROGZER
+                                KeyCode.Keypad9,    //NORMINC
+                                KeyCode.Keypad7,    //NORMDEC
+                                KeyCode.None,       //NORMZER
+                                KeyCode.Keypad6,    //RADIINC
+                                KeyCode.Keypad4,    //RADIDEC
+                                KeyCode.None,       //RADIZER
+                                KeyCode.Keypad3,    //TIMEINC
+                                KeyCode.Keypad1,    //TIMEDEC
+                                KeyCode.None,       //CIRCORB
+                                KeyCode.None,       //TURNOUP
+                                KeyCode.None,       //TURNODN
+                                KeyCode.Keypad0,    //PAGEINC
+                                KeyCode.Keypad2,    //PAGECON
+                                KeyCode.P,          //HIDEWIN
+                                KeyCode.None,       //SHOWORB
+                                KeyCode.None,       //SHOWEJC
+                                KeyCode.None,       //FOCTARG
+                                KeyCode.None,       //FOCVESL
+                                KeyCode.None,       //PLUSORB
+                                KeyCode.None,       //MINUORB
+                                KeyCode.None,       //PAGEX10
+                                KeyCode.None,       //NEXTMAN
+                                KeyCode.None,       //PREVMAN
+                                KeyCode.None        //MNVRDEL
                               };
+  private bool[] hotkeyPresses = Enumerable.Repeat(false, Enum.GetValues(typeof(HotkeyType)).Length).ToArray ();
 
   internal void setHotkey (HotkeyType type, KeyCode code) {
     hotkeys[(int)type] = code;
@@ -136,6 +171,17 @@ internal class PreciseManeuverConfig {
 
   internal KeyCode getHotkey (HotkeyType type) {
     return hotkeys[(int)type];
+  }
+
+  internal void registerHotkeyPress (HotkeyType type) {
+    hotkeyPresses[(int)type] = true;
+  }
+  internal bool isHotkeyRegistered (HotkeyType type) {
+    if (hotkeyPresses[(int)type] == true) {
+      hotkeyPresses[(int)type] = false;
+      return true;
+    }
+    return false;
   }
 
   /// <summary>

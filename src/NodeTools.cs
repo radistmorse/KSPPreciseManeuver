@@ -149,13 +149,12 @@ internal static class NodeTools {
     return d;
   }
 
-  internal static Orbit findNextEncounter (this ManeuverNode node) {
-    System.Collections.ObjectModel.ReadOnlyCollection<Orbit> plan = node.solver.flightPlan.AsReadOnly();
-    Orbit curOrbit = node.patch; // FlightGlobals.ActiveVessel.orbit;
-    for (int k = plan.IndexOf (node.patch); k < plan.Count; k++) {
-      Orbit o = plan[k];
+  internal static CelestialBody findNextEncounter () {
+    var plan = FlightGlobals.ActiveVessel.patchedConicSolver.flightPlan.AsReadOnly();
+    var curOrbit = FlightGlobals.ActiveVessel.orbit;
+    foreach (var o in plan) {
       if (curOrbit.referenceBody.name != o.referenceBody.name && !o.referenceBody.isSun()) {
-        return o;
+        return o.referenceBody;
       }
     }
     return null;
@@ -209,12 +208,20 @@ internal static class NodeTools {
     return o.patchEndTransition == Orbit.PatchTransitionType.FINAL;
   }
 
-  internal static bool isUTInsidePatch (this Orbit o, double ut) {
-    return (ut >= Planetarium.GetUniversalTime()) && (o.isClosed() || (ut <= o.EndUT));
-  }
-
   internal static bool isSun (this CelestialBody body) {
     return body.name == "Sun";
+  }
+
+  internal static void turnVector (ref Vector3d v, Vector3d axis, double theta) {
+    double costheta = Math.Cos (theta);
+    double sintheta = Math.Sin (theta);
+    var naxis = axis.normalized;
+    double newx = (costheta + (1 - costheta) * naxis.x * naxis.x) * v.x + ((1 - costheta) * naxis.x * naxis.y - sintheta * naxis.z) * v.y + ((1 - costheta) * naxis.x * naxis.z + sintheta * naxis.y) * v.z;
+    double newy = ((1 - costheta) * naxis.x * naxis.y + sintheta * naxis.z) * v.x + (costheta + (1 - costheta) * naxis.y * naxis.y) * v.y + ((1 - costheta) * naxis.y * naxis.z - sintheta * naxis.x) * v.z;
+    double newz = ((1 - costheta) * naxis.x * naxis.z - sintheta * naxis.y) * v.x + ((1 - costheta) * naxis.y * naxis.z + sintheta * naxis.x) * v.y + (costheta + (1 - costheta) * naxis.z * naxis.z) * v.z;
+    v.x = newx;
+    v.y = newy;
+    v.z = newz;
   }
 
   /// <summary>
@@ -281,7 +288,7 @@ internal static class NodeTools {
   internal static KeyCode fetchKey () {
 
     foreach (KeyCode code in Enum.GetValues (typeof (KeyCode))) {
-      if (Input.GetKeyDown (code))
+      if (Input.GetKeyDown (code) && ((int)code < (int)KeyCode.Mouse0 || (int)code > (int)KeyCode.Mouse6))
         return code;
     }
 

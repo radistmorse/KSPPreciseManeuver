@@ -1,3 +1,9 @@
+1.1, 2015-12-27
+- New tools: circularize and orbit up/down
+- Lots of new hotkeys
+- Ability to unset hotkeys
+- Little tweaks to make GUI more responsive
+
 1.0.0, 2015-12-13
 - Let's start a brand new changelog here, so now this is an initial release
 - The histrory of the PreciseNode plugin can be found here:

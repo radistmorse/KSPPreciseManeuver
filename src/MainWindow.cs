@@ -46,7 +46,7 @@ internal class MainWindow {
   private int nodeCount = -1;
 
   /* parameters of the window*/
-  private bool showAngles = false;
+  private bool showEject = false;
   private bool showOrbit = false;
   private bool showManeuvers = false;
   private int nodeCountShow = -1;
@@ -67,7 +67,7 @@ internal class MainWindow {
   /* GUI size*/
   private const int buttonSize = 40;
   private const int bigButtonSize = 100;
-  private const int leftLabelSize = 100;
+  private const int leftLabelSize = 120;
   private const int verticalSpace = 10;
 
   /* GUI colors*/
@@ -106,9 +106,9 @@ internal class MainWindow {
   private FastString nodeDVY = new FastString ();
   private FastString nodeDVZ = new FastString ();
   private FastString nodeUT = new FastString ();
-  private FastString nodeAp = new FastString ();
-  private FastString nodePe = new FastString ();
-  private FastString nodeInc = new FastString ();
+  private FastString orbitAp = new FastString ();
+  private FastString orbitPe = new FastString ();
+  private FastString orbitInc = new FastString ();
   private FastString totalDV = new FastString ();
 
   /* caches for string representation for nodes list */
@@ -201,7 +201,7 @@ internal class MainWindow {
     if (currentNode == null)
       return;
 
-    if (showAngles) {
+    if (showEject) {
       if (!FlightGlobals.ActiveVessel.orbit.referenceBody.isSun ()) {
         double eang = FlightGlobals.ActiveVessel.orbit.getEjectionAngle (currentNode);
         if (eAngle.update (eang, true))
@@ -225,13 +225,13 @@ internal class MainWindow {
 
     if (showOrbit) {
       if (currentNode.solver.flightPlan.Count > 1) {
-        nodeAp.update (currentNode.nextPatch.ApA, true, "m");
-        nodePe.update (currentNode.nextPatch.PeA, true, "m");
-        nodeInc.update (currentNode.nextPatch.inclination, false, "°");
+        orbitAp.update (currentNode.nextPatch.ApA, true, "m");
+        orbitPe.update (currentNode.nextPatch.PeA, true, "m");
+        orbitInc.update (currentNode.nextPatch.inclination, false, "°");
       } else {
-        nodeAp.update (double.NaN);
-        nodePe.update (double.NaN);
-        nodeInc.update (double.NaN);
+        orbitAp.update (double.NaN);
+        orbitPe.update (double.NaN);
+        orbitInc.update (double.NaN);
       }
     }
 
@@ -256,7 +256,8 @@ internal class MainWindow {
     GUILayout.BeginHorizontal ();
 
     GUI.enabled = currentNodeIdx > 0;
-    if (GUILayout.Button ("◀", GUILayout.Width (pageButtonSize))) {
+    if (GUILayout.Button ("◀", GUILayout.Width (pageButtonSize)) ||
+        (currentNodeIdx > 0 && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.PREVMAN))) {
       currentNodeIdx--;
       currentNode = solver.maneuverNodes[currentNodeIdx];
     }
@@ -270,7 +271,8 @@ internal class MainWindow {
     GUI.enabled = (currentNodeIdx == nodeCount - 1);
     Color oldContentColor = GUI.contentColor;
     GUI.contentColor = Color.red;
-    if (GUILayout.Button ("Del", GUILayout.Width (bigButtonSize/2))) {
+    if (GUILayout.Button ("Del", GUILayout.Width (bigButtonSize/2)) ||
+        ((currentNodeIdx == nodeCount - 1) && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.MNVRDEL))) {
       solver.RemoveManeuverNode (currentNode);
       nodeCount--;
       currentNodeIdx--;
@@ -282,7 +284,8 @@ internal class MainWindow {
     GUI.contentColor = oldContentColor;
 
     GUI.enabled = currentNodeIdx < nodeCount - 1;
-    if (GUILayout.Button ("▶", GUILayout.Width (pageButtonSize))) {
+    if (GUILayout.Button ("▶", GUILayout.Width (pageButtonSize)) ||
+        ((currentNodeIdx < nodeCount - 1) && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.NEXTMAN))) {
       currentNodeIdx++;
       currentNode = solver.maneuverNodes[currentNodeIdx];
     }
@@ -290,7 +293,7 @@ internal class MainWindow {
     GUILayout.EndHorizontal ();
   }
 
-  private double drawTimeControls () {
+  private double drawTimeControls (ref bool changed) {
     Orbit target = null;
 
     GUI.enabled = currentNode != null;
@@ -307,22 +310,30 @@ internal class MainWindow {
     GUILayout.TextField (nodeUT.value, GUILayout.Width (buttonSize * 2 + GUI.skin.button.margin.left));
 
     if (GUILayout.RepeatButton ("+", GUILayout.Width (buttonSize))) {
-      if (repeatButtonDelay ())
+      if (repeatButtonDelay ()) {
         ut += config.increment * (config.x10UTincrement ? 10 : 1);
+        changed = true;
+      }
     }
     if (GUILayout.RepeatButton ("-", GUILayout.Width (buttonSize))) {
-      if (repeatButtonDelay ())
+      if (repeatButtonDelay ()) {
         ut -= config.increment * (config.x10UTincrement ? 10 : 1);
+        changed = true;
+      }
     }
     GUILayout.EndHorizontal ();
     GUILayout.BeginHorizontal ();
     config.x10UTincrement = GUILayout.Toggle (config.x10UTincrement,"x10","button", GUILayout.Width (buttonSize));
     GUI.enabled = currentNode != null && currentNode.patch.isClosed ();
-    if (GUILayout.Button ("Ap", GUILayout.Width (buttonSize)))
-      ut = Planetarium.GetUniversalTime () + currentNode.patch.timeToAp;
+    if (GUILayout.Button ("Ap", GUILayout.Width (buttonSize))) {
+      ut = currentNode.patch.StartUT + currentNode.patch.timeToAp;
+      changed = true;
+    }
     GUI.enabled = currentNode != null;
-    if (GUILayout.Button ("Pe", GUILayout.Width (buttonSize)))
-      ut = Planetarium.GetUniversalTime () + currentNode.patch.timeToPe;
+    if (GUILayout.Button ("Pe", GUILayout.Width (buttonSize))) {
+      ut = currentNode.patch.StartUT + currentNode.patch.timeToPe;
+      changed = true;
+    }
 
     if (currentNode != null)
       target = NodeTools.getTargetOrbit ();
@@ -330,9 +341,11 @@ internal class MainWindow {
     GUI.enabled = target != null;
     if (GUILayout.Button ("AN", GUILayout.Width (buttonSize))) {
       ut = currentNode.patch.getTargetANUT (target);
+      changed = true;
     }
     if (GUILayout.Button ("DN", GUILayout.Width (buttonSize))) {
       ut = currentNode.patch.getTargetDNUT (target);
+      changed = true;
     }
     GUI.enabled = currentNode != null;
 
@@ -344,45 +357,51 @@ internal class MainWindow {
     return ut;
   }
 
-  private double drawAxisControls (string name, string text, double init, GUIStyle[] style) {
+  private double drawAxisControls (string name, string text, double init, GUIStyle[] style, ref bool changed) {
     double rez = init;
 
     GUILayout.BeginHorizontal ();
     GUILayout.Label (name, style[0], GUILayout.Width (leftLabelSize));
     GUILayout.TextField (text, style[1], GUILayout.Width (buttonSize * 2 + GUI.skin.button.margin.left));
     if (GUILayout.RepeatButton ("+", GUILayout.Width (buttonSize))) {
-      if (repeatButtonDelay ())
+      if (repeatButtonDelay ()) {
         rez += config.increment;
+        changed = true;
+      }
     }
     if (GUILayout.RepeatButton ("-", GUILayout.Width (buttonSize))) {
-      if (repeatButtonDelay ())
+      if (repeatButtonDelay ()) {
         rez -= config.increment;
+        changed = true;
+      }
     }
     if (GUILayout.Button ("0", GUILayout.Width (buttonSize))) {
       rez = 0;
+      changed = true;
     }
     GUILayout.EndHorizontal ();
     return rez;
   }
 
   private void drawEncounter () {
-    Orbit nextEnc = null;
+    CelestialBody nextEnc = null;
     string theName = "N/A";
 
     int labelSize = 5 * buttonSize + 3 * GUI.skin.button.margin.left - bigButtonSize;
 
     if (currentNode != null)
-      nextEnc = currentNode.findNextEncounter ();
+      nextEnc = NodeTools.findNextEncounter ();
 
     if (nextEnc != null)
-      theName = nextEnc.referenceBody.theName;
+      theName = nextEnc.theName;
 
     GUILayout.BeginHorizontal();
     GUILayout.Label ("Next encounter:", GUILayout.Width (leftLabelSize));
     GUILayout.Label (theName, GUILayout.Width (labelSize));
     GUI.enabled = nextEnc != null;
-    if (GUILayout.Button ("Focus", GUILayout.Width (bigButtonSize))) {
-      MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.celestialBody != null) && (o.celestialBody == nextEnc.referenceBody));
+    if (GUILayout.Button ("Focus", GUILayout.Width (bigButtonSize)) ||
+        (nextEnc != null && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.FOCTARG))) {
+      MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.celestialBody != null) && (o.celestialBody == nextEnc));
       MapView.MapCamera.SetTarget (mapObject);
     }
     GUI.enabled = true;
@@ -498,24 +517,26 @@ internal class MainWindow {
 
     GUILayout.Space (verticalSpace);
 
-    /* time control panel */
-    double ut = this.drawTimeControls ();
-
-    GUILayout.Space (verticalSpace);
-
     double dx = 0;
     double dy = 0;
     double dz = 0;
+    bool changed = false;
+
+    /* time control panel */
+    double ut = this.drawTimeControls (ref changed);
+
+    GUILayout.Space (verticalSpace);
+
 
     /* axis control panels */
     if (currentNode != null) {
-      dz = drawAxisControls ("Prograde:", nodeDVZ.value, currentNode.DeltaV.z, progradeStyle);
-      dy = drawAxisControls ("Normal:", nodeDVY.value, currentNode.DeltaV.y, normalStyle);
-      dx = drawAxisControls ("Radial:", nodeDVX.value, currentNode.DeltaV.x, radialStyle);
+      dz = drawAxisControls ("Prograde:", nodeDVZ.value, currentNode.DeltaV.z, progradeStyle, ref changed);
+      dy = drawAxisControls ("Normal:", nodeDVY.value, currentNode.DeltaV.y, normalStyle, ref changed);
+      dx = drawAxisControls ("Radial:", nodeDVX.value, currentNode.DeltaV.x, radialStyle, ref changed);
     } else {
-      drawAxisControls ("Prograde:", "0", 0, progradeStyle);
-      drawAxisControls ("Normal:", "0", 0, normalStyle);
-      drawAxisControls ("Radial:", "0", 0, radialStyle);
+      drawAxisControls ("Prograde:", "0", 0, progradeStyle, ref changed);
+      drawAxisControls ("Normal:", "0", 0, normalStyle, ref changed);
+      drawAxisControls ("Radial:", "0", 0, radialStyle, ref changed);
     }
 
     GUILayout.Space (verticalSpace);
@@ -523,23 +544,98 @@ internal class MainWindow {
     /* maneuver & orbit info */
     labelSize = 2*buttonSize + 2 * GUI.skin.button.margin.left;
     GUILayout.BeginHorizontal ();
-    GUILayout.Label ("Total Δv:", GUILayout.Width (100));
+    GUILayout.Label ("Total Δv:", GUILayout.Width (leftLabelSize));
     GUILayout.Label (totalDV.value, GUILayout.Width (labelSize));
-    bool showAnglesPrevious = showAngles;
+    bool showEjectPrevious = showEject;
     bool showOrbitPrevious = showOrbit;
+    if (config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.SHOWEJC))
+      showEject = !showEject;
+    if (config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.SHOWORB))
+      showOrbit = !showOrbit;
     this.showOrbit = GUILayout.Toggle (this.showOrbit, "Orbit", "button", GUILayout.Width (1.5f*buttonSize));
-    this.showAngles = GUILayout.Toggle (this.showAngles, "Angles", "button", GUILayout.Width (1.5f*buttonSize));
+    this.showEject = GUILayout.Toggle (this.showEject, "Eject.", "button", GUILayout.Width (1.5f*buttonSize));
     GUILayout.EndHorizontal ();
 
-    if (showAngles) {
-      MainWindow.drawDoubleLabel ("Ejection angle:", eAngleStr);
+    if (showEject) {
+      MainWindow.drawDoubleLabel ("Eject. angle:", eAngleStr);
       MainWindow.drawDoubleLabel ("Eject. inclination:", eInclStr);
     }
 
+    bool circ = false;
+    bool up = false;
+    bool down = false;
+
     if (showOrbit) {
-      MainWindow.drawDoubleLabel ("Apoapsis:", nodeAp.value);
-      MainWindow.drawDoubleLabel ("Periapsis:", nodePe.value);
-      MainWindow.drawDoubleLabel ("Inclination:", nodeInc.value);
+      labelSize = 5 * buttonSize + 3 * GUI.skin.button.margin.left - bigButtonSize;
+      int bigButtonHalved = (bigButtonSize - GUI.skin.button.margin.left) / 2;
+      GUILayout.BeginHorizontal ();
+      GUILayout.BeginVertical ();
+      GUILayout.BeginHorizontal ();
+      GUILayout.Label ("Apoapsis:", GUILayout.Width (leftLabelSize));
+      GUILayout.Label (orbitAp.value, GUILayout.Width (labelSize));
+      GUILayout.EndHorizontal ();
+      GUILayout.BeginHorizontal ();
+      GUILayout.Label ("Periapsis:", GUILayout.Width (leftLabelSize));
+      GUILayout.Label (orbitPe.value, GUILayout.Width (labelSize));
+      GUILayout.EndHorizontal ();
+      GUILayout.EndVertical ();
+      GUILayout.BeginVertical ();
+      GUILayout.FlexibleSpace ();
+      circ = GUILayout.Button ("Circularize\nOrbit", GUILayout.Width (bigButtonSize));
+      GUILayout.FlexibleSpace ();
+      GUILayout.EndVertical ();
+      GUILayout.EndHorizontal ();
+      GUILayout.BeginHorizontal ();
+      GUILayout.Label ("Inclination:", GUILayout.Width (leftLabelSize));
+      GUILayout.Label (orbitInc.value, GUILayout.Width (labelSize));
+      up = GUILayout.RepeatButton ("▲", GUILayout.Width (bigButtonHalved));
+      down = GUILayout.RepeatButton ("▼", GUILayout.Width (bigButtonHalved));
+      GUILayout.EndHorizontal ();
+    }
+
+    if (currentNode != null && (circ || config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.CIRCORB))) {
+      var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
+      var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+      var nprog = maneuverVel.normalized;
+      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+      var nrad = Vector3d.Cross (nnorm, nprog);
+
+      var curVel = currentNode.nextPatch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+      double rezSpeed = Math.Sqrt (currentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
+
+      var normVel = Vector3d.Cross (maneuverPos, curVel);
+      var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
+      var newDV = newVel - maneuverVel;
+
+      dx = Vector3d.Dot (newDV, nrad);
+      dy = Vector3d.Dot (newDV, nnorm);
+      dz = Vector3d.Dot (newDV, nprog);
+      changed = true;
+    }
+
+    up = (up && repeatButtonDelay ()) || config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.TURNOUP);
+    down = (down && repeatButtonDelay ()) || config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.TURNODN);
+
+    if (currentNode != null && (up || down)) {
+      var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
+      var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+      var nprog = maneuverVel.normalized;
+      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+      var nrad = Vector3d.Cross (nnorm, nprog);
+
+      double theta = config.incrementDeg;
+      if (up)
+        theta = -theta;
+
+      var dv = currentNode.DeltaV;
+      var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
+      NodeTools.turnVector (ref calcVel, maneuverPos, theta);
+      var newDV = calcVel - maneuverVel;
+
+      dx = Vector3d.Dot (newDV, nrad);
+      dy = Vector3d.Dot (newDV, nnorm);
+      dz = Vector3d.Dot (newDV, nprog);
+      changed = true;
     }
 
     /* next encounter info */
@@ -558,14 +654,15 @@ internal class MainWindow {
     bool showManueversPrev = showManeuvers;
     showManeuvers = GUILayout.Toggle (showManeuvers, "Show the List of\nManeuvers", "button", GUILayout.Width (endButtonSize));
 
-    if (GUILayout.Button ("Focus on\nVessel", GUILayout.Width (endButtonSize))) {
+    if (GUILayout.Button ("Focus on\nVessel", GUILayout.Width (endButtonSize)) ||
+        config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.FOCVESL)) {
       MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.vessel != null) && o.vessel.Equals (FlightGlobals.ActiveVessel));
       MapView.MapCamera.SetTarget (mapObject);
     }
 
     GUILayout.EndHorizontal ();
 
-    if (currentNode != null)
+    if (currentNode != null && changed)
       nodeManager.changeNode (currentNode, dx, dy, dz, ut);
 
     /* list of maneuvers */
@@ -576,7 +673,7 @@ internal class MainWindow {
       }
     }
 
-    if ((showAnglesPrevious != showAngles) ||
+    if ((showEjectPrevious != showEject) ||
         (showOrbitPrevious != showOrbit) ||
         (showManueversPrev != showManeuvers) ||
         (showManeuvers && (nodeCount != nodeCountShow)))
@@ -588,7 +685,7 @@ internal class MainWindow {
         repeatButtonPressInterval++;
       repeatButtonReleaseInterval = 0;
     } else {
-      if (repeatButtonReleaseInterval < 5)
+      if (repeatButtonReleaseInterval < 3)
         repeatButtonReleaseInterval++;
       else
         repeatButtonPressInterval = 0;

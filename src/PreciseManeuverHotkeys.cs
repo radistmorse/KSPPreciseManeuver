@@ -67,40 +67,71 @@ internal class PreciseManeuverHotkeys {
       config.showKeymapperWindow = false;
 
     GUILayout.BeginVertical ();
-
     drawKeyControls ("Hide/show window",   PreciseManeuverConfig.HotkeyType.HIDEWIN);
     drawKeyControls ("Increment prograde", PreciseManeuverConfig.HotkeyType.PROGINC);
     drawKeyControls ("Decrement prograde", PreciseManeuverConfig.HotkeyType.PROGDEC);
+    drawKeyControls ("Zero prograde",      PreciseManeuverConfig.HotkeyType.PROGZER);
     drawKeyControls ("Increment normal",   PreciseManeuverConfig.HotkeyType.NORMINC);
     drawKeyControls ("Decrement normal",   PreciseManeuverConfig.HotkeyType.NORMDEC);
+    drawKeyControls ("Zero normal",        PreciseManeuverConfig.HotkeyType.NORMZER);
     drawKeyControls ("Increment radial",   PreciseManeuverConfig.HotkeyType.RADIINC);
     drawKeyControls ("Decrement radial",   PreciseManeuverConfig.HotkeyType.RADIDEC);
+    drawKeyControls ("Zero radial",        PreciseManeuverConfig.HotkeyType.RADIZER);
     drawKeyControls ("Increment time",     PreciseManeuverConfig.HotkeyType.TIMEINC);
     drawKeyControls ("Decrement time",     PreciseManeuverConfig.HotkeyType.TIMEDEC);
+    drawKeyControls ("Circularize orbit",  PreciseManeuverConfig.HotkeyType.CIRCORB);
+    drawKeyControls ("Turn orbit up",      PreciseManeuverConfig.HotkeyType.TURNOUP);
+    drawKeyControls ("Turn orbit down",    PreciseManeuverConfig.HotkeyType.TURNODN);
     drawKeyControls ("Change increment forward\n(+Alt to change backward)",
-                                            PreciseManeuverConfig.HotkeyType.PAGEINC);
+                                           PreciseManeuverConfig.HotkeyType.PAGEINC);
     drawKeyControls ("Change orbit mode forward\n(+Alt to change backward)",
-                                            PreciseManeuverConfig.HotkeyType.PAGECON);
-
+                                           PreciseManeuverConfig.HotkeyType.PAGECON);
+    drawKeyControls ("Show orbit info",    PreciseManeuverConfig.HotkeyType.SHOWORB);
+    drawKeyControls ("Show ejection info", PreciseManeuverConfig.HotkeyType.SHOWEJC);
+    drawKeyControls ("Focus on target",    PreciseManeuverConfig.HotkeyType.FOCTARG);
+    drawKeyControls ("Focus on vessel",    PreciseManeuverConfig.HotkeyType.FOCVESL);
+    drawKeyControls ("Show more orbits",   PreciseManeuverConfig.HotkeyType.PLUSORB);
+    drawKeyControls ("Show less orbits",   PreciseManeuverConfig.HotkeyType.MINUORB);
+    drawKeyControls ("Toggle x10 time",    PreciseManeuverConfig.HotkeyType.PAGEX10);
+    drawKeyControls ("Next maneuver",      PreciseManeuverConfig.HotkeyType.NEXTMAN);
+    drawKeyControls ("Prev maneuver",      PreciseManeuverConfig.HotkeyType.PREVMAN);
+    drawKeyControls ("Delete maneuver",    PreciseManeuverConfig.HotkeyType.MNVRDEL);
     GUILayout.EndVertical ();
     GUI.DragWindow ();
   }
 
   private void drawKeyControls (string title, PreciseManeuverConfig.HotkeyType type) {
     GUILayout.BeginHorizontal ();
-    GUILayout.Label (title + ": " + config.getHotkey (type).ToString (), GUILayout.Width (300));
+    GUILayout.BeginVertical ();
+    GUILayout.FlexibleSpace ();
+    GUILayout.BeginHorizontal ();
     if (GUILayout.Button ("Set")) {
+      config.setHotkey (type, KeyCode.None);
       ScreenMessages.PostScreenMessage ("Press a key to bind '" + title.ToLower () + "'...", expectedTimeout, ScreenMessageStyle.UPPER_CENTER);
       expectedHotkey = type;
       expectingConfigHotkey = true;
       expectedTime = Planetarium.GetUniversalTime () + expectedTimeout;
     }
+    if (GUILayout.Button ("Unset")) {
+      config.setHotkey (type, KeyCode.None);
+      expectingConfigHotkey = false;
+    }
+    GUILayout.EndHorizontal ();
+    GUILayout.FlexibleSpace ();
+    GUILayout.EndVertical ();
+    GUILayout.Label (title + ": " + config.getHotkey (type).ToString (), GUILayout.Width (300));
     GUILayout.EndHorizontal ();
   }
 
-  /// <summary>
-  /// Processes keyboard input.
-  /// </summary>
+  internal void processGlobalHotkeys () {
+    if (Input.anyKey && GUIUtility.keyboardControl == 0) {
+      // hide/show window
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.HIDEWIN))) {
+        config.showMainWindow = !config.showMainWindow;
+      }
+    }
+  }
+
   internal void processKeyInput (int nodeIdx) {
     repeatButtonPressed = false;
     if (Input.anyKey && GUIUtility.keyboardControl == 0) {
@@ -110,97 +141,93 @@ internal class PreciseManeuverHotkeys {
         expectingConfigHotkey = false;
         if (expectedTime > Planetarium.GetUniversalTime ()) {
           KeyCode key = NodeTools.fetchKey ();
-          if (key != KeyCode.None) {
+          if (key != KeyCode.None && key != KeyCode.Escape) {
             config.setHotkey (expectedHotkey, key);
             ScreenMessages.PostScreenMessage ("Binded to '" + key.ToString () + "'", 0.5f, ScreenMessageStyle.UPPER_CENTER);
+            // prevent the hotkey being detected as pressed the next frame after it is set
+            repeatButtonDelay (key);
           }
           return;
         }
       }
 
-      // hide/show window
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.HIDEWIN))) {
-        config.showMainWindow = !config.showMainWindow;
-      }
-
-      if (!config.showMainWindow || nodeIdx == -1)
+      if (nodeIdx == -1)
         return;
 
       ManeuverNode node = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[nodeIdx];
 
       // process normal keyboard input
+      double dvx = node.DeltaV.x;
+      double dvy = node.DeltaV.y;
+      double dvz = node.DeltaV.z;
+      double ut = node.UT;
+      bool changed = false;
       // prograde increment
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGINC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGINC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z + config.increment,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGINC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGINC))) {
+        dvz += config.increment;
+        changed = true;
       }
       // prograde decrement
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGDEC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGDEC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z - config.increment,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGDEC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGDEC))) {
+        dvz -= config.increment;
+        changed = true;
+      }
+      // prograde zero
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PROGZER))) {
+        dvz = 0;
+        changed = true;
       }
       // normal increment
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMINC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMINC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y + config.increment,
-                                  node.DeltaV.z,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMINC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMINC))) {
+        dvy += config.increment;
+        changed = true;
       }
       // normal decrement
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMDEC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMDEC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y - config.increment,
-                                  node.DeltaV.z,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMDEC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMDEC))) {
+        dvy -= config.increment;
+        changed = true;
+      }
+      // normal zero
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.NORMZER))) {
+        dvy = 0;
+        changed = true;
       }
       // radial increment
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIINC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIINC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x + config.increment,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIINC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIINC))) {
+        dvx += config.increment;
+        changed = true;
       }
       // radial decrement
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIDEC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIDEC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x - config.increment,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z,
-                                  node.UT);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIDEC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIDEC))) {
+        dvx -= config.increment;
+        changed = true;
+      }
+      // radial zero
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.RADIZER))) {
+        dvx = 0;
+        changed = true;
       }
       // UT increment
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEINC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEINC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z,
-                                  node.UT + config.increment * (config.x10UTincrement ? 10 : 1));
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEINC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEINC))) {
+        ut += config.increment * (config.x10UTincrement ? 10 : 1);
+        changed = true;
       }
       // UT decrement
-      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEDEC))) {
-        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEDEC)))
-          nodeManager.changeNode (node,
-                                  node.DeltaV.x,
-                                  node.DeltaV.y,
-                                  node.DeltaV.z,
-                                  node.UT - config.increment * (config.x10UTincrement ? 10 : 1));
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEDEC)) &&
+          repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TIMEDEC))) {
+        ut -= config.increment * (config.x10UTincrement ? 10 : 1);
+        changed = true;
       }
+      if (changed)
+        nodeManager.changeNode (node, dvx, dvy, dvz, ut);
+
       // Page Conics
       if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGECON))) {
         int mode = NodeTools.getConicsMode();
@@ -217,6 +244,41 @@ internal class PreciseManeuverHotkeys {
         else
           config.setIncrementUp();
       }
+      // toggle x10
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGEX10)))
+        config.x10UTincrement = !config.x10UTincrement;
+      // more patches
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PLUSORB)))
+        FlightGlobals.ActiveVessel.patchedConicSolver.IncreasePatchLimit ();
+      // less patches
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.MINUORB)))
+        FlightGlobals.ActiveVessel.patchedConicSolver.DecreasePatchLimit ();
+
+      // all the rest, just pass it to the config, for main window to take
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TURNOUP)))
+        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TURNOUP)))
+          config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.TURNOUP);
+      if (Input.GetKey (config.getHotkey (PreciseManeuverConfig.HotkeyType.TURNODN)))
+        if (repeatButtonDelay (config.getHotkey (PreciseManeuverConfig.HotkeyType.TURNODN)))
+          config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.TURNODN);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.CIRCORB)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.CIRCORB);
+
+
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.SHOWORB)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.SHOWORB);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.SHOWEJC)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.SHOWEJC);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.FOCTARG)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.FOCTARG);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.FOCVESL)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.FOCVESL);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.NEXTMAN)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.NEXTMAN);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PREVMAN)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.PREVMAN);
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.MNVRDEL)))
+        config.registerHotkeyPress(PreciseManeuverConfig.HotkeyType.MNVRDEL);
     }
     if (repeatButtonPressed) {
       if (repeatButtonPressInterval < 50)
