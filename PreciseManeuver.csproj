@@ -58,8 +58,8 @@
     <Compile Include="src\MainWindow.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CHANGES.txt" />
-    <Content Include="LICENSE.txt" />
+    <Content Include="ChangeLog" />
+    <Content Include="LICENSE" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

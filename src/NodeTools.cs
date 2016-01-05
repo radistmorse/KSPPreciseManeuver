@@ -224,6 +224,12 @@ internal static class NodeTools {
     v.z = newz;
   }
 
+  internal static bool NotNAN (this Vector3d v) {
+    if (Double.IsNaN(v.x) || Double.IsNaN(v.y) || Double.IsNaN(v.z))
+      return false;
+    return true;
+  }
+
   /// <summary>
   /// Converts the UT to human-readable Kerbal local time.
   /// </summary>

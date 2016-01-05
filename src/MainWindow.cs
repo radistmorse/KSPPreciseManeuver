@@ -256,7 +256,7 @@ internal class MainWindow {
     GUILayout.BeginHorizontal ();
 
     GUI.enabled = currentNodeIdx > 0;
-    if (GUILayout.Button ("◀", GUILayout.Width (pageButtonSize)) ||
+    if (GUILayout.Button ("◄", GUILayout.Width (pageButtonSize)) ||
         (currentNodeIdx > 0 && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.PREVMAN))) {
       currentNodeIdx--;
       currentNode = solver.maneuverNodes[currentNodeIdx];
@@ -284,7 +284,7 @@ internal class MainWindow {
     GUI.contentColor = oldContentColor;
 
     GUI.enabled = currentNodeIdx < nodeCount - 1;
-    if (GUILayout.Button ("▶", GUILayout.Width (pageButtonSize)) ||
+    if (GUILayout.Button ("►", GUILayout.Width (pageButtonSize)) ||
         ((currentNodeIdx < nodeCount - 1) && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.NEXTMAN))) {
       currentNodeIdx++;
       currentNode = solver.maneuverNodes[currentNodeIdx];
@@ -307,7 +307,7 @@ internal class MainWindow {
     if (currentNode != null) {
       ut = currentNode.UT;
     }
-    GUILayout.TextField (nodeUT.value, GUILayout.Width (buttonSize * 2 + GUI.skin.button.margin.left));
+    GUILayout.TextField (nodeUT.value, GUILayout.Width (buttonSize * 3 + GUI.skin.button.margin.left * 2));
 
     if (GUILayout.RepeatButton ("+", GUILayout.Width (buttonSize))) {
       if (repeatButtonDelay ()) {
@@ -556,11 +556,6 @@ internal class MainWindow {
     this.showEject = GUILayout.Toggle (this.showEject, "Eject.", "button", GUILayout.Width (1.5f*buttonSize));
     GUILayout.EndHorizontal ();
 
-    if (showEject) {
-      MainWindow.drawDoubleLabel ("Eject. angle:", eAngleStr);
-      MainWindow.drawDoubleLabel ("Eject. inclination:", eInclStr);
-    }
-
     bool circ = false;
     bool up = false;
     bool down = false;
@@ -596,21 +591,31 @@ internal class MainWindow {
     if (currentNode != null && (circ || config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.CIRCORB))) {
       var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
       var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-      var nprog = maneuverVel.normalized;
-      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
-      var nrad = Vector3d.Cross (nnorm, nprog);
 
-      var curVel = currentNode.nextPatch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-      double rezSpeed = Math.Sqrt (currentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
+      if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+        var nprog = maneuverVel.normalized;
+        var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+        var nrad = Vector3d.Cross (nnorm, nprog);
+        var curVel = currentNode.nextPatch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+        if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero () && curVel.NotNAN ()) {
+          double rezSpeed = Math.Sqrt (currentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
 
-      var normVel = Vector3d.Cross (maneuverPos, curVel);
-      var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
-      var newDV = newVel - maneuverVel;
+          var normVel = Vector3d.Cross (maneuverPos, curVel);
+          var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
+          var newDV = newVel - maneuverVel;
 
-      dx = Vector3d.Dot (newDV, nrad);
-      dy = Vector3d.Dot (newDV, nnorm);
-      dz = Vector3d.Dot (newDV, nprog);
-      changed = true;
+          dx = Vector3d.Dot (newDV, nrad);
+          dy = Vector3d.Dot (newDV, nnorm);
+          dz = Vector3d.Dot (newDV, nprog);
+          changed = true;
+        }
+      }
+      if (!changed) {
+        // position and velocity are perfectly parallel (less probable)
+        // or
+        // KSP API returned NaN or some other weird shit (much more probable)
+        ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+      }
     }
 
     up = (up && repeatButtonDelay ()) || config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.TURNOUP);
@@ -619,23 +624,39 @@ internal class MainWindow {
     if (currentNode != null && (up || down)) {
       var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
       var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-      var nprog = maneuverVel.normalized;
-      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
-      var nrad = Vector3d.Cross (nnorm, nprog);
 
-      double theta = config.incrementDeg;
-      if (up)
-        theta = -theta;
+      if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+        var nprog = maneuverVel.normalized;
+        var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+        var nrad = Vector3d.Cross (nnorm, nprog);
 
-      var dv = currentNode.DeltaV;
-      var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
-      NodeTools.turnVector (ref calcVel, maneuverPos, theta);
-      var newDV = calcVel - maneuverVel;
+        if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero ()) {
+          double theta = config.incrementDeg;
+          if (up)
+            theta = -theta;
 
-      dx = Vector3d.Dot (newDV, nrad);
-      dy = Vector3d.Dot (newDV, nnorm);
-      dz = Vector3d.Dot (newDV, nprog);
-      changed = true;
+          var dv = currentNode.DeltaV;
+          var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
+          NodeTools.turnVector (ref calcVel, maneuverPos, theta);
+          var newDV = calcVel - maneuverVel;
+
+          dx = Vector3d.Dot (newDV, nrad);
+          dy = Vector3d.Dot (newDV, nnorm);
+          dz = Vector3d.Dot (newDV, nprog);
+          changed = true;
+        }
+      }
+      if (!changed) {
+        // position and velocity are perfectly parallel (less probable)
+        // or
+        // KSP API returned NaN or some other weird shit (much more probable)
+        ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+      }
+    }
+
+    if (showEject) {
+      MainWindow.drawDoubleLabel ("Eject. angle:", eAngleStr);
+      MainWindow.drawDoubleLabel ("Eject. inclination:", eInclStr);
     }
 
     /* next encounter info */

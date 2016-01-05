@@ -1,3 +1,8 @@
+1.1.1, 2016-01-05
+- Check orbit parameters for sanity before use
+- Change GUID to unique one
+- Small GUI fixes
+
 1.1, 2015-12-27
 - New tools: circularize and orbit up/down
 - Lots of new hotkeys
