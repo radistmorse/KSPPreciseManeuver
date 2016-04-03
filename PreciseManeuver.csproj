@@ -32,10 +32,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>Assembly-CSharp.dll</HintPath>
+      <HintPath>Libs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>Libs\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPUtil, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\KSPUtil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -43,10 +47,16 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>UnityEngine.dll</HintPath>
+      <HintPath>Libs\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\StyleManager.cs" />
+    <Compile Include="src\PreciseManeuverToolbar.cs" />
     <Compile Include="src\KACWrapper.cs" />
     <Compile Include="src\PreciseManeuverHotkeys.cs" />
     <Compile Include="src\CompatibilityChecker.cs" />
@@ -65,5 +75,10 @@
   <PropertyGroup>
     <PostBuildEvent>call "$(SolutionDir)PostBuildEvent"</PostBuildEvent>
   </PropertyGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="PreciseManeuver.Unity.csproj">
+      <Project>{5387bb1e-32b1-4bac-b03f-100570b9554c}</Project>
+      <Name>PreciseManeuver.Unity</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

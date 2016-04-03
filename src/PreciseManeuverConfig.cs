@@ -41,26 +41,31 @@ internal class PreciseManeuverConfig {
     return _instance;
   }
 
+  private AssetBundle _prefabs;
+
+  internal AssetBundle prefabs {
+    get {
+      if (_prefabs == null) {
+        var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        path = path.Replace(System.IO.Path.GetFileName(path), "prefabs");
+        _prefabs = AssetBundle.CreateFromFile(path);
+      }
+      return _prefabs;
+    }
+  }
+
   private Rect _mainWindowPos = new Rect (Screen.width / 10, 20, 0, 0);
   internal Rect mainWindowPos {
-    get {
-      return _mainWindowPos;
-    }
-    set {
-      _mainWindowPos = value;
-    }
+    get { return _mainWindowPos; }
+    set { _mainWindowPos = value; }
   }
   internal void readjustMainWindow() {
     _mainWindowPos.height = 0;
   }
   private Rect _keymapperWindowPos = new Rect (Screen.width / 5, 20, 0, 0);
   internal Rect keymapperWindowPos {
-    get {
-      return _keymapperWindowPos;
-    }
-    set {
-      _keymapperWindowPos = value;
-    }
+    get { return _keymapperWindowPos; }
+    set { _keymapperWindowPos = value; }
   }
 
   internal bool showMainWindow = true;
@@ -70,9 +75,7 @@ internal class PreciseManeuverConfig {
   internal double increment { get { return Math.Pow (10, _increment); } }
   internal double incrementDeg { get { return Math.PI * Math.Pow (10, _increment) / 180; } }
   internal int incrementRaw {
-    get {
-      return _increment;
-    }
+    get { return _increment; }
     set {
       if (value >= -2 && value <= 2)
         _increment = value;
@@ -105,6 +108,54 @@ internal class PreciseManeuverConfig {
     }
   }
 
+  internal enum ModuleType {
+    PAGER,
+    TIMER,
+    INPUT,
+    GIZMO,
+    TOTDV,
+    EJECT,
+    ORBIT,
+    ENCOT,
+    PATCH
+  };
+
+  private static readonly string[] moduleNames = {
+    "Maneuver Pager",
+    "Time & Alarm",
+    "Precise Input",
+    "Maneuver Gizmo",
+    "Total Δv",
+    "Ejection angles",
+    "Orbit Info",
+    "Next Encounter",
+    "Patches Control",
+  };
+
+  private bool[] moduleState = {
+    true,
+    true,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true
+  };
+
+  internal static string getModuleName(ModuleType type) {
+    return moduleNames[(int)type];
+  }
+
+  internal bool getModuleState (ModuleType type) {
+    return moduleState[(int)type];
+  }
+
+  internal void setModuleState (ModuleType type, bool state) {
+    moduleState[(int)type] = state;
+  }
+
   internal enum HotkeyType {
     PROGINC,
     PROGDEC,
@@ -135,34 +186,35 @@ internal class PreciseManeuverConfig {
     MNVRDEL
   };
 
-  private KeyCode[] hotkeys = { KeyCode.Keypad8,    //PROGINC
-                                KeyCode.Keypad5,    //PROGDEC
-                                KeyCode.None,       //PROGZER
-                                KeyCode.Keypad9,    //NORMINC
-                                KeyCode.Keypad7,    //NORMDEC
-                                KeyCode.None,       //NORMZER
-                                KeyCode.Keypad6,    //RADIINC
-                                KeyCode.Keypad4,    //RADIDEC
-                                KeyCode.None,       //RADIZER
-                                KeyCode.Keypad3,    //TIMEINC
-                                KeyCode.Keypad1,    //TIMEDEC
-                                KeyCode.None,       //CIRCORB
-                                KeyCode.None,       //TURNOUP
-                                KeyCode.None,       //TURNODN
-                                KeyCode.Keypad0,    //PAGEINC
-                                KeyCode.Keypad2,    //PAGECON
-                                KeyCode.P,          //HIDEWIN
-                                KeyCode.None,       //SHOWORB
-                                KeyCode.None,       //SHOWEJC
-                                KeyCode.None,       //FOCTARG
-                                KeyCode.None,       //FOCVESL
-                                KeyCode.None,       //PLUSORB
-                                KeyCode.None,       //MINUORB
-                                KeyCode.None,       //PAGEX10
-                                KeyCode.None,       //NEXTMAN
-                                KeyCode.None,       //PREVMAN
-                                KeyCode.None        //MNVRDEL
-                              };
+  private KeyCode[] hotkeys = {
+    KeyCode.Keypad8,    //PROGINC
+    KeyCode.Keypad5,    //PROGDEC
+    KeyCode.None,       //PROGZER
+    KeyCode.Keypad9,    //NORMINC
+    KeyCode.Keypad7,    //NORMDEC
+    KeyCode.None,       //NORMZER
+    KeyCode.Keypad6,    //RADIINC
+    KeyCode.Keypad4,    //RADIDEC
+    KeyCode.None,       //RADIZER
+    KeyCode.Keypad3,    //TIMEINC
+    KeyCode.Keypad1,    //TIMEDEC
+    KeyCode.None,       //CIRCORB
+    KeyCode.None,       //TURNOUP
+    KeyCode.None,       //TURNODN
+    KeyCode.Keypad0,    //PAGEINC
+    KeyCode.Keypad2,    //PAGECON
+    KeyCode.P,          //HIDEWIN
+    KeyCode.None,       //SHOWORB
+    KeyCode.None,       //SHOWEJC
+    KeyCode.None,       //FOCTARG
+    KeyCode.None,       //FOCVESL
+    KeyCode.None,       //PLUSORB
+    KeyCode.None,       //MINUORB
+    KeyCode.None,       //PAGEX10
+    KeyCode.None,       //NEXTMAN
+    KeyCode.None,       //PREVMAN
+    KeyCode.None        //MNVRDEL
+  };
   private bool[] hotkeyPresses = Enumerable.Repeat(false, Enum.GetValues(typeof(HotkeyType)).Length).ToArray ();
 
   internal void setHotkey (HotkeyType type, KeyCode code) {
@@ -176,6 +228,7 @@ internal class PreciseManeuverConfig {
   internal void registerHotkeyPress (HotkeyType type) {
     hotkeyPresses[(int)type] = true;
   }
+
   internal bool isHotkeyRegistered (HotkeyType type) {
     if (hotkeyPresses[(int)type] == true) {
       hotkeyPresses[(int)type] = false;
@@ -194,6 +247,9 @@ internal class PreciseManeuverConfig {
     foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
       config[type.ToString ()] = hotkeys[(int)type].ToString ();
 
+    foreach (ModuleType type in Enum.GetValues (typeof (ModuleType)))
+      config[type.ToString ()] = moduleState[(int)type];
+
     config["increment"] = _increment;
     config["x10UTincrement"] = x10UTincrement;
 
@@ -201,8 +257,6 @@ internal class PreciseManeuverConfig {
     config["mainWindowY"] = (int)_mainWindowPos.y;
     config["keyWindowX"] = (int)_keymapperWindowPos.x;
     config["keyWindowY"] = (int)_keymapperWindowPos.y;
-
-    config["useKSPskin"] = useKSPskin;
 
     config.save();
   }
@@ -219,10 +273,11 @@ internal class PreciseManeuverConfig {
       foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
         hotkeys[(int)type] = (KeyCode)Enum.Parse (typeof (KeyCode), config.GetValue<String> (type.ToString (), hotkeys[(int)type].ToString ()));
 
+      foreach (ModuleType type in Enum.GetValues (typeof (ModuleType)))
+        moduleState[(int)type] = config.GetValue<bool> (type.ToString (), moduleState[(int)type]);
+
       _increment = config.GetValue<int> ("increment", _increment);
       x10UTincrement = config.GetValue<bool> ("x10UTincrement", x10UTincrement);
-
-      useKSPskin = config.GetValue<bool>("useKSPskin", useKSPskin);
 
       _mainWindowPos.x = config.GetValue<int> ("mainWindowX", (int)_mainWindowPos.x);
       _mainWindowPos.y = config.GetValue<int> ("mainWindowY", (int)_mainWindowPos.y);

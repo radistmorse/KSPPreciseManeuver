@@ -273,7 +273,7 @@ internal class MainWindow {
     GUI.contentColor = Color.red;
     if (GUILayout.Button ("Del", GUILayout.Width (bigButtonSize/2)) ||
         ((currentNodeIdx == nodeCount - 1) && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.MNVRDEL))) {
-      solver.RemoveManeuverNode (currentNode);
+      currentNode.RemoveSelf ();
       nodeCount--;
       currentNodeIdx--;
       if (currentNodeIdx != -1)
