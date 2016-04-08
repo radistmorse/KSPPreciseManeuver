@@ -33,10 +33,9 @@ public class StyleApplicator : MonoBehaviour {
   public enum ElementTypes {
     None,
     Window,
-    Box,
+    Input,
     Button,
-    ButtonToggle,
-    Label
+    ButtonToggle
   }
 
   [SerializeField]
@@ -64,16 +63,12 @@ public class StyleApplicator : MonoBehaviour {
   /// <summary>
   ///     Sets the applicator to apply the specified values to an attached selectable component.
   /// </summary>
-  public void SetSelectable(TextStyle textStyle, Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
-    SetText(textStyle, GetComponentInChildren<Text>());
-
+  public void SetSelectable(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
     Selectable selectable = GetComponent<Selectable>();
     if (selectable != null) {
       selectable.image.sprite = normal;
       selectable.image.type = Image.Type.Sliced;
-
       selectable.transition = Selectable.Transition.SpriteSwap;
-
       SpriteState spriteState = selectable.spriteState;
       spriteState.highlightedSprite = highlight;
       spriteState.pressedSprite = pressed;
@@ -83,37 +78,16 @@ public class StyleApplicator : MonoBehaviour {
   }
 
   /// <summary>
-  ///     Sets the applicator to apply a style to an attached text component.
-  /// </summary>
-  public void SetText(TextStyle textStyle) {
-    SetText(textStyle, GetComponent<Text>());
-  }
-
-  /// <summary>
   ///     Sets the applicator to apply the specified values to an attached toggle component.
   /// </summary>
-  public void SetToggle(TextStyle textStyle, Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
-    SetSelectable(textStyle, normal, highlight, pressed, disabled);
+  public void SetToggle(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
+    SetSelectable(normal, highlight, pressed, disabled);
 
     Image toggleImage = GetComponent<Toggle>()?.graphic as Image;
     if (toggleImage != null) {
       toggleImage.sprite = pressed;
       toggleImage.type = Image.Type.Sliced;
     }
-  }
-
-  /// <summary>
-  ///     Sets the applicator to apply a style to the supplied text component.
-  /// </summary>
-  private static void SetText(TextStyle textStyle, Text textComponent) {
-    if (textStyle == null || textComponent == null)
-      return;
-
-    if (textStyle.Font != null)
-      textComponent.font = textStyle.Font;
-    textComponent.fontSize = textStyle.Size;
-    textComponent.fontStyle = textStyle.Style;
-    textComponent.color = textStyle.Colour;
   }
 }
 }

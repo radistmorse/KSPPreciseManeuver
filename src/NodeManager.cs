@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 /******************************************************************************
  * Copyright (c) 2015, George Sedov
  * All rights reserved.
@@ -28,66 +25,73 @@ using System.Linq;
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
 namespace KSPPreciseManeuver {
 internal class NodeManager {
+  #region Singleton
 
+  private NodeManager () {
+    initAlarm ();
+  }
   static private NodeManager _instance;
-  static internal NodeManager getInstance () {
-    if (_instance == null)
-      _instance = new NodeManager ();
-    return _instance;
+  static internal NodeManager Instance {
+    get {
+      if (_instance == null)
+        _instance = new NodeManager ();
+      return _instance;
+    }
   }
 
+  #endregion
+
+  #region SavedNode internal class
+
   private class SavedNode {
-    private double dx;
-    private double dy;
-    private double dz;
+    private double dx = 0.0;
+    private double dy = 0.0;
+    private double dz = 0.0;
     private double origdx;
     private double origdy;
     private double origdz;
-    private double _ut;
-    private double _origUt;
-    private const double epsilon = 1E-05;
+    private double _ut = 0.0;
+    private double origUt;
+    private const double epsilon = 1E-5;
 
     internal Vector3d dv { get { return new Vector3d (dx, dy, dz); } }
     internal double ut { get { return _ut; } }
     internal bool changed { get; private set; } = false;
 
     internal SavedNode (ManeuverNode node) {
-      dx = node.DeltaV.x;
-      dy = node.DeltaV.y;
-      dz = node.DeltaV.z;
-      origdx = node.DeltaV.x;
-      origdy = node.DeltaV.y;
-      origdz = node.DeltaV.z;
-      _ut = node.UT;
-      _origUt = node.UT;
+      updateOrig (node);
     }
 
-    internal void update (double dvx, double dvy, double dvz, double ut) {
-      if (Math.Abs (dx - dvx) > epsilon) {
-        dx = dvx;
-        changed = true;
-      }
-      if (Math.Abs (dy - dvy) > epsilon) {
-        dy = dvy;
-        changed = true;
-      }
-      if (Math.Abs (dz - dvz) > epsilon) {
-        dz = dvz;
-        changed = true;
-      }
-      if (Math.Abs (_ut - ut) > epsilon) {
-        _ut = ut;
-        changed = true;
-      }
+    internal void updateDiff (double ddvx, double ddvy, double ddvz, double ddut) {
+      dx += ddvx;
+      dy += ddvy;
+      dz += ddvz;
+      _ut += ddut;
+      changed = true;
+    }
+    internal void updateMult (double mdvx, double mdvy, double mdvz) {
+      dx *= mdvx;
+      dy *= mdvy;
+      dz *= mdvz;
+      changed = true;
+    }
+
+    internal void updateUtAbs (double ut) {
+      _ut = ut;
+      changed = true;
     }
 
     internal void updateOrig (ManeuverNode node) {
       origdx = node.DeltaV.x;
       origdy = node.DeltaV.y;
       origdz = node.DeltaV.z;
-      _origUt = node.UT;
+      origUt = node.UT;
       dx = node.DeltaV.x;
       dy = node.DeltaV.y;
       dz = node.DeltaV.z;
@@ -99,39 +103,48 @@ internal class NodeManager {
       return (Math.Abs (origdx - node.DeltaV.x) < epsilon &&
               Math.Abs (origdy - node.DeltaV.y) < epsilon &&
               Math.Abs (origdz - node.DeltaV.z) < epsilon &&
-              Math.Abs (_origUt - node.UT) < epsilon);
+              Math.Abs (origUt - node.UT) < epsilon);
     }
   }
 
-  private ManeuverNode currentNode = null;
-  private SavedNode currentSavedNode = null;
+  #endregion
+
+  /* Node we're currently working with */
+  private ManeuverNode _currentNode = null;
+  internal ManeuverNode currentNode {
+    get {
+      if (_currentNode == null) {
+        updateCurrentNode ();
+      }
+      return _currentNode;
+    }
+  }
+  internal int currentNodeIdx { get; private set; } = -1;
+  private int nodeCount = 0;
+  /* Variables that help find the newly selected nodes */
+  private bool nodeRecentlyAdded = false;
+  private List<ManeuverNode> prevGizmos = null;
+  /* Internal copy of the node */
+  private SavedNode _currentSavedNode = null;
+  private SavedNode currentSavedNode {
+    get {
+      if (_currentSavedNode == null)
+        updateCurrentNode ();
+      return _currentSavedNode;
+    }
+  }
+  /* KAC */
   private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
 
-  internal void init () {
-    KACWrapper.InitKACWrapper();
+  private Orbit target = null;
+
+  #region KAC integration
+
+  internal void initAlarm () {
+    KACWrapper.InitKACWrapper ();
   }
 
-  internal bool alarmPluginEnabled() {
-    return KACWrapper.APIReady;
-  }
-
-  private void changeCurrentNode (ManeuverNode node) {
-    currentNode = node;
-    if (currentSavedNode != null)
-      currentSavedNode.updateOrig (node);
-    else
-      currentSavedNode = new SavedNode (node);
-    if (KACWrapper.APIReady)
-      currentAlarm = KACWrapper.KAC.Alarms.FirstOrDefault
-                                  (a => ((Math.Abs (a.AlarmTime + 600.0 - node.UT) < 1E-05) &&
-                                         (a.VesselID == FlightGlobals.ActiveVessel.id.ToString ()) &&
-                                         (a.AlarmType == KACWrapper.KACAPI.AlarmTypeEnum.Maneuver)));
-  }
-
-  internal void createAlarm (ManeuverNode node) {
-    if (node != currentNode)
-      changeCurrentNode (node);
-
+  internal void createAlarm () {
     if (!KACWrapper.APIReady)
       return;
 
@@ -139,56 +152,186 @@ internal class NodeManager {
       return;
 
     string newID = KACWrapper.KAC.CreateAlarm (KACWrapper.KACAPI.AlarmTypeEnum.Maneuver,
-                                               "Maneuver for " + FlightGlobals.ActiveVessel.GetName(),
-                                               currentNode.UT - 600.0);
+                                             "Maneuver for " + FlightGlobals.ActiveVessel.GetName(),
+                                             currentNode.UT - 600.0);
     currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
 
     currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
     currentAlarm.Notes = "The maneuver is in 10 minutes.";
   }
 
-  internal void deleteAlarm (ManeuverNode node) {
-    if (node != currentNode)
-      changeCurrentNode (node);
-
+  internal void deleteAlarm () {
     if (currentAlarm != null) {
       KACWrapper.KAC.DeleteAlarm (currentAlarm.ID);
       currentAlarm = null;
     }
   }
 
-  internal bool alarmCreated (ManeuverNode node) {
-    if (node != currentNode)
-      changeCurrentNode (node);
+  internal bool alarmCreated () {
     return currentAlarm != null;
   }
 
-  internal bool unchanged (ManeuverNode node) {
-    if (node != currentNode)
-     return false;
-    return (currentSavedNode != null) && !currentSavedNode.changed;
+  #endregion
+
+  #region Update API
+
+  internal void changeNodeDiff (double ddvx, double ddvy, double ddvz, double dut) {
+    currentSavedNode.updateDiff (ddvx, ddvy, ddvz, dut);
   }
 
-  internal void changeNode (ManeuverNode node, double dvx, double dvy, double dvz, double ut) {
-    if (node != currentNode)
-      changeCurrentNode (node);
-
-    currentSavedNode.update (dvx, dvy, dvz, ut);
+  internal void changeNodeDVMult (double mdvx, double mdvy, double mdvz) {
+    currentSavedNode.updateMult (mdvx, mdvy, mdvz);
   }
 
-  internal void updateNodes() {
-    if (currentNode == null)
-      return;
+  internal void changeNodeUTtoAP () {
+    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToAp);
+  }
+  internal void changeNodeUTtoPE () {
+    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToPe);
+  }
+  internal void changeNodeUTtoAN () {
+    currentSavedNode.updateUtAbs (currentNode.patch.getTargetANUT (target));
+  }
+  internal void changeNodeUTtoDN () {
+    currentSavedNode.updateUtAbs (currentNode.patch.getTargetDNUT (target));
+  }
 
-    if (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count == 0) {
-      currentNode = null;
-      currentSavedNode = null;
-      currentAlarm = null;
-      return;
+  internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
+  internal bool previousNodeAvailable { get { return currentNodeIdx > 0; } }
+
+  internal void switchNextNode () {
+    if (nextNodeAvailable) {
+      _currentNode = null;
+      currentNodeIdx += 1;
+      updateCurrentNode ();
+      notifyIndexChanged ();
+    }
+  }
+
+  internal void switchPreviousNode () {
+    if (previousNodeAvailable) {
+      _currentNode = null;
+      currentNodeIdx -= 1;
+      updateCurrentNode ();
+      notifyIndexChanged ();
+    }
+  }
+
+  internal void deleteNode () {
+    if (_currentNode != null) {
+      _currentNode.RemoveSelf ();
+      _currentNode = null;
+      updateCurrentNode ();
+    }
+  }
+
+  internal void turnOrbitUp () {
+
+  }
+  internal void turnOrbitDown () {
+
+  }
+  internal void circularizeOrbit () {
+
+  }
+
+  #endregion
+
+  #region Updaters
+
+  internal void searchNewGizmo () {
+    var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
+    var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null);
+    var tmp = curList.ToList ();
+    /* first, if the node was just created, choose it */
+    if (nodeRecentlyAdded) {
+      var node = solver.maneuverNodes.Last ();
+      if (node != _currentNode) {
+        _currentNode = node;
+        notifyNodeChanged ();
+      }
+      nodeRecentlyAdded = false;
+    } else {
+      /* then, let's see if user is hovering a mouse *
+       * over any gizmo. That would be a hint.       */
+      if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
+        var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
+        if (node != _currentNode) {
+          _currentNode = node;
+          notifyNodeChanged ();
+        }
+      } else {
+        /* finally, let's see if we can find any  *
+         * new gizmos that were created recently. */
+        if (prevGizmos != null)
+          curList = curList.Except (prevGizmos);
+        if (curList.Count () == 1) {
+          var node = curList.First ();
+          if (node != _currentNode) {
+            _currentNode = node;
+            notifyNodeChanged ();
+          }
+        }
+      }
+    }
+    prevGizmos = tmp;
+  }
+
+  private void updateCurrentNode () {
+    bool idxboolcache1 = nextNodeAvailable;
+    bool idxboolcache2 = previousNodeAvailable;
+    var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
+    int tmp = solver.maneuverNodes.Count;
+    if (tmp > nodeCount)
+      nodeRecentlyAdded = true;
+    nodeCount = tmp;
+
+    /* setting the current node */
+    int idx = -1;
+    /* first, let's see if we already have a valid node */
+    if (_currentNode != null)
+      idx = solver.maneuverNodes.IndexOf (_currentNode);
+    if (idx != -1) {
+      if (currentNodeIdx != idx) {
+        currentNodeIdx = idx;
+        notifyIndexChanged ();
+      }
+    } else {
+      /* if no, let's see if our index is still good */
+      if (currentNodeIdx != -1 && currentNodeIdx < solver.maneuverNodes.Count) {
+        _currentNode = solver.maneuverNodes[currentNodeIdx];
+        notifyNodeChanged ();
+      } else {
+        /* if no, pick the last node */
+        if (nodeCount > 0) {
+          _currentNode = solver.maneuverNodes[nodeCount - 1];
+          currentNodeIdx = nodeCount - 1;
+          notifyIndexChanged ();
+          notifyNodeChanged ();
+        } else {
+          _currentNode = null;
+          currentNodeIdx = -1;
+        }
+      }
+    }
+    /* the state of the prev/next maneuver buttons should change */
+    if (idxboolcache1 != nextNodeAvailable || idxboolcache2 != previousNodeAvailable)
+      notifyIndexChanged ();
+  }
+
+  internal void updateNodes () {
+    var newtarget = NodeTools.getTargetOrbit();
+
+    if (newtarget != target) {
+      target = newtarget;
+      notifyTargetChanged ();
     }
 
-    if (currentSavedNode.changed) {
-      if (currentSavedNode.origSame (currentNode)) {
+    updateCurrentNode ();
+    bool origSame = currentSavedNode.origSame (currentNode);
+    bool changed = currentSavedNode.changed;
+    if (changed) {
+      if (origSame) {
         Vector3d newdv = currentSavedNode.dv;
         if (currentNode.attachedGizmo != null) {
           currentNode.attachedGizmo.DeltaV = newdv;
@@ -198,6 +341,81 @@ internal class NodeManager {
       }
       currentSavedNode.updateOrig (currentNode);
     }
+    if (changed || !origSame)
+      notifyDvUTChanged ();
   }
+
+  #endregion
+
+  #region EventListeners
+
+  private enum changeType {
+    dvut,
+    index,
+    target
+  }
+
+  private Dictionary<changeType,List<Action>> _listeners;
+
+  private Dictionary<changeType, List<Action>> listeners {
+    get {
+      if (_listeners == null) {
+        _listeners = new Dictionary<changeType, List<Action>> (3);
+        _listeners[changeType.dvut] = new List<Action> ();
+        _listeners[changeType.index] = new List<Action> ();
+        _listeners[changeType.target] = new List<Action> ();
+      }
+      return _listeners;
+    }
+  }
+
+  public void listenToIdxChange (Action listener) {
+    listeners[changeType.index].Add (listener);
+  }
+  public void listenToValuesChange (Action listener) {
+    listeners[changeType.dvut].Add (listener);
+  }
+  public void listenToTargetChange (Action listener) {
+    listeners[changeType.target].Add (listener);
+  }
+
+  public void removeListener (Action listener) {
+    foreach (var list in listeners.Values)
+      list.RemoveAll (a => (a == listener));
+  }
+
+  private void notifyNodeChanged () {
+    /* update savednode */
+    if (_currentSavedNode != null)
+      _currentSavedNode.updateOrig (currentNode);
+    else
+      _currentSavedNode = new SavedNode (currentNode);
+    /* update KAC alarm */
+    if (KACWrapper.APIReady)
+      currentAlarm = KACWrapper.KAC.Alarms.FirstOrDefault
+                                  (a => ((Math.Abs (a.AlarmTime + 600.0 - currentNode.UT) < 1E-05) &&
+                                         (a.VesselID == FlightGlobals.ActiveVessel.id.ToString ()) &&
+                                         (a.AlarmType == KACWrapper.KACAPI.AlarmTypeEnum.Maneuver)));
+
+    /* if the node changed, its values changed too */
+    notifyDvUTChanged ();
+  }
+
+  private void notifyDvUTChanged () {
+    foreach (var act in listeners[changeType.dvut])
+      act ();
+  }
+
+  private void notifyIndexChanged () {
+    foreach (var act in listeners[changeType.index])
+      act ();
+  }
+
+  private void notifyTargetChanged () {
+    foreach (var act in listeners[changeType.target])
+      act ();
+  }
+
+  #endregion
 }
 }

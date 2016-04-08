@@ -25,23 +25,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System.Collections.Generic;
-using UnityEngine;
+using System;
 
 namespace KSPPreciseManeuver.UI {
-public interface IMenuAppLauncher {
-  bool IsMainWindowVisible { get; set; }
+public interface ITimeAlarmControl {
+  void alarmToggle (bool state);
 
-  bool IsKeybindingsVisible { get; set; }
+  string TimeValue { get; }
+  bool AlarmAvailable { get; }
+  bool AlarmEnabled { get; }
 
-  bool IsOn { get; }
-
-  void ApplyTheme(GameObject gameObject);
-
-  void ClampToScreen(RectTransform rectTransform);
-
-  Vector3 GetAnchor();
-
-  IList<ISectionModule> GetSections();
+  void registerUpdateAction (Action updateTimeAlarm);
+  void deregisterUpdateAction (Action updateTimeAlarm);
 }
 }

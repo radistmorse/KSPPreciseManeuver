@@ -30,30 +30,40 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
+public class TimeAlarmControl : MonoBehaviour {
   [SerializeField]
-  private Toggle m_DisplayToggle = null;
-
+  private Text m_TimeValue = null;
   [SerializeField]
-  private Text m_DisplayText = null;
+  private Toggle m_ToggleAlarm = null;
 
-  private ISectionControl m_Section;
+  private ITimeAlarmControl m_timeAlarmControl = null;
 
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
+  public void SetTimeAlarmControl(ITimeAlarmControl timeAlarmControl) {
+    m_timeAlarmControl = timeAlarmControl;
+    updateTimeAlarm ();
+    m_timeAlarmControl.registerUpdateAction (updateTimeAlarm);
   }
 
   public void OnDestroy () {
-    m_Section = null;
+    m_timeAlarmControl.deregisterUpdateAction (updateTimeAlarm);
+    m_timeAlarmControl = null;
   }
 
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
+  public void ToggleAlarmAction (bool state) {
+    m_timeAlarmControl.alarmToggle (state);
+  }
+
+  public void updateTimeAlarm () {
+    m_TimeValue.text = m_timeAlarmControl.TimeValue;
+    if (m_timeAlarmControl.AlarmAvailable) {
+      m_ToggleAlarm.interactable = true;
+      m_ToggleAlarm.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      m_ToggleAlarm.isOn = m_timeAlarmControl.AlarmEnabled;
+    } else {
+      m_ToggleAlarm.interactable = false;
+      m_ToggleAlarm.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      m_ToggleAlarm.isOn = false;
+    }
   }
 }
 }

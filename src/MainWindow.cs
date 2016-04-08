@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-
 /******************************************************************************
  * Copyright (c) 2013-2014, Justin Bengtson
  * Copyright (c) 2014-2015, Maik Schreiber
- * Copyright (c) 2015, George Sedov
+ * Copyright (c) 2015-2016, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +27,17 @@ using UnityEngine;
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-namespace KSPPreciseManeuver {
-internal class MainWindow {
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
+namespace KSPPreciseManeuver {
+using UI;
+internal class MainWindow {
   /* some globals for convenience*/
-  private PreciseManeuverConfig config = PreciseManeuverConfig.getInstance();
-  private NodeManager nodeManager = NodeManager.getInstance();
+  private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
+  private NodeManager nodeManager = NodeManager.Instance;
   private PatchedConicSolver solver = null;
 
   /* current node we're working with*/
@@ -80,15 +80,23 @@ internal class MainWindow {
 
   /* helper class to cache the string representation of doubles */
   private class FastString {
-    internal string value = "N/A";
+    internal string value { get; private set; } = "N/A";
     private double previous = double.NaN;
     private double current = double.NaN;
     private const double epsilon = 1E-03;
-    internal bool update (double value, bool distance = true, string postfix = "") {
+    private string format = "{0}";
+    internal FastString () { }
+    internal FastString (string format) {
+      this.format = format;
+    }
+    internal bool update (double value, bool abs = false, bool abbriv = false) {
       previous = current;
-      current = distance ? value : Math.Abs (value);
+      current = abs ? value : Math.Abs (value);
       if (!double.IsNaN (current) && (double.IsNaN (previous) || Math.Abs (previous - current) > epsilon)) {
-        this.value = distance ? NodeTools.formatMeters (current) : current.ToString ("0.##") + postfix;
+        if (abbriv)
+          this.value = String.Format (format, NodeTools.formatMeters (current));
+        else
+          this.value = String.Format (format, current);
         return true;
       }
       if (double.IsNaN (current) && !double.IsNaN (previous)) {
@@ -98,9 +106,9 @@ internal class MainWindow {
       return false;
     }
   }
-  private FastString eAngle = new FastString ();
+  private FastString eAngle = new FastString ("{0:0.0° from prograde;0.0° from retrograde}");
   private string eAngleStr = "N/A";
-  private FastString eIncl = new FastString ();
+  private FastString eIncl = new FastString ("{0:0.0° north;0.0° south}");
   private string eInclStr = "N/A";
   private FastString nodeDVX = new FastString ();
   private FastString nodeDVY = new FastString ();
@@ -108,26 +116,27 @@ internal class MainWindow {
   private FastString nodeUT = new FastString ();
   private FastString orbitAp = new FastString ();
   private FastString orbitPe = new FastString ();
-  private FastString orbitInc = new FastString ();
-  private FastString totalDV = new FastString ();
+  private FastString orbitInc = new FastString ("{0}°");
+  private FastString totalDV = new FastString ("{0} m/s");
 
   /* caches for string representation for nodes list */
   private IDictionary<long, string> humanTimes = new Dictionary<long, string> ();
+
   private IDictionary<long, string> dVs = new Dictionary<long, string> ();
   private string getDV (double dv) {
-    if (dVs.ContainsKey ((long)(dv*1000)))
-      return dVs[(long)(dv*1000)];
+    if (dVs.ContainsKey ((long)(dv * 1000)))
+      return dVs[(long)(dv * 1000)];
     if (dVs.Count > 100)
-      dVs.Clear();
+      dVs.Clear ();
     string tmp = dv.ToString ("0.##") + " m/s";
-    humanTimes[(long)(dv*1000)] = tmp;
+    humanTimes[(long)(dv * 1000)] = tmp;
     return tmp;
   }
   private string getHumanTime (double UT) {
     if (humanTimes.ContainsKey ((long)UT))
       return humanTimes[(long)UT];
     if (humanTimes.Count > 100)
-      humanTimes.Clear();
+      humanTimes.Clear ();
     string tmp = NodeTools.convertUTtoHumanTime (UT);
     humanTimes[(long)UT] = tmp;
     return tmp;
@@ -153,7 +162,7 @@ internal class MainWindow {
         var tmp2 = curList.ToList ();
         /* first, if the node was just created, shoose it */
         if (nodeRecentlyAdded) {
-          currentNode = solver.maneuverNodes.Last();
+          currentNode = solver.maneuverNodes.Last ();
           nodeRecentlyAdded = false;
         } else {
           /* then, let's see if user is hovering a mouse *
@@ -225,9 +234,9 @@ internal class MainWindow {
 
     if (showOrbit) {
       if (currentNode.solver.flightPlan.Count > 1) {
-        orbitAp.update (currentNode.nextPatch.ApA, true, "m");
-        orbitPe.update (currentNode.nextPatch.PeA, true, "m");
-        orbitInc.update (currentNode.nextPatch.inclination, false, "°");
+        orbitAp.update (currentNode.nextPatch.ApA, true, true);
+        orbitPe.update (currentNode.nextPatch.PeA, true, true);
+        orbitInc.update (currentNode.nextPatch.inclination, false, false);
       } else {
         orbitAp.update (double.NaN);
         orbitPe.update (double.NaN);
@@ -239,11 +248,11 @@ internal class MainWindow {
     nodeDVX.update (currentNode.DeltaV.x);
     nodeDVY.update (currentNode.DeltaV.y);
     nodeDVZ.update (currentNode.DeltaV.z);
-    totalDV.update (currentNode.DeltaV.magnitude, false, " m/s");
+    totalDV.update (currentNode.DeltaV.magnitude);
   }
 
   private static void drawDoubleLabel (String text1, String text2) {
-    GUILayout.BeginHorizontal();
+    GUILayout.BeginHorizontal ();
     GUILayout.Label (text1, GUILayout.Width (leftLabelSize));
     GUILayout.Label (text2, GUILayout.ExpandWidth (true));
     GUILayout.EndHorizontal ();
@@ -271,7 +280,7 @@ internal class MainWindow {
     GUI.enabled = (currentNodeIdx == nodeCount - 1);
     Color oldContentColor = GUI.contentColor;
     GUI.contentColor = Color.red;
-    if (GUILayout.Button ("Del", GUILayout.Width (bigButtonSize/2)) ||
+    if (GUILayout.Button ("Del", GUILayout.Width (bigButtonSize / 2)) ||
         ((currentNodeIdx == nodeCount - 1) && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.MNVRDEL))) {
       currentNode.RemoveSelf ();
       nodeCount--;
@@ -323,7 +332,7 @@ internal class MainWindow {
     }
     GUILayout.EndHorizontal ();
     GUILayout.BeginHorizontal ();
-    config.x10UTincrement = GUILayout.Toggle (config.x10UTincrement,"x10","button", GUILayout.Width (buttonSize));
+    config.x10UTincrement = GUILayout.Toggle (config.x10UTincrement, "x10", "button", GUILayout.Width (buttonSize));
     GUI.enabled = currentNode != null && currentNode.patch.isClosed ();
     if (GUILayout.Button ("Ap", GUILayout.Width (buttonSize))) {
       ut = currentNode.patch.StartUT + currentNode.patch.timeToAp;
@@ -395,12 +404,12 @@ internal class MainWindow {
     if (nextEnc != null)
       theName = nextEnc.theName;
 
-    GUILayout.BeginHorizontal();
+    GUILayout.BeginHorizontal ();
     GUILayout.Label ("Next encounter:", GUILayout.Width (leftLabelSize));
     GUILayout.Label (theName, GUILayout.Width (labelSize));
     GUI.enabled = nextEnc != null;
     if (GUILayout.Button ("Focus", GUILayout.Width (bigButtonSize)) ||
-        (nextEnc != null && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.FOCTARG))) {
+        (nextEnc != null && config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.FOCNENC))) {
       MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.celestialBody != null) && (o.celestialBody == nextEnc));
       MapView.MapCamera.SetTarget (mapObject);
     }
@@ -431,9 +440,9 @@ internal class MainWindow {
     int orbButtonlSize = (5 * buttonSize + 3 * GUI.skin.button.margin.left) / 2;
 
     if (GUILayout.Button ("+ orbits", GUILayout.Width (orbButtonlSize)))
-      solver.IncreasePatchLimit();
+      solver.IncreasePatchLimit ();
     if (GUILayout.Button ("- orbits", GUILayout.Width (orbButtonlSize)))
-      solver.DecreasePatchLimit();
+      solver.DecreasePatchLimit ();
 
     GUILayout.EndHorizontal ();
     GUILayout.EndVertical ();
@@ -458,15 +467,16 @@ internal class MainWindow {
     GUILayout.EndHorizontal ();
   }
 
+
   internal void draw () {
     repeatButtonPressed = false;
 
-    GUI.skin = config.skin;
+    GUI.skin = null;
 
     if (progradeStyle == null) {
       progradeStyle = new GUIStyle[] { new GUIStyle (GUI.skin.label), new GUIStyle (GUI.skin.textField) };
-      normalStyle   = new GUIStyle[] { new GUIStyle (GUI.skin.label), new GUIStyle (GUI.skin.textField) };
-      radialStyle   = new GUIStyle[] { new GUIStyle (GUI.skin.label), new GUIStyle (GUI.skin.textField) };
+      normalStyle = new GUIStyle[] { new GUIStyle (GUI.skin.label), new GUIStyle (GUI.skin.textField) };
+      radialStyle = new GUIStyle[] { new GUIStyle (GUI.skin.label), new GUIStyle (GUI.skin.textField) };
       progradeStyle[0].normal.textColor = PROGRADE_COLOR;
       progradeStyle[1].normal.textColor = PROGRADE_COLOR;
       normalStyle[0].normal.textColor = NORMAL_COLOR;
@@ -476,9 +486,9 @@ internal class MainWindow {
     }
 
     /* Keymapping button */
-    config.showKeymapperWindow =
+    /*config.showKeymapperWindow =
       GUI.Toggle (new Rect (config.mainWindowPos.width - 24, 2, 22, 18),
-            config.showKeymapperWindow, "K", "button");
+            config.showKeymapperWindow, "K", "button");*/
 
     /* maneuver pager */
     this.drawManeuverPager ();
@@ -488,14 +498,14 @@ internal class MainWindow {
     GUILayout.BeginHorizontal ();
     GUILayout.Label ("Time:", GUILayout.Width (leftLabelSize));
     GUILayout.Label ((currentNode != null) ? NodeTools.convertUTtoHumanTime (currentNode.UT) : "N/A", GUILayout.Width (labelSize));
-    bool alarmCreated = (currentNode != null) && nodeManager.alarmCreated (currentNode);
-    GUI.enabled = (currentNode != null) && nodeManager.alarmPluginEnabled ();
+    bool alarmCreated = (currentNode != null) && nodeManager.alarmCreated ();
+    GUI.enabled = (currentNode != null);
     if (GUILayout.Toggle (alarmCreated, "Alarm", "button", GUILayout.Width (1.5f * buttonSize))) {
       if (!alarmCreated)
-        nodeManager.createAlarm (currentNode);
+        nodeManager.createAlarm ();
     } else {
       if (alarmCreated)
-        nodeManager.deleteAlarm (currentNode);
+        nodeManager.deleteAlarm ();
     }
     GUI.enabled = true;
     GUILayout.EndHorizontal ();
@@ -542,18 +552,15 @@ internal class MainWindow {
     GUILayout.Space (verticalSpace);
 
     /* maneuver & orbit info */
-    labelSize = 2*buttonSize + 2 * GUI.skin.button.margin.left;
+    labelSize = 2 * buttonSize + 2 * GUI.skin.button.margin.left;
     GUILayout.BeginHorizontal ();
     GUILayout.Label ("Total Δv:", GUILayout.Width (leftLabelSize));
     GUILayout.Label (totalDV.value, GUILayout.Width (labelSize));
     bool showEjectPrevious = showEject;
     bool showOrbitPrevious = showOrbit;
-    if (config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.SHOWEJC))
-      showEject = !showEject;
-    if (config.isHotkeyRegistered (PreciseManeuverConfig.HotkeyType.SHOWORB))
-      showOrbit = !showOrbit;
-    this.showOrbit = GUILayout.Toggle (this.showOrbit, "Orbit", "button", GUILayout.Width (1.5f*buttonSize));
-    this.showEject = GUILayout.Toggle (this.showEject, "Eject.", "button", GUILayout.Width (1.5f*buttonSize));
+
+    this.showOrbit = GUILayout.Toggle (this.showOrbit, "Orbit", "button", GUILayout.Width (1.5f * buttonSize));
+    this.showEject = GUILayout.Toggle (this.showEject, "Eject.", "button", GUILayout.Width (1.5f * buttonSize));
     GUILayout.EndHorizontal ();
 
     bool circ = false;
@@ -683,8 +690,8 @@ internal class MainWindow {
 
     GUILayout.EndHorizontal ();
 
-    if (currentNode != null && changed)
-      nodeManager.changeNode (currentNode, dx, dy, dz, ut);
+    //if (currentNode != null && changed)
+    //  nodeManager.changeNode (currentNode, dx, dy, dz, ut);
 
     /* list of maneuvers */
     if (showManeuvers) {
@@ -694,11 +701,11 @@ internal class MainWindow {
       }
     }
 
-    if ((showEjectPrevious != showEject) ||
+    /*if ((showEjectPrevious != showEject) ||
         (showOrbitPrevious != showOrbit) ||
         (showManueversPrev != showManeuvers) ||
         (showManeuvers && (nodeCount != nodeCountShow)))
-      config.readjustMainWindow ();
+      config.readjustMainWindow ();*/
     nodeCountShow = nodeCount;
 
     if (repeatButtonPressed) {
@@ -713,6 +720,468 @@ internal class MainWindow {
     }
 
     GUI.DragWindow ();
+  }
+
+
+
+
+
+
+
+
+
+
+
+  #region UT + Axis Control GUI
+
+  GameObject UTPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverUTControl");
+  GameObject axisPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverAxisControl");
+
+  private class UTControlInterface : IUTControl {
+
+    MainWindow _parent;
+    FastString _value = new FastString("{0:0.##}");
+
+    internal UTControlInterface (MainWindow parent) {
+      _parent = parent;
+    }
+
+    public bool APAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed ();
+      }
+    }
+
+    public bool PEAvailable {
+      get {
+        return true;
+      }
+    }
+
+    public bool ANAvailable {
+      get {
+        return NodeTools.getTargetOrbit () != null;
+      }
+    }
+
+    public bool DNAvailable {
+      get {
+        return NodeTools.getTargetOrbit () != null;
+      }
+    }
+
+    public string UTValue {
+      get {
+        _value.update (_parent.nodeManager.currentNode.UT);
+        return _value.value;
+      }
+    }
+
+    public bool X10State {
+      get {
+        return _parent.config.x10UTincrement;
+      }
+
+      set {
+        _parent.config.x10UTincrement = value;
+      }
+    }
+
+    public void APButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoAP ();
+    }
+
+    public void PEButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoPE ();
+    }
+
+    public void ANButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoAN ();
+    }
+
+    public void DNButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoDN ();
+    }
+
+    public void PlusButtonPressed () {
+      _parent.nodeManager.changeNodeDiff (0, 0, 0, _parent.config.incrementUt);
+    }
+
+    public void MinusButtonPressed () {
+      _parent.nodeManager.changeNodeDiff (0, 0, 0, -_parent.config.incrementUt);
+    }
+
+    public void registerUpdateAction (Action action) {
+      _parent.nodeManager.listenToValuesChange (action);
+      _parent.nodeManager.listenToTargetChange (action);
+      _parent.config.listenTox10Change (action);
+    }
+
+    public void deregisterUpdateAction (Action action) {
+      _parent.nodeManager.removeListener (action);
+      _parent.config.removeListener (action);
+    }
+  }
+
+
+  private class AxisControlInterface : IAxisControl {
+    internal enum Axis {
+      prograde,
+      normal,
+      radial
+    }
+    Axis _axis;
+    MainWindow _parent;
+    FastString _value = new FastString("{0:0.##}");
+
+    internal AxisControlInterface (MainWindow parent, Axis axis) {
+      _parent = parent;
+      _axis = axis;
+    }
+    public Color AxisColor {
+      get {
+        switch (_axis) {
+          case Axis.prograde:
+            return Color.green;
+          case Axis.normal:
+            return Color.magenta;
+          case Axis.radial:
+            return Color.cyan;
+        }
+        return Color.white;
+      }
+    }
+
+    public string AxisName {
+      get {
+        switch (_axis) {
+          case Axis.prograde:
+            return "Prograde";
+          case Axis.normal:
+            return "Normal";
+          case Axis.radial:
+            return "Radial";
+        }
+        return "To outer space, apparently";
+      }
+    }
+
+    public string AxisValue {
+      get {
+        var node = _parent.nodeManager.currentNode;
+        if (node != null) {
+          switch (_axis) {
+            case Axis.prograde:
+              _value.update (node.DeltaV.z);
+              break;
+            case Axis.normal:
+              _value.update (node.DeltaV.y);
+              break;
+            case Axis.radial:
+              _value.update (node.DeltaV.x);
+              break;
+          }
+        } else {
+          _value.update (Double.NaN);
+        }
+        return _value.value;
+      }
+    }
+
+    public void MinusButtonPressed () {
+      double dx = _axis == Axis.radial ? _parent.config.increment : 0;
+      double dy = _axis == Axis.normal ? _parent.config.increment : 0;
+      double dz = _axis == Axis.prograde ? _parent.config.increment : 0;
+      _parent.nodeManager.changeNodeDiff (-dx, -dy, -dz, 0.0);
+    }
+
+    public void PlusButtonPressed () {
+      double dx = _axis == Axis.radial ? _parent.config.increment : 0;
+      double dy = _axis == Axis.normal ? _parent.config.increment : 0;
+      double dz = _axis == Axis.prograde ? _parent.config.increment : 0;
+      _parent.nodeManager.changeNodeDiff (dx, dy, dz, 0.0);
+    }
+
+    public void ZeroButtonPressed () {
+      double dx = _axis == Axis.radial ? 0 : 1;
+      double dy = _axis == Axis.normal ? 0 : 1;
+      double dz = _axis == Axis.prograde ? 0 : 1;
+      _parent.nodeManager.changeNodeDVMult (dx, dy, dz);
+    }
+
+    public void registerUpdateAction (Action action) {
+      _parent.nodeManager.listenToValuesChange (action);
+    }
+    public void deregisterUpdateAction (Action action) {
+      _parent.nodeManager.removeListener (action);
+    }
+  }
+
+  private void createUtAxisControls (GameObject panel) {
+
+    if (UTPrefab == null || axisPrefab == null)
+      return;
+
+    var utObj = UnityEngine.Object.Instantiate (UTPrefab) as GameObject;
+    StyleManager.Process (utObj);
+    UTControl utcontrol = utObj.GetComponent<UTControl>();
+    utcontrol.SetUTControl (new UTControlInterface (this));
+    utObj.transform.SetParent (panel.transform, false);
+
+    var progradeObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
+    StyleManager.Process (progradeObj);
+    AxisControl progradeAxis = progradeObj.GetComponent<AxisControl>();
+    progradeAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.prograde));
+    progradeObj.transform.SetParent (panel.transform, false);
+
+    var normalObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
+    StyleManager.Process (normalObj);
+    AxisControl normalAxis = normalObj.GetComponent<AxisControl>();
+    normalAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.normal));
+    normalObj.transform.SetParent (panel.transform, false);
+
+    var radialObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
+    StyleManager.Process (radialObj);
+    AxisControl radialAxis = radialObj.GetComponent<AxisControl>();
+    radialAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.radial));
+    radialObj.transform.SetParent (panel.transform, false);
+  }
+
+  #endregion
+
+  #region Pager
+
+  GameObject PagerPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverPager");
+
+  private class PagerControlInterface : IPagerControl {
+
+    MainWindow _parent;
+
+    public bool prevManeuverExists {
+      get {
+        return _parent.nodeManager.previousNodeAvailable;
+      }
+    }
+
+    public bool nextManeuverExists {
+      get {
+        return _parent.nodeManager.nextNodeAvailable;
+      }
+    }
+
+    public int maneuverIdx {
+      get {
+        return _parent.nodeManager.currentNodeIdx;
+      }
+    }
+
+    internal PagerControlInterface (MainWindow parent) {
+      _parent = parent;
+    }
+
+    public void registerUpdateAction (Action action) {
+      _parent.nodeManager.listenToIdxChange (action);
+    }
+    public void deregisterUpdateAction (Action action) {
+      _parent.nodeManager.removeListener (action);
+    }
+
+    public void PrevButtonPressed () {
+      _parent.nodeManager.switchPreviousNode ();
+    }
+
+    public void FocusButtonPressed () {
+      MapView.MapCamera.SetTarget (_parent.nodeManager.currentNode.scaledSpaceTarget);
+    }
+
+    public void DelButtonPressed () {
+      _parent.nodeManager.deleteNode ();
+    }
+
+    public void NextButtonPressed () {
+      _parent.nodeManager.switchNextNode ();
+    }
+  }
+
+  private void createPagerControls (GameObject panel) {
+    if (PagerPrefab == null)
+      return;
+
+    var pagerObj = UnityEngine.Object.Instantiate (PagerPrefab) as GameObject;
+    StyleManager.Process (pagerObj);
+    PagerControl pagercontrol = pagerObj.GetComponent<PagerControl>();
+    pagercontrol.SetPagerControl (new PagerControlInterface (this));
+    pagerObj.transform.SetParent (panel.transform, false);
+  }
+
+  #endregion
+
+  #region Time & Alarm
+
+  GameObject TimeAlarmPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverTimeAlarm");
+
+  private class TimeAlarmControlInterface : ITimeAlarmControl {
+
+    MainWindow _parent;
+    double _localUT = -1;
+    string _localUTstr = "";
+
+    public string TimeValue {
+      get {
+        if (_localUT != _parent.nodeManager.currentNode.UT) {
+          _localUTstr = NodeTools.convertUTtoHumanTime (_parent.nodeManager.currentNode.UT);
+        }
+        return _localUTstr;
+      }
+    }
+
+    public bool AlarmAvailable {
+      get {
+        return KACWrapper.APIReady;
+      }
+    }
+
+    public bool AlarmEnabled {
+      get {
+        return _parent.nodeManager.alarmCreated ();
+      }
+    }
+
+    internal TimeAlarmControlInterface (MainWindow parent) {
+      _parent = parent;
+    }
+
+    public void registerUpdateAction (Action action) {
+      _parent.nodeManager.listenToValuesChange (action);
+    }
+    public void deregisterUpdateAction (Action action) {
+      _parent.nodeManager.removeListener (action);
+    }
+
+    public void alarmToggle (bool state) {
+      if (state)
+        _parent.nodeManager.createAlarm ();
+      else
+        _parent.nodeManager.deleteAlarm ();
+    }
+  }
+
+  private void createTimeAlarmControls (GameObject panel) {
+    if (TimeAlarmPrefab == null)
+      return;
+
+    var timeAlarmObj = UnityEngine.Object.Instantiate (TimeAlarmPrefab) as GameObject;
+    StyleManager.Process (timeAlarmObj);
+    TimeAlarmControl timealarmcontrol = timeAlarmObj.GetComponent<TimeAlarmControl>();
+    timealarmcontrol.SetTimeAlarmControl (new TimeAlarmControlInterface (this));
+    timeAlarmObj.transform.SetParent (panel.transform, false);
+  }
+
+  #endregion
+
+  #region Increment
+
+  GameObject IncrementPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverIncrement");
+
+  private class IncrementControlInterface : IIncrementControl {
+
+    MainWindow _parent;
+
+    public int getRawIncrement {
+      get {
+        return _parent.config.incrementRaw;
+      }
+    }
+
+    internal IncrementControlInterface (MainWindow parent) {
+      _parent = parent;
+    }
+
+    public void registerUpdateAction (Action action) {
+      _parent.config.listenToIncrementChange (action);
+    }
+    public void deregisterUpdateAction (Action action) {
+      _parent.config.removeListener(action);
+    }
+
+    public void incrementChanged (int num) {
+      _parent.config.incrementRaw = num;
+    }
+  }
+
+  private void createIncrementControls (GameObject panel) {
+    if (IncrementPrefab == null)
+      return;
+
+    var incrementObj = UnityEngine.Object.Instantiate (IncrementPrefab) as GameObject;
+    StyleManager.Process (incrementObj);
+    IncrementControl pagercontrol = incrementObj.GetComponent<IncrementControl>();
+    pagercontrol.SetIncrementControl (new IncrementControlInterface (this));
+    incrementObj.transform.SetParent (panel.transform, false);
+  }
+
+  #endregion
+
+  GameObject[] panels = null;
+
+  internal void updateMainWindow (DraggableWindow window) {
+    if (panels == null)
+      panels = new GameObject[10];
+    window.DivideContentPanel (panels.Length);
+    // PAGER
+    int num = 0;
+    if (config.getModuleState (PreciseManeuverConfig.ModuleType.PAGER)) {
+      if (panels[num] == null) {
+        panels[num] = window.createInnerContentPanel (num);
+        createPagerControls (panels[num]);
+      }
+    } else {
+      if (panels[num] != null) {
+        UnityEngine.Object.Destroy (panels[num]);
+        panels[num] = null;
+      }
+    }
+    // TIME & ALARM (always on)
+    num = 1;
+    if (panels[num] == null) {
+      panels[num] = window.createInnerContentPanel (num);
+      createTimeAlarmControls (panels[num]);
+    }
+    // INCREMENT (on if manual || tools)
+    num = 2;
+    if (config.getModuleState (PreciseManeuverConfig.ModuleType.INPUT) ||
+        config.getModuleState (PreciseManeuverConfig.ModuleType.TOOLS)) {
+      if (panels[num] == null) {
+        panels[num] = window.createInnerContentPanel (num);
+        createIncrementControls (panels[num]);
+      }
+    } else {
+      if (panels[num] != null) {
+        UnityEngine.Object.Destroy (panels[num]);
+        panels[num] = null;
+      }
+    }
+    // MANUAL INPUT
+    num = 3;
+    if (config.getModuleState (PreciseManeuverConfig.ModuleType.INPUT)) {
+      if (panels[num] == null) {
+        panels[num] = window.createInnerContentPanel (num);
+        createUtAxisControls (panels[num]);
+      }
+    } else {
+      if (panels[num] != null) {
+        UnityEngine.Object.Destroy (panels[num]);
+        panels[num] = null;
+      }
+    }
+  }
+
+  internal void clearMainWindow () {
+    if (panels != null)
+      foreach (var panel in panels)
+        if (panel != null)
+          UnityEngine.Object.Destroy (panel);
+    panels = null;
   }
 }
 }

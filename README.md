@@ -13,23 +13,27 @@ Or it can use the default Unity look:
 
 NOTES:
 --------------
-Works with KSP 1.0.5
+Works with KSP 1.0.5  
+Development version 1.1
 
 BUILD:
 --------------
 .NET v3.5 is required.  
 Both Visual Studio on windows and Monodevelop on linux are able to build the project. Just open the .csproj file.  
-Three files must be present in the project root directory:
+The libraries are expected to be found in /Libs folder:
 ```
 UnityEngine.dll
+UnityEngine.UI.dll
 Assembly-CSharp.dll
 Assembly-CSharp-firstpass.dll
+KSPUtil.dll
 ```
-All three files can be taken from the KSP_Data/Managed directory of your KSP installation.
+All five files can be taken from the KSP_Data/Managed directory of your KSP installation.
 
 INSTALLATION:
 --------------
-Put the PreciseManeuver.dll library into GameData/PreciseManeuver folder inside your KSP installation.
+Put the PreciseManeuver.dll and PreciseManeuver.UI.dll library into GameData/PreciseManeuver folder inside your KSP installation.  
+Also, you will need the AssetBundle file with unity prefabs, which can be generated in Unity Editor from prefabs in /Prefabs folder.
 
 USAGE:
 --------------
@@ -41,7 +45,3 @@ The following hotkeys are available:
 - Keypad2: switch different modes for orbit (+alt for reverse)
 - Keypad0: raise the increment step (+alt for reverse)
 - "P": hide/show the window (other hotkeys will stop working)
-
-The keybindings can be changed by pressing the "K" button in top right corner of the main window.
-
-To chnage the look of the window, go to the GameData/PreciseManeuver/PluginData/PreciseManeuver/config.xml inside your KSP installation, and change the "useKSPskin" field from 1 to 0.

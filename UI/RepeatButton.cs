@@ -25,10 +25,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-namespace KSPPreciseManeuver.UI {
-public interface ISectionModule {
-  bool IsVisible { get; set; }
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
-  string Name { get; }
+namespace KSPPreciseManeuver.UI {
+[RequireComponent (typeof (Button))]
+class RepeatButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
+
+  [SerializeField]
+  private UnityEvent OnRepeatedClick = null;
+
+  private bool pressed = false;
+  private int buttonPressedInterval = 0;
+
+  internal void FixedUpdate () {
+    if (pressed == true) {
+      if (buttonPressedInterval > 20 || buttonPressedInterval == 0) {
+        if (OnRepeatedClick != null)
+          OnRepeatedClick.Invoke ();
+      }
+      buttonPressedInterval++;
+    } else {
+      buttonPressedInterval = 0;
+    }
+  }
+
+  public void OnPointerDown (PointerEventData eventData) {
+    pressed = true;
+  }
+
+  public void OnPointerUp (PointerEventData eventData) {
+    pressed = false;
+  }
 }
 }

@@ -25,35 +25,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using UnityEngine;
-using UnityEngine.UI;
+using System;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
-  [SerializeField]
-  private Toggle m_DisplayToggle = null;
+public interface IAxisControl {
+  void PlusButtonPressed ();
+  void MinusButtonPressed ();
+  void ZeroButtonPressed ();
 
-  [SerializeField]
-  private Text m_DisplayText = null;
-
-  private ISectionControl m_Section;
-
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
-  }
-
-  public void OnDestroy () {
-    m_Section = null;
-  }
-
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
-  }
+  string AxisName { get; }
+  string AxisValue { get; }
+  UnityEngine.Color AxisColor { get; }
+  void registerUpdateAction (Action action);
+  void deregisterUpdateAction (Action action);
 }
 }

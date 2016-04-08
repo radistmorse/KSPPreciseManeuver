@@ -35,50 +35,74 @@ public class CanvasGroupFader : MonoBehaviour {
   private CanvasGroup m_CanvasGroup;
   private IEnumerator m_FadeCoroutine;
 
-  public bool IsFading {
-    get { return m_FadeCoroutine != null; }
+  private float m_FastFadeDuration = 0.2f;
+  private float m_SlowFadeDuration = 1.0f;
+  
+  private bool m_IsFadingIn;
+
+  public bool IsFadingIn {
+    get { return m_FadeCoroutine != null && m_IsFadingIn; }
   }
 
-  /// <summary>
-  ///     Fades the canvas group to a specified alpha using the supplied blocking state during fade with optional callback.
-  /// </summary>
-  public void FadeTo(float alpha, float duration, Action callback = null) {
+  public bool IsFadingOut {
+    get { return m_FadeCoroutine != null && !m_IsFadingIn; }
+  }
+
+  public void setTransparent() {
+    setAlpha (0.0f);
+  }
+
+  public void FadeIn () {
+    m_IsFadingIn = true;
+    FadeTo (1.0f, m_FastFadeDuration);
+  }
+
+  public void fadeClose() {
+    m_IsFadingIn = false;
+    FadeTo(0.0f, m_FastFadeDuration, Destroy);
+  }
+
+  public void fadeCloseSlow () {
+    m_IsFadingIn = false;
+    FadeTo (0.0f, m_SlowFadeDuration, Destroy);
+  }
+
+  private void FadeTo(float alpha, float duration, Action callback = null) {
     if (m_CanvasGroup == null)
       return;
 
     Fade(m_CanvasGroup.alpha, alpha, duration, callback);
   }
 
-  /// <summary>
-  ///     Sets the alpha value of the canvas group.
-  /// </summary>
-  public void SetAlpha(float alpha) {
+  private void setAlpha (float alpha) {
     if (m_CanvasGroup == null)
       return;
 
-    alpha = Mathf.Clamp01(alpha);
+    alpha = Mathf.Clamp01 (alpha);
     m_CanvasGroup.alpha = alpha;
   }
 
   protected virtual void Awake() {
-    // cache components
     m_CanvasGroup = GetComponent<CanvasGroup>();
   }
 
-  /// <summary>
-  ///     Starts a fade from one alpha value to another with callback.
-  /// </summary>
+  protected virtual void Start() {
+    setTransparent();
+    FadeIn();
+  }
+
   private void Fade(float from, float to, float duration, Action callback) {
     if (m_FadeCoroutine != null)
       StopCoroutine(m_FadeCoroutine);
 
-    m_FadeCoroutine = FadeCoroutine(from, to, duration, callback);
-    StartCoroutine(m_FadeCoroutine);
+    if (Math.Abs(from - to) < 0.1) {
+      setAlpha(to);
+    } else {
+      m_FadeCoroutine = FadeCoroutine(from, to, duration, callback);
+      StartCoroutine(m_FadeCoroutine);
+    }
   }
 
-  /// <summary>
-  ///     Coroutine that handles the fading.
-  /// </summary>
   private IEnumerator FadeCoroutine(float from, float to, float duration, Action callback) {
     // wait for end of frame so that only the last call to fade that frame is honoured.
     yield return new WaitForEndOfFrame();
@@ -87,13 +111,19 @@ public class CanvasGroupFader : MonoBehaviour {
 
     while (progress <= 1.0f) {
       progress += Time.deltaTime / duration;
-      SetAlpha(Mathf.Lerp(from, to, progress));
+      setAlpha(Mathf.Lerp(from, to, progress));
       yield return null;
     }
 
     callback?.Invoke();
 
     m_FadeCoroutine = null;
+  }
+
+  protected virtual void Destroy() {
+    // disable game object first due to an issue within unity 5.2.4f1 that shows a single frame at full opaque alpha just before destruction
+    gameObject.SetActive(false);
+    Destroy(gameObject);
   }
 }
 }

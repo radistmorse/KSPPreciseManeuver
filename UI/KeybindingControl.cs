@@ -30,30 +30,48 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
+public class KeybindingControl : MonoBehaviour {
   [SerializeField]
-  private Toggle m_DisplayToggle = null;
+  private Text m_KeybindingsText = null;
 
   [SerializeField]
-  private Text m_DisplayText = null;
+  private Text m_KeybindingsKeycode = null;
 
-  private ISectionControl m_Section;
+  [SerializeField]
+  private Toggle m_KeybindingsSetButton = null;
 
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
+  private IKeybindingsControl m_Control;
+
+  public void setControl (IKeybindingsControl control) {
+    m_Control = control;
+    if (m_KeybindingsText != null)
+      m_KeybindingsText.text = control.keyName;
+    if (m_KeybindingsKeycode != null)
+      m_KeybindingsKeycode.text = control.code.ToString ();
   }
 
-  public void OnDestroy () {
-    m_Section = null;
+  public void setButtonPressed (bool value) {
+    if (value == true) {
+      m_Control.setKey (updateKeyCode);
+    } else {
+      m_Control.abortSetKey ();
+    }
   }
 
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
+  public void unsetButtonPressed () {
+    m_Control.unsetKey ();
+    if (m_KeybindingsKeycode != null)
+      m_KeybindingsKeycode.text = KeyCode.None.ToString ();
+  }
+
+  private void updateKeyCode (KeyCode code) {
+    if (m_KeybindingsKeycode != null)
+      m_KeybindingsKeycode.text = code.ToString ();
+    if (m_KeybindingsSetButton != null) {
+      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+      m_KeybindingsSetButton.isOn = false;
+      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    }
   }
 }
 }

@@ -25,35 +25,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using System;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
-  [SerializeField]
-  private Toggle m_DisplayToggle = null;
+public interface IMenuControl {
+  bool IsMainWindowVisible { get; set; }
 
-  [SerializeField]
-  private Text m_DisplayText = null;
+  bool IsKeybindingsVisible { get; set; }
 
-  private ISectionControl m_Section;
+  bool IsOn { get; }
 
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
-  }
+  void registerUpdateAction (Action action);
+  void deregisterUpdateAction (Action action);
 
-  public void OnDestroy () {
-    m_Section = null;
-  }
+  void ClampToScreen(RectTransform rectTransform);
 
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
-  }
+  Vector3 GetAnchor();
+
+  IList<ISectionControl> GetSections();
 }
 }

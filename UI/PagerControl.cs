@@ -30,30 +30,60 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
+public class PagerControl : MonoBehaviour {
   [SerializeField]
-  private Toggle m_DisplayToggle = null;
-
+  private Button m_ButtonPrev = null;
   [SerializeField]
-  private Text m_DisplayText = null;
+  private Button m_ButtonNext = null;
+  [SerializeField]
+  private Text m_Number = null;
 
-  private ISectionControl m_Section;
+  private IPagerControl m_pagerControl = null;
 
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
+  public void SetPagerControl(IPagerControl pagerControl) {
+    m_pagerControl = pagerControl;
+    updatePagerValues ();
+    m_pagerControl.registerUpdateAction (updatePagerValues);
   }
 
   public void OnDestroy () {
-    m_Section = null;
+    m_pagerControl.deregisterUpdateAction (updatePagerValues);
+    m_pagerControl = null;
   }
 
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
+  public void PrevButtonAction () {
+    if (m_pagerControl != null)
+      m_pagerControl.PrevButtonPressed ();
+  }
+  public void FocusButtonAction () {
+    if (m_pagerControl != null)
+      m_pagerControl.FocusButtonPressed ();
+  }
+  public void DelButtonAction () {
+    if (m_pagerControl != null)
+      m_pagerControl.DelButtonPressed ();
+  }
+  public void NextButtonAction () {
+    if (m_pagerControl != null)
+      m_pagerControl.NextButtonPressed ();
+  }
+
+  public void updatePagerValues () {
+    if (m_pagerControl.prevManeuverExists) {
+      m_ButtonPrev.interactable = true;
+      m_ButtonPrev.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      m_ButtonPrev.interactable = false;
+      m_ButtonPrev.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
+    if (m_pagerControl.nextManeuverExists) {
+      m_ButtonNext.interactable = true;
+      m_ButtonNext.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      m_ButtonNext.interactable = false;
+      m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
+    m_Number.text = "Node " + (m_pagerControl.maneuverIdx + 1).ToString ();
   }
 }
 }

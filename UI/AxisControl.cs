@@ -26,12 +26,52 @@
  ******************************************************************************/
 
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-public class TextStyle {
-  public Color Colour { get; set; }
-  public Font Font { get; set; }
-  public int Size { get; set; }
-  public FontStyle Style { get; set; }
+[RequireComponent (typeof (RectTransform))]
+public class AxisControl : MonoBehaviour {
+  [SerializeField]
+  private InputField m_AxisValue = null;
+  [SerializeField]
+  private Text m_AxisName = null;
+
+  private IAxisControl m_axisControl = null;
+
+  public void SetAxisControl(IAxisControl axisControl) {
+    m_axisControl = axisControl;
+    if (m_AxisName != null) {
+      m_AxisName.color = m_axisControl.AxisColor;
+      m_AxisName.text = m_axisControl.AxisName;
+    }
+    if (m_AxisValue != null) {
+      m_AxisValue.textComponent.color = m_axisControl.AxisColor;
+      m_AxisValue.text = m_axisControl.AxisValue;
+    }
+    m_axisControl.registerUpdateAction (updateAxisValue);
+  }
+
+  public void OnDestroy () {
+    m_axisControl.deregisterUpdateAction (updateAxisValue);
+    m_axisControl = null;
+  }
+
+  public void PlusButtonAction () {
+    if (m_axisControl != null)
+      m_axisControl.PlusButtonPressed ();
+  }
+  public void MinusButtonAction () {
+    if (m_axisControl != null)
+      m_axisControl.MinusButtonPressed ();
+  }
+  public void ZeroButtonAction () {
+    if (m_axisControl != null)
+      m_axisControl.ZeroButtonPressed ();
+  }
+
+  public void updateAxisValue () {
+    if (m_AxisValue != null && m_axisControl != null)
+      m_AxisValue.text = m_axisControl.AxisValue;
+  }
 }
 }

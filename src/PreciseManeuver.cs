@@ -1,5 +1,3 @@
-using UnityEngine;
-
 /******************************************************************************
  * Copyright (c) 2013-2014, Justin Bengtson
  * Copyright (c) 2014-2015, Maik Schreiber
@@ -29,79 +27,168 @@ using UnityEngine;
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using UnityEngine;
+
 namespace KSPPreciseManeuver {
-[KSPAddon (KSPAddon.Startup.Flight, false)]
+using UI;
+[KSPAddon(KSPAddon.Startup.Flight, false)]
 internal class PreciseManeuver : MonoBehaviour {
 
-  private MainWindow mainWindow = new MainWindow ();
-  private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys ();
+  private MainWindow mainWindow = new MainWindow();
+  private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys();
 
-  private PreciseManeuverConfig config = PreciseManeuverConfig.getInstance ();
-  private NodeManager manager = NodeManager.getInstance ();
+  private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
+  private NodeManager manager = NodeManager.Instance;
 
-  private readonly int mainWindowId = 841358683;
-  private readonly int keymapperWindowId = 546312356;
+  private DraggableWindow     m_KeybindingsWindow = null;
+  private GameObject m_KeybindingsWindowObject = null;
 
-  /// <summary>
-  /// Overridden function from MonoBehavior
-  /// </summary>
-  internal void Start () {
-    config.loadConfig ();
-    manager.init ();
-  }
+  private DraggableWindow     m_MainWindow = null;
+  private GameObject m_MainWindowObject = null;
 
-  /// <summary>
-  /// Overridden function from MonoBehavior
-  /// </summary>
-  internal void OnDisable () {
+  private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
+
+  private int waitForGizmo = 0;
+
+  internal void OnDisable() {
+    closeKeybindingsWindow();
+    closeMainWindow ();
     config.saveConfig ();
   }
 
-  /// <summary>
-  /// Overridden function from MonoBehavior
-  /// </summary>
-  internal void Update () {
-    if (!patchedConicsUnlocked ())
+  internal void Update() {
+    if (!NodeTools.patchedConicsUnlocked)
       return;
+
+    if (config.showKeymapperWindow)
+      openKeybindingsWindow ();
+    if (!config.showKeymapperWindow)
+      closeKeybindingsWindow ();
+
+    if (config.showMainWindow && canShowNodeEditor)
+      openMainWindow ();
+    if (!config.showMainWindow || !canShowNodeEditor)
+      closeMainWindow ();
+
+    if (m_KeybindingsWindowObject != null)
+      hotkeys.processHotkeySet ();
 
     if (!FlightDriver.Pause && canShowNodeEditor) {
-      hotkeys.processGlobalHotkeys ();
-      if (config.showMainWindow) {
-        hotkeys.processKeyInput(mainWindow.currentNodeIdx);
+      hotkeys.processGlobalHotkeys();
+      if (m_MainWindowObject != null) {
+        hotkeys.processRegularHotkeys();
+        mainWindow.updateValues();
+
+        if (Input.GetMouseButtonUp (0))
+          waitForGizmo = 3;
+        if (waitForGizmo > 0) {
+          if (waitForGizmo == 1)
+            manager.searchNewGizmo ();
+          waitForGizmo--;
+        }
         manager.updateNodes ();
-        mainWindow.updateValues ();
       }
     }
   }
 
-  /// <summary>
-  /// Overridden function from MonoBehavior
-  /// </summary>
-  internal void OnGUI () {
-    if (!patchedConicsUnlocked ())
+  #region MainWindow
+
+  private void openMainWindow () {
+    // fade in if already open
+    if (m_MainWindow != null) {
+      if (m_MainWindow.IsFadingOut)
+        m_MainWindow.FadeIn ();
+      if (config.modulesChanged)
+        mainWindow.updateMainWindow (m_MainWindow);
+      return;
+    }
+
+    if (m_WindowPrefab == null || m_MainWindowObject != null)
       return;
 
-    if (config.showMainWindow && canShowNodeEditor) {
-      config.mainWindowPos = GUILayout.Window(mainWindowId, config.mainWindowPos, (id) => mainWindow.draw (),
-                                               "Precise Maneuver", GUILayout.ExpandHeight (true));
-      if (config.showKeymapperWindow) {
-        config.keymapperWindowPos = GUILayout.Window(keymapperWindowId, config.keymapperWindowPos, (id) => hotkeys.drawKeymapperWindow (),
-                                                      "Precise Maneuver Hotkeys", GUILayout.ExpandHeight (true));
-      }
+    // create object
+    Vector3 pos = new Vector3(config.mainWindowPos.x, config.mainWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
+    m_MainWindowObject = Instantiate (m_WindowPrefab, pos, Quaternion.identity) as GameObject;
+    if (m_MainWindowObject == null)
+      return;
+
+    StyleManager.Process (m_MainWindowObject);
+
+    // set object as a child of the main canvas
+    m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+
+    m_MainWindow = m_MainWindowObject.GetComponent<DraggableWindow> ();
+    if (m_MainWindow != null) {
+      m_MainWindow.SetTitle ("PRECISE MANEUVER");
+      m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
+      mainWindow.clearMainWindow ();
+      mainWindow.updateMainWindow (m_MainWindow);
     }
   }
 
-  private bool patchedConicsUnlocked () {
-    return GameVariables.Instance.GetOrbitDisplayMode
-             (ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
+  private void closeMainWindow () {
+    if (m_MainWindow != null) {
+      if (!m_MainWindow.IsFadingOut) {
+        config.mainWindowPos = m_MainWindow.RectTransform.position;
+        m_MainWindow.fadeClose ();
+      }
+    } else if (m_MainWindowObject != null) {
+      Destroy (m_MainWindowObject);
+      mainWindow.clearMainWindow ();
+    }
   }
 
-  /// <summary>
-  /// Returns whether the Node Editor can be shown based on a number of global factors.
-  /// </summary>
-  /// <value><c>true</c> if the Node Editor can be shown; otherwise, <c>false</c>.</value>
+  #endregion
+
+  #region KeybindingsWindow
+
+  private void openKeybindingsWindow() {
+    // fade in if already open
+    if (m_KeybindingsWindow != null) {
+      if (m_KeybindingsWindow.IsFadingOut)
+        m_KeybindingsWindow.FadeIn();
+      return;
+    }
+
+    if (m_WindowPrefab == null || m_KeybindingsWindowObject != null)
+      return;
+
+    // create object
+    Vector3 pos = new Vector3(config.keymapperWindowPos.x, config.keymapperWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
+    m_KeybindingsWindowObject = Instantiate(m_WindowPrefab, pos, Quaternion.identity) as GameObject;
+    if (m_KeybindingsWindowObject == null)
+      return;
+
+    StyleManager.Process(m_KeybindingsWindowObject);
+
+    // set object as a child of the main canvas
+    m_KeybindingsWindowObject.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
+
+    m_KeybindingsWindow = m_KeybindingsWindowObject.GetComponent<DraggableWindow>();
+    if (m_KeybindingsWindow != null) {
+      m_KeybindingsWindow.SetTitle("PRECISE MANEUVER KEYBINDINGS");
+      m_KeybindingsWindow.setMainCanvasTransform(MainCanvasUtil.MainCanvasRect);
+      hotkeys.fillKeymapperWindow(m_KeybindingsWindow);
+    }
+  }
+
+  private void closeKeybindingsWindow () {
+    if (m_KeybindingsWindow != null) {
+      if (!m_KeybindingsWindow.IsFadingOut) {
+        config.keymapperWindowPos = m_KeybindingsWindow.RectTransform.position;
+        m_KeybindingsWindow.fadeClose ();
+      }
+    } else if (m_KeybindingsWindowObject != null) {
+      Destroy (m_KeybindingsWindowObject);
+    }
+  }
+
+  #endregion
+
   private bool canShowNodeEditor {
     get {
+      if (!NodeTools.patchedConicsUnlocked)
+        return false;
       PatchedConicSolver solver = FlightGlobals.ActiveVessel.patchedConicSolver;
       return (FlightGlobals.ActiveVessel != null) && MapView.MapIsEnabled && (solver != null) && (solver.maneuverNodes.Count > 0);
     }

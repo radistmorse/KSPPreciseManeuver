@@ -1,6 +1,3 @@
-using System;
-using UnityEngine;
-
 /******************************************************************************
  * Copyright (c) 2013-2014, Justin Bengtson
  * Copyright (c) 2015, George Sedov
@@ -29,8 +26,10 @@ using UnityEngine;
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-namespace KSPPreciseManeuver {
+using System;
+using UnityEngine;
 
+namespace KSPPreciseManeuver {
 internal static class NodeTools {
   /// <summary>
   /// Sets the conics render mode
@@ -288,9 +287,6 @@ internal static class NodeTools {
     return string.Format ("{0:0.##}{1}", d, multiplier);
   }
 
-  /// <summary>
-  /// Function to figure out which KeyCode was pressed.
-  /// </summary>
   internal static KeyCode fetchKey () {
 
     foreach (KeyCode code in Enum.GetValues (typeof (KeyCode))) {
@@ -299,6 +295,13 @@ internal static class NodeTools {
     }
 
     return KeyCode.None;
+  }
+
+  public static bool patchedConicsUnlocked {
+    get {
+      return GameVariables.Instance.GetOrbitDisplayMode
+                (ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation)) == GameVariables.OrbitDisplayMode.PatchedConics;
+    }
   }
 }
 }

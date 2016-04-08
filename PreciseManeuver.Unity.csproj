@@ -2,9 +2,9 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5387BB1E-32B1-4BAC-B03F-100570B9554C}</ProjectGuid>
+    <ProjectGuid>{BD20CDC4-952C-413A-AB29-85BF346F964A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KSPPreciseManeuver.UI</RootNamespace>
@@ -31,21 +31,30 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IUTControl.cs" />
+    <Compile Include="Interfaces\IKeybindingsControl.cs" />
+    <Compile Include="Interfaces\IAxisControl.cs" />
+    <Compile Include="Interfaces\IPagerControl.cs" />
+    <Compile Include="Interfaces\IIncrementControl.cs" />
+    <Compile Include="Interfaces\ITimeAlarmControl.cs" />
+    <Compile Include="UI\TimeAlarmControl.cs" />
+    <Compile Include="UI\IncrementControl.cs" />
+    <Compile Include="UI\PagerControl.cs" />
+    <Compile Include="UI\UTControl.cs" />
+    <Compile Include="UI\AxisControl.cs" />
+    <Compile Include="UI\RepeatButton.cs" />
+    <Compile Include="UI\KeybindingControl.cs" />
     <Compile Include="Utils\CanvasGroupFader.cs" />
     <Compile Include="UI\ToolbarMenu.cs" />
     <Compile Include="UI\ToolbarMenuSection.cs" />
-    <Compile Include="Interfaces\IMenuAppLauncher.cs" />
-    <Compile Include="Interfaces\ISectionModule.cs" />
+    <Compile Include="Interfaces\IMenuControl.cs" />
+    <Compile Include="Interfaces\ISectionControl.cs" />
     <Compile Include="Properties\AssemblyInfo.Unity.cs" />
-    <Compile Include="Utils\TextStyle.cs" />
     <Compile Include="Utils\StyleApplicator.cs" />
     <Compile Include="UI\Window.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System">
-      <HintPath>..\..\game\KSP_Data\Managed\System.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>Libs\UnityEngine.dll</HintPath>
     </Reference>
@@ -59,7 +68,7 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

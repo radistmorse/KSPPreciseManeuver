@@ -32,7 +32,7 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent(typeof(RectTransform))]
-public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitHandler {
+public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler {
   [SerializeField]
   private Toggle m_ShowMainWindowToggle = null;
 
@@ -45,13 +45,7 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   [SerializeField]
   private Transform m_SectionsTransform = null;
 
-  [SerializeField]
-  private float m_FastFadeDuration = 0.2f;
-
-  [SerializeField]
-  private float m_SlowFadeDuration = 1.0f;
-
-  private IMenuAppLauncher m_FlightAppLauncher;
+  private IMenuControl m_MenuControl;
   private RectTransform m_RectTransform;
 
   public void OnPointerEnter(PointerEventData eventData) {
@@ -59,126 +53,79 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   }
 
   public void OnPointerExit(PointerEventData eventData) {
-    if (m_FlightAppLauncher != null && m_FlightAppLauncher.IsOn == false)
-      FadeTo(0.0f, m_SlowFadeDuration, Destroy);
+      if (m_MenuControl != null && m_MenuControl.IsOn == false)
+        fadeCloseSlow ();
   }
 
-  /// <summary>
-  ///     Fades out and destroys the menu.
-  /// </summary>
-  public void Close() {
-    FadeTo(0.0f, m_FastFadeDuration, Destroy);
+  public void OnPointerDown (PointerEventData data) {
+    m_RectTransform.SetAsLastSibling ();
   }
 
-  /// <summary>
-  ///     Fades in the menu.
-  /// </summary>
-  public void FadeIn() {
-    FadeTo(1.0f, m_FastFadeDuration);
-  }
-
-  /// <summary>
-  ///     Sets the display stack visibility.
-  /// </summary>
   public void SetMainWindowVisible(bool visible) {
-    if (m_FlightAppLauncher != null)
-      m_FlightAppLauncher.IsMainWindowVisible = visible;
+    if (m_MenuControl != null)
+      m_MenuControl.IsMainWindowVisible = visible;
   }
 
-  /// <summary>
-  ///     Sets the display stack visibility.
-  /// </summary>
   public void SetKeybindingsVisible(bool visible) {
-    if (m_FlightAppLauncher != null)
-      m_FlightAppLauncher.IsKeybindingsVisible = visible;
+    if (m_MenuControl != null)
+      m_MenuControl.IsKeybindingsVisible = visible;
   }
 
 
-  /// <summary>
-  ///     Sets a reference to the flight app launcher object.
-  /// </summary>
-  public void SetMenuAppLauncher(IMenuAppLauncher flightAppLauncher) {
-    if (flightAppLauncher == null)
-      return;
-    m_FlightAppLauncher = flightAppLauncher;
-
-    // create section controls
-    CreateSectionControls(m_FlightAppLauncher.GetSections());
+  public void SetMenuControl(IMenuControl menuControl) {
+    m_MenuControl = menuControl;
+    CreateMenuSections(m_MenuControl.GetSections());
+    updateControls ();
+    m_MenuControl.registerUpdateAction (updateControls);
   }
 
   protected override void Awake() {
     base.Awake();
-
-    // cache components
     m_RectTransform = GetComponent<RectTransform>();
   }
 
-  protected virtual void Start() {
-    // set starting alpha to zero and fade in
-    SetAlpha(0.0f);
-    FadeIn();
+
+  public void OnDestroy () {
+    m_MenuControl.deregisterUpdateAction (updateControls);
+    m_MenuControl = null;
   }
 
-  protected virtual void Update() {
-    if (m_FlightAppLauncher == null)
-      return;
+  public void updateControls() {
+    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_ShowMainWindowToggle.isOn = m_MenuControl.IsMainWindowVisible;
+    m_ShowKeybindingsToggle.isOn = m_MenuControl.IsKeybindingsVisible;
+    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+  }
 
-    // set toggle states to match the actual states
-    SetToggle(m_ShowMainWindowToggle, m_FlightAppLauncher.IsMainWindowVisible);
-    SetToggle(m_ShowKeybindingsToggle, m_FlightAppLauncher.IsKeybindingsVisible);
 
+  public void Update() {
     // update anchor position
     if (m_RectTransform != null) {
-      m_RectTransform.position = m_FlightAppLauncher.GetAnchor();
-      m_FlightAppLauncher.ClampToScreen(m_RectTransform);
+      m_RectTransform.position = m_MenuControl.GetAnchor();
+      m_MenuControl.ClampToScreen(m_RectTransform);
     }
   }
 
-  /// <summary>
-  ///     Sets a given toggle to the specified state with null checking.
-  /// </summary>
-  private static void SetToggle(Toggle toggle, bool state) {
-    if (toggle != null)
-      toggle.isOn = state;
-  }
-
-  /// <summary>
-  ///     Creates a menu section control.
-  /// </summary>
-  private void CreateSectionControl(ISectionModule section) {
+  private void CreateMenuSection(ISectionControl section) {
     GameObject menuSectionObject = Instantiate(m_MenuSectionPrefab);
     if (menuSectionObject != null) {
-      // apply ksp theme to the created menu section object
-      m_FlightAppLauncher.ApplyTheme(menuSectionObject);
-
       menuSectionObject.transform.SetParent(m_SectionsTransform, false);
-
       ToolbarMenuSection menuSection = menuSectionObject.GetComponent<ToolbarMenuSection>();
       if (menuSection != null)
-        menuSection.SetAssignedSection(section);
+        menuSection.SetSectionControl(section);
     }
   }
 
-  /// <summary>
-  ///     Creates a list of section controls from a given list of sections.
-  /// </summary>
-  private void CreateSectionControls(IList<ISectionModule> sections) {
+  private void CreateMenuSections(IList<ISectionControl> sections) {
     if (sections == null || m_MenuSectionPrefab == null || m_SectionsTransform == null)
       return;
     for (int i = 0; i < sections.Count; i++) {
-      ISectionModule section = sections[i];
+      ISectionControl section = sections[i];
       if (section != null)
-        CreateSectionControl(section);
+        CreateMenuSection(section);
     }
-  }
-
-  /// <summary>
-  ///     Destroys the game object.
-  /// </summary>
-  private void Destroy() {
-    // disable game object first due to an issue within unity 5.2.4f1 that shows a single frame at full opaque alpha just before destruction
-    gameObject.SetActive(false);
-    Destroy(gameObject);
   }
 }
 }
