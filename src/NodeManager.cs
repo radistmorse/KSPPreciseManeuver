@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2015, George Sedov
+ * Copyright (c) 2015-2016, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,12 @@ internal class NodeManager {
       dz *= mdvz;
       changed = true;
     }
-
+    internal void updateDvAbs (double dvx, double dvy, double dvz) {
+      dx = dvx;
+      dy = dvy;
+      dz = dvz;
+      changed = true;
+    }
     internal void updateUtAbs (double ut) {
       _ut = ut;
       changed = true;
@@ -217,6 +222,16 @@ internal class NodeManager {
     }
   }
 
+  internal void switchNode (int idx) {
+    if (idx < FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count &&
+        idx != currentNodeIdx) {
+      _currentNode = null;
+      currentNodeIdx = idx;
+      updateCurrentNode ();
+      notifyIndexChanged ();
+    }
+  }
+
   internal void deleteNode () {
     if (_currentNode != null) {
       _currentNode.RemoveSelf ();
@@ -225,14 +240,71 @@ internal class NodeManager {
     }
   }
 
+  internal void loadPreset (string name) {
+    var dv = PreciseManeuverConfig.Instance.getPreset (name);
+    currentSavedNode.updateDvAbs (dv.x, dv.y, dv.z);
+  }
+  
   internal void turnOrbitUp () {
-
+    turnOrbit (-PreciseManeuverConfig.Instance.incrementDeg);
   }
   internal void turnOrbitDown () {
-
+    turnOrbit (PreciseManeuverConfig.Instance.incrementDeg);
   }
-  internal void circularizeOrbit () {
 
+  private void turnOrbit (double theta) {
+    var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
+    var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+
+    if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+      var nprog = maneuverVel.normalized;
+      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+      var nrad = Vector3d.Cross (nnorm, nprog);
+
+      if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero ()) {
+        var dv = currentNode.DeltaV;
+        var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
+        NodeTools.turnVector (ref calcVel, maneuverPos, theta);
+        var newDV = calcVel - maneuverVel;
+
+        currentSavedNode.updateDvAbs (Vector3d.Dot (newDV, nrad),
+                                      Vector3d.Dot (newDV, nnorm),
+                                      Vector3d.Dot (newDV, nprog));
+        return;
+      }
+    }
+    // position and velocity are perfectly parallel (less probable)
+    // or
+    // KSP API returned NaN or some other weird shit (much more probable)
+    ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
+  }
+
+  internal void circularizeOrbit () {
+    var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
+    var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+
+    if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+      var nprog = maneuverVel.normalized;
+      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+      var nrad = Vector3d.Cross (nnorm, nprog);
+      var curVel = currentNode.nextPatch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
+      if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero () && curVel.NotNAN ()) {
+        double rezSpeed = Math.Sqrt (currentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
+
+        var normVel = Vector3d.Cross (maneuverPos, curVel);
+        var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
+        var newDV = newVel - maneuverVel;
+
+        currentSavedNode.updateDvAbs (Vector3d.Dot (newDV, nrad),
+                                      Vector3d.Dot (newDV, nnorm),
+                                      Vector3d.Dot (newDV, nprog));
+        return;
+      }
+    }
+    // position and velocity are perfectly parallel (less probable)
+    // or
+    // KSP API returned NaN or some other weird shit (much more probable)
+    ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
   }
 
   #endregion
@@ -345,6 +417,11 @@ internal class NodeManager {
       notifyDvUTChanged ();
   }
 
+  internal void clear () {
+    _currentNode = null;
+    currentNodeIdx = -1;
+  }
+
   #endregion
 
   #region EventListeners
@@ -416,6 +493,7 @@ internal class NodeManager {
       act ();
   }
 
-  #endregion
+    #endregion
+
 }
 }

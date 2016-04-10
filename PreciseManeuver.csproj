@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3EBB00A5-1BBE-46C1-AE28-01B5F6C603F6}</ProjectGuid>
+    <ProjectGuid>{BD20CDC4-952C-413A-AB29-85BF346F964A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KSPPreciseManeuver</RootNamespace>
@@ -77,7 +77,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="PreciseManeuver.Unity.csproj">
-      <Project>{5387bb1e-32b1-4bac-b03f-100570b9554c}</Project>
+      <Project>{3ebb00a5-1bbe-46c1-ae28-01b5f6c603f6}</Project>
       <Name>PreciseManeuver.Unity</Name>
     </ProjectReference>
   </ItemGroup>

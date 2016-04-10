@@ -25,25 +25,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+[RequireComponent (typeof (RectTransform))]
+  public class DropDownManeuverPager : Dropdown {
+    private PagerControl m_control = null;
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
+    override protected void Awake() {
+      base.Awake ();
+      m_control = GetComponentInParent<PagerControl> ();
+    }
 
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+    private int num = 0;
+    override protected GameObject CreateDropdownList (GameObject template) {
+      num = 0;
+      return base.CreateDropdownList (template);
+    }
+
+    override protected DropdownItem CreateItem (DropdownItem itemTemplate) {
+      Text nodetime = null;
+      Text nodedv = null;
+      foreach (var item in itemTemplate.GetComponentsInChildren<Text> ()) {
+        if (item.name == "NodeTime")
+          nodetime = item;
+        if (item.name == "NodeDV")
+          nodedv = item;
+      }
+
+      if (m_control != null && nodetime != null && nodedv != null) {
+        nodetime.text = m_control.GetTimeForNode (num);
+        nodedv.text = m_control.GetDVForNode (num);
+      }
+      num++;
+      return Instantiate (itemTemplate);
+    }
   }
 }

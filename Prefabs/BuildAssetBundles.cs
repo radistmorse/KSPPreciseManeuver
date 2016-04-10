@@ -1,4 +1,4 @@
-﻿// 
+// 
 //     Kerbal Engineer Redux
 // 
 //     Copyright (C) 2016 CYBUTEK

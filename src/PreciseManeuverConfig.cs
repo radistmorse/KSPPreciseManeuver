@@ -34,6 +34,7 @@ using System.Collections.Generic;
 
 namespace KSPPreciseManeuver {
 internal class PreciseManeuverConfig {
+
   #region Singleton
 
   private PreciseManeuverConfig () {
@@ -55,11 +56,21 @@ internal class PreciseManeuverConfig {
     get {
       if (_prefabs == null) {
         var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        path = path.Replace (System.IO.Path.GetFileName (path), "prefabs");
+        path = path.Replace (System.IO.Path.GetFileName (path), "precisemaneuverprefabs");
         var www = new WWW("file://"+path);
         _prefabs = www.assetBundle;
       }
       return _prefabs;
+    }
+  }
+
+  internal int conicsMode {
+    get {
+      return NodeTools.getConicsMode ();
+    }
+    set {
+      NodeTools.setConicsMode (value);
+      notifyConicsModeChanged ();
     }
   }
 
@@ -144,43 +155,71 @@ internal class PreciseManeuverConfig {
 
   #endregion
 
+  #region Presets
+
+  Dictionary<string, Vector3d> presets = new Dictionary<string, Vector3d> ();
+
+  internal void addPreset (string name) {
+    presets.Add (name, NodeManager.Instance.currentNode.DeltaV);
+  }
+
+  internal void removePreset (string name) {
+    presets.Remove (name);
+  }
+
+  internal Vector3d getPreset (string name) {
+    if (presets.ContainsKey(name))
+      return presets[name];
+    return Vector3d.zero;
+  }
+
+  internal List<string> getPresetNames () {
+    var list = presets.Keys.ToList();
+    list.Sort ();
+    return list;
+  }
+
+  #endregion
+
   #region MainWindow Modules
 
   internal enum ModuleType {
     PAGER,
     //timealarm
     //increment
+    SAVER,
     INPUT,
     TOOLS,
     GIZMO,
-    //totdv
+    ENCOT,
     EJECT,
     ORBIT,
-    ENCOT,
     PATCH
   };
 
   private static readonly string[] moduleNames = {
-  "Maneuver Pager",
-  "Precise Input",
-  "Orbit Tools",
-  "Maneuver Gizmo",
-  "Ejection angles",
-  "Orbit Info",
-  "Next Encounter",
-  "Patches Control",
-};
+    "Maneuver Pager",
+    "Maneuver Presets",
+    "Precise Input",
+    "Orbit Tools",
+    "Maneuver Gizmo",
+    "Next Encounter",
+    "Ejection angles",
+    "Orbit Info",
+    "Patches Control",
+  };
 
   private bool[] moduleState = {
-  true,
-  true,
-  true,
-  false,
-  false,
-  false,
-  false,
-  true
-};
+    true,
+    false,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true
+  };
 
   private bool _modulesChanged = false;
 
@@ -242,32 +281,32 @@ internal class PreciseManeuverConfig {
   };
 
   private KeyCode[] hotkeys = {
-  KeyCode.Keypad8,    //PROGINC
-  KeyCode.Keypad5,    //PROGDEC
-  KeyCode.None,       //PROGZER
-  KeyCode.Keypad9,    //NORMINC
-  KeyCode.Keypad7,    //NORMDEC
-  KeyCode.None,       //NORMZER
-  KeyCode.Keypad6,    //RADIINC
-  KeyCode.Keypad4,    //RADIDEC
-  KeyCode.None,       //RADIZER
-  KeyCode.Keypad3,    //TIMEINC
-  KeyCode.Keypad1,    //TIMEDEC
-  KeyCode.None,       //CIRCORB
-  KeyCode.None,       //TURNOUP
-  KeyCode.None,       //TURNODN
-  KeyCode.Keypad0,    //PAGEINC
-  KeyCode.Keypad2,    //PAGECON
-  KeyCode.P,          //HIDEWIN
-  KeyCode.None,       //FOCNENC
-  KeyCode.None,       //FOCVESL
-  KeyCode.None,       //PLUSORB
-  KeyCode.None,       //MINUORB
-  KeyCode.None,       //PAGEX10
-  KeyCode.None,       //NEXTMAN
-  KeyCode.None,       //PREVMAN
-  KeyCode.None        //MNVRDEL
-};
+    KeyCode.Keypad8,    //PROGINC
+    KeyCode.Keypad5,    //PROGDEC
+    KeyCode.None,       //PROGZER
+    KeyCode.Keypad9,    //NORMINC
+    KeyCode.Keypad7,    //NORMDEC
+    KeyCode.None,       //NORMZER
+    KeyCode.Keypad6,    //RADIINC
+    KeyCode.Keypad4,    //RADIDEC
+    KeyCode.None,       //RADIZER
+    KeyCode.Keypad3,    //TIMEINC
+    KeyCode.Keypad1,    //TIMEDEC
+    KeyCode.None,       //CIRCORB
+    KeyCode.None,       //TURNOUP
+    KeyCode.None,       //TURNODN
+    KeyCode.Keypad0,    //PAGEINC
+    KeyCode.Keypad2,    //PAGECON
+    KeyCode.P,          //HIDEWIN
+    KeyCode.None,       //FOCNENC
+    KeyCode.None,       //FOCVESL
+    KeyCode.None,       //PLUSORB
+    KeyCode.None,       //MINUORB
+    KeyCode.None,       //PAGEX10
+    KeyCode.None,       //NEXTMAN
+    KeyCode.None,       //PREVMAN
+    KeyCode.None        //MNVRDEL
+  };
   private bool[] hotkeyPresses = Enumerable.Repeat(false, Enum.GetValues(typeof(HotkeyType)).Length).ToArray ();
 
   internal void setHotkey (HotkeyType type, KeyCode code) {
@@ -297,7 +336,8 @@ internal class PreciseManeuverConfig {
   private enum changeType {
     x10,
     increment,
-    visibility
+    visibility,
+    conicsmode
   }
 
   private Dictionary<changeType, List<Action>> _listeners;
@@ -309,6 +349,7 @@ internal class PreciseManeuverConfig {
         _listeners[changeType.x10] = new List<Action> ();
         _listeners[changeType.increment] = new List<Action> ();
         _listeners[changeType.visibility] = new List<Action> ();
+        _listeners[changeType.conicsmode] = new List<Action> ();
       }
       return _listeners;
     }
@@ -324,6 +365,10 @@ internal class PreciseManeuverConfig {
 
   public void listenToShowChange (Action listener) {
     listeners[changeType.visibility].Add (listener);
+  }
+
+  public void listenToConicsModeChange (Action listener) {
+    listeners[changeType.conicsmode].Add (listener);
   }
 
   public void removeListener (Action listener) {
@@ -343,6 +388,11 @@ internal class PreciseManeuverConfig {
 
   private void notifyShowChanged () {
     foreach (var act in listeners[changeType.visibility])
+      act ();
+  }
+
+  private void notifyConicsModeChanged () {
+    foreach (var act in listeners[changeType.conicsmode])
       act ();
   }
 
@@ -368,6 +418,17 @@ internal class PreciseManeuverConfig {
     config["keyWindowX"] = (int)_keymapperWindowPos.x;
     config["keyWindowY"] = (int)_keymapperWindowPos.y;
 
+    // presets
+    config["presetsCount"] = (int)presets.Count;
+    int i = 0;
+    foreach (KeyValuePair<string, Vector3d> item in presets) {
+      config["preset" + i.ToString () + "name"] = item.Key;
+      config["preset" + i.ToString () + "dx"] = item.Value.x.ToString ("G17");
+      config["preset" + i.ToString () + "dy"] = item.Value.y.ToString ("G17");
+      config["preset" + i.ToString () + "dz"] = item.Value.z.ToString ("G17");
+      i++;
+    }
+
     config.save ();
   }
 
@@ -390,11 +451,28 @@ internal class PreciseManeuverConfig {
       _mainWindowPos.y = config.GetValue<int> ("mainWindowY", (int)_mainWindowPos.y);
       _keymapperWindowPos.x = config.GetValue<int> ("keyWindowX", (int)_keymapperWindowPos.x);
       _keymapperWindowPos.y = config.GetValue<int> ("keyWindowY", (int)_keymapperWindowPos.y);
+
+      // presets
+      var count = config.GetValue<int> ("presetsCount", 0);
+      for (int i = 0; i < count; i++) {
+        var name = config.GetValue<string> ("preset"+i.ToString()+"name", "");
+        double dx;
+        double dy;
+        double dz;
+
+        if (name != "" &&
+              Double.TryParse (config.GetValue<string> ("preset" + i.ToString () + "dx", ""), out dx) &&
+              Double.TryParse (config.GetValue<string> ("preset" + i.ToString () + "dy", ""), out dy) &&
+              Double.TryParse (config.GetValue<string> ("preset" + i.ToString () + "dz", ""), out dz)) {
+          presets.Add (name, new Vector3d (dx, dy, dz));
+        }
+      }
     } catch (Exception) {
       // do nothing here, the defaults are already set
     }
   }
 
   #endregion
+
 }
 }

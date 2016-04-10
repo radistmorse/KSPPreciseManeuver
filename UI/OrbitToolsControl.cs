@@ -25,25 +25,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+[RequireComponent (typeof (RectTransform))]
+public class OrbitToolsControl : MonoBehaviour {
+  private IOrbitToolsControl m_control = null;
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
-
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+  public void SetControl(IOrbitToolsControl control) {
+    m_control = control;
+    m_control.registerUpdateAction (updateControls);
   }
+
+  public void OnDestroy () {
+    m_control.deregisterUpdateAction (updateControls);
+    m_control = null;
+  }
+
+  public void OrbitUpButtonAction () {
+    if (m_control != null)
+      m_control.OrbitUpButtonPressed ();
+  }
+  public void OrbitDnButtonAction () {
+    if (m_control != null)
+      m_control.OrbitDnButtonPressed ();
+  }
+  public void CircularizeButtonAction () {
+    if (m_control != null)
+      m_control.CircularizeButtonPressed ();
+  }
+
+  public void updateControls () {
+  }
+}
 }

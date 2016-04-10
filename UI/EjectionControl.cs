@@ -25,25 +25,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+[RequireComponent (typeof (RectTransform))]
+public class EjectionControl : MonoBehaviour {
+  [SerializeField]
+  private Text m_AngleValue = null;
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
+  [SerializeField]
+  private Text m_InclinationValue = null;
 
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+  private IEjectionControl m_control = null;
+
+  public void SetControl(IEjectionControl control) {
+    m_control = control;
+    updateControl ();
+    m_control.registerUpdateAction (updateControl);
   }
+
+  public void OnDestroy () {
+    m_control.deregisterUpdateAction (updateControl);
+    m_control = null;
+  }
+    
+  public void updateControl () {
+    m_AngleValue.text = m_control.AngleValue;
+    m_InclinationValue.text = m_control.InclinationValue;
+  }
+}
 }

@@ -52,14 +52,24 @@ public class CanvasGroupFader : MonoBehaviour {
     setAlpha (0.0f);
   }
 
-  public void FadeIn () {
+  public void fadeIn () {
     m_IsFadingIn = true;
+    gameObject.SetActive (true);
     FadeTo (1.0f, m_FastFadeDuration);
   }
 
   public void fadeClose() {
     m_IsFadingIn = false;
     FadeTo(0.0f, m_FastFadeDuration, Destroy);
+  }
+
+  public void fadeOut() {
+    m_IsFadingIn = false;
+    FadeTo(0.0f, m_FastFadeDuration, setInactive);
+  }
+  
+  private void setInactive () {
+    gameObject.SetActive (false);
   }
 
   public void fadeCloseSlow () {
@@ -84,11 +94,6 @@ public class CanvasGroupFader : MonoBehaviour {
 
   protected virtual void Awake() {
     m_CanvasGroup = GetComponent<CanvasGroup>();
-  }
-
-  protected virtual void Start() {
-    setTransparent();
-    FadeIn();
   }
 
   private void Fade(float from, float to, float duration, Action callback) {

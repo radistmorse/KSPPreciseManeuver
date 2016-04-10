@@ -25,25 +25,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+[RequireComponent (typeof (RectTransform))]
+public class EncounterControl : MonoBehaviour {
+  [SerializeField]
+  private Text m_Encounter = null;
+  [SerializeField]
+  private Button m_Focus = null;
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
+  private IEncounterControl m_Control = null;
 
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+  public void SetControl(IEncounterControl control) {
+    m_Control = control;
+    updateControl ();
+    m_Control.registerUpdateAction (updateControl);
   }
+
+  public void OnDestroy () {
+    m_Control.deregisterUpdateAction (updateControl);
+    m_Control = null;
+  }
+
+  public void FocusButtonAction () {
+    m_Control.focus ();
+  }
+
+  public void updateControl () {
+    m_Encounter.text = m_Control.Encounter;
+    if (m_Encounter.text != "N/A") {
+      m_Focus.interactable = true;
+      m_Focus.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      m_Focus.interactable = false;
+      m_Focus.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
+  }
+}
 }

@@ -31,46 +31,45 @@ using UnityEngine.UI;
 namespace KSPPreciseManeuver {
 using UI;
 internal static class StyleManager {
+  static  UISkinDef skin = UISkinManager.defaultSkin;
+
   internal static void Process(GameObject gameObject) {
     if (gameObject == null)
       return;
 
-    StyleApplicator[] applicators = gameObject.GetComponentsInChildren<StyleApplicator>();
-
-    if (applicators != null)
-      for (int i = 0; i < applicators.Length; i++)
-        Process(applicators[i]);
+    foreach (var applicator in gameObject.GetComponentsInChildren<StyleApplicator> (true))
+        Process (applicator);
   }
 
   private static void Process(StyleApplicator applicator) {
-    if (applicator == null)
-      return;
-
-    UISkinDef skin = UISkinManager.defaultSkin;
-    if (skin == null)
-      return;
-
     switch (applicator.ElementType) {
       case StyleApplicator.ElementTypes.Window:
         applicator.SetImage(skin.window.normal.background, Image.Type.Sliced);
       break;
       case StyleApplicator.ElementTypes.Input:
         applicator.SetSelectable (skin.textField.normal.background,
-                                  skin.textField.normal.background,
-                                  skin.textField.normal.background,
+                                  skin.textField.highlight.background,
+                                  skin.textField.active.background,
                                   skin.textField.normal.background);
       break;
       case StyleApplicator.ElementTypes.Button:
-        applicator.SetSelectable(skin.button.normal.background,
-                                 skin.button.highlight.background,
-                                 skin.button.active.background,
-                                 skin.button.disabled.background);
+        applicator.SetSelectable (skin.button.normal.background,
+                                  skin.button.highlight.background,
+                                  skin.button.active.background,
+                                  skin.button.disabled.background);
       break;
       case StyleApplicator.ElementTypes.ButtonToggle:
-        applicator.SetToggle(skin.button.normal.background,
-                             skin.button.highlight.background,
-                             skin.button.active.background,
-                             skin.button.disabled.background);
+        applicator.SetToggle (skin.button.normal.background,
+                              skin.button.highlight.background,
+                              skin.button.active.background,
+                              skin.button.disabled.background);
+      break;
+      case StyleApplicator.ElementTypes.Scrollbar:
+        applicator.SetScrollbar (skin.verticalScrollbarThumb.normal.background,
+                                 skin.verticalScrollbarThumb.highlight.background,
+                                 skin.verticalScrollbarThumb.active.background,
+                                 skin.verticalScrollbarThumb.disabled.background,
+                                 skin.verticalScrollbar.normal.background);
       break;
     }
   }

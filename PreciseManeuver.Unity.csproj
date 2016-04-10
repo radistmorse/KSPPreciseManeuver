@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BD20CDC4-952C-413A-AB29-85BF346F964A}</ProjectGuid>
+    <ProjectGuid>{3EBB00A5-1BBE-46C1-AE28-01B5F6C603F6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KSPPreciseManeuver.UI</RootNamespace>
@@ -37,6 +37,18 @@
     <Compile Include="Interfaces\IPagerControl.cs" />
     <Compile Include="Interfaces\IIncrementControl.cs" />
     <Compile Include="Interfaces\ITimeAlarmControl.cs" />
+    <Compile Include="Interfaces\IOrbitToolsControl.cs" />
+    <Compile Include="Interfaces\IEjectionControl.cs" />
+    <Compile Include="Interfaces\IOrbitInfoControl.cs" />
+    <Compile Include="Interfaces\IEncounterControl.cs" />
+    <Compile Include="Interfaces\IConicsControl.cs" />
+    <Compile Include="UI\ConicsControl.cs" />
+    <Compile Include="UI\ISaverControl.cs" />
+    <Compile Include="UI\OrbitInfoControl.cs" />
+    <Compile Include="UI\OrbitToolsControl.cs" />
+    <Compile Include="UI\EjectionControl.cs" />
+    <Compile Include="UI\EncounterControl.cs" />
+    <Compile Include="UI\SaverControl.cs" />
     <Compile Include="UI\TimeAlarmControl.cs" />
     <Compile Include="UI\IncrementControl.cs" />
     <Compile Include="UI\PagerControl.cs" />
@@ -44,6 +56,9 @@
     <Compile Include="UI\AxisControl.cs" />
     <Compile Include="UI\RepeatButton.cs" />
     <Compile Include="UI\KeybindingControl.cs" />
+    <Compile Include="Utils\InputCaretFixer.cs" />
+    <Compile Include="Utils\DropDownManeuverPager.cs" />
+    <Compile Include="Utils\CanvasFixer.cs" />
     <Compile Include="Utils\CanvasGroupFader.cs" />
     <Compile Include="UI\ToolbarMenu.cs" />
     <Compile Include="UI\ToolbarMenuSection.cs" />

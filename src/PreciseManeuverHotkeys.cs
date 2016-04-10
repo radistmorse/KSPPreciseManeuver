@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2015, George Sedov
+ * Copyright (c) 2015-2016, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ internal class PreciseManeuverHotkeys {
   private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
   private NodeManager nodeManager = NodeManager.Instance;
 
-  #region GUI Interface
+  #region GUI Controls
 
   private class KeybindingControlInterface : UI.IKeybindingsControl {
     private PreciseManeuverConfig.HotkeyType _type;
@@ -134,8 +134,8 @@ internal class PreciseManeuverHotkeys {
     newKeyControl (window, "Change orbit mode (w/Alt)", PreciseManeuverConfig.HotkeyType.PAGECON);
     newKeyControl (window, "Focus on next encounter", PreciseManeuverConfig.HotkeyType.FOCNENC);
     newKeyControl (window, "Focus on vessel", PreciseManeuverConfig.HotkeyType.FOCVESL);
-    newKeyControl (window, "Show more orbits", PreciseManeuverConfig.HotkeyType.PLUSORB);
-    newKeyControl (window, "Show less orbits", PreciseManeuverConfig.HotkeyType.MINUORB);
+    newKeyControl (window, "Show more trajectories", PreciseManeuverConfig.HotkeyType.PLUSORB);
+    newKeyControl (window, "Show less trajectories", PreciseManeuverConfig.HotkeyType.MINUORB);
     newKeyControl (window, "Toggle x10 time", PreciseManeuverConfig.HotkeyType.PAGEX10);
     newKeyControl (window, "Next maneuver", PreciseManeuverConfig.HotkeyType.NEXTMAN);
     newKeyControl (window, "Prev maneuver", PreciseManeuverConfig.HotkeyType.PREVMAN);
@@ -156,14 +156,7 @@ internal class PreciseManeuverHotkeys {
 
   #endregion
 
-  internal void processGlobalHotkeys () {
-    if (Input.anyKey && GUIUtility.keyboardControl == 0) {
-      // hide/show window
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.HIDEWIN))) {
-        config.showMainWindow = !config.showMainWindow;
-      }
-    }
-  }
+  #region Hotkey Set
 
   internal void processHotkeySet () {
     if (expectingConfigHotkey && expectedTime < Planetarium.GetUniversalTime ()) {
@@ -186,6 +179,37 @@ internal class PreciseManeuverHotkeys {
       }
     }
   }
+
+  #endregion
+
+  #region Global Hotkeys
+
+  internal void processGlobalHotkeys () {
+    if (Input.anyKey && GUIUtility.keyboardControl == 0) {
+      // hide/show window
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.HIDEWIN)))
+        config.showMainWindow = !config.showMainWindow;
+      // more patches
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PLUSORB)))
+        FlightGlobals.ActiveVessel.patchedConicSolver.IncreasePatchLimit ();
+      // less patches
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.MINUORB)))
+        FlightGlobals.ActiveVessel.patchedConicSolver.DecreasePatchLimit ();
+      // Page Conics
+      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGECON))) {
+        int mode = config.conicsMode;
+        if (Event.current.alt)
+          mode = (mode == 0) ? 4 : mode - 1;
+        else
+          mode = (mode == 4) ? 0 : mode + 1;
+        config.conicsMode = mode;
+      }
+    }
+  }
+
+  #endregion
+
+  #region Process Hotkeys
 
   internal void processRegularHotkeys () {
     repeatButtonPressed = false;
@@ -268,31 +292,16 @@ internal class PreciseManeuverHotkeys {
       if (changed)
         nodeManager.changeNodeDiff (dvx, dvy, dvz, dut);
 
-      // Page Conics
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGECON))) {
-        int mode = NodeTools.getConicsMode();
-        if (Event.current.alt)
-          mode = (mode == 0) ? 4 : mode - 1;
-        else
-          mode = (mode == 4) ? 0 : mode + 1;
-        NodeTools.setConicsMode (mode);
-      }
       // change increment
       if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGEINC))) {
         if (Event.current.alt)
-          config.setIncrementDown ();
-        else
           config.setIncrementUp ();
+        else
+          config.setIncrementDown ();
       }
       // toggle x10
       if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PAGEX10)))
         config.x10UTincrement = !config.x10UTincrement;
-      // more patches
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.PLUSORB)))
-        FlightGlobals.ActiveVessel.patchedConicSolver.IncreasePatchLimit ();
-      // less patches
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.MINUORB)))
-        FlightGlobals.ActiveVessel.patchedConicSolver.DecreasePatchLimit ();
       // next node
       if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.NEXTMAN)))
         nodeManager.switchNextNode ();
@@ -340,5 +349,8 @@ internal class PreciseManeuverHotkeys {
       }
     }
   }
+
+    #endregion
+
 }
 }

@@ -35,7 +35,8 @@ public class StyleApplicator : MonoBehaviour {
     Window,
     Input,
     Button,
-    ButtonToggle
+    ButtonToggle,
+    Scrollbar
   }
 
   [SerializeField]
@@ -89,5 +90,20 @@ public class StyleApplicator : MonoBehaviour {
       toggleImage.type = Image.Type.Sliced;
     }
   }
-}
+
+    public void SetScrollbar (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
+      Scrollbar scrollbar = GetComponent<Scrollbar>();
+      if (scrollbar != null) {
+        scrollbar.image.sprite = normal;
+        scrollbar.image.type = Image.Type.Sliced;
+        scrollbar.transition = Selectable.Transition.SpriteSwap;
+        SpriteState spriteState = scrollbar.spriteState;
+        spriteState.highlightedSprite = highlight;
+        spriteState.pressedSprite = pressed;
+        spriteState.disabledSprite = disabled;
+        scrollbar.spriteState = spriteState;
+      }
+      SetImage (background, Image.Type.Sliced);
+    }
+  }
 }

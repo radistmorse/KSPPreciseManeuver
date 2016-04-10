@@ -49,7 +49,7 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   private RectTransform m_RectTransform;
 
   public void OnPointerEnter(PointerEventData eventData) {
-    FadeIn();
+    fadeIn();
   }
 
   public void OnPointerExit(PointerEventData eventData) {
@@ -84,6 +84,10 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
     m_RectTransform = GetComponent<RectTransform>();
   }
 
+  protected virtual void Start() {
+    setTransparent();
+    fadeIn();
+  }
 
   public void OnDestroy () {
     m_MenuControl.deregisterUpdateAction (updateControls);

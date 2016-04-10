@@ -25,25 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
-
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
-
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+[RequireComponent (typeof (RectTransform))]
+public class CanvasFixer : MonoBehaviour {
+  internal string canvasLayer { get; set; }
+  public void Awake () {
+    var canv = GetComponent<Canvas>();
+    if (canv != null)
+      canv.sortingLayerName = "Main";
   }
+}
 }

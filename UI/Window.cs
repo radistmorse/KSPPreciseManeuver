@@ -32,7 +32,7 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent(typeof(RectTransform))]
-public class DraggableWindow : CanvasGroupFader, IPointerDownHandler {
+public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
   [SerializeField]
   private Text m_Title = null;
 
@@ -62,8 +62,13 @@ public class DraggableWindow : CanvasGroupFader, IPointerDownHandler {
     m_RectTransform = GetComponent<RectTransform>();
   }
 
+  protected virtual void Start() {
+    setTransparent();
+    fadeIn();
+  }
+
   public void OnPointerDown(PointerEventData data) {
-    m_RectTransform.SetAsLastSibling();
+    //m_RectTransform.SetAsLastSibling();
   }
 
   public void OnBeginDrag(BaseEventData data) {
@@ -128,7 +133,7 @@ public class DraggableWindow : CanvasGroupFader, IPointerDownHandler {
     var innerpanel = new GameObject("PreciseManeuverInnerPanel"+num.ToString());
     innerpanel.AddComponent<RectTransform> ();
     var layout = innerpanel.AddComponent<VerticalLayoutGroup> ();
-    layout.padding = new RectOffset (0, 0, 4, 4);
+    layout.padding = new RectOffset (4, 4, 4, 4);
     layout.spacing = 2.0f;
     innerpanel.transform.SetParent (m_ContentSections[num].transform, false);
     return innerpanel;

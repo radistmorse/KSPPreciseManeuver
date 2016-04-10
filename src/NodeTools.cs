@@ -263,8 +263,8 @@ internal static class NodeTools {
   /// </summary>
   /// <returns>The string format, in meters.</returns>
   /// <param name="d">The double to format</param>
-  internal static string formatMeters (this double d, string units = "") {
-    string multiplier = "";
+  internal static string formatMeters (this double d) {
+    string multiplier = " ";
     if ((Math.Abs (d) / 1000) >= 100) {
       d /= 1000;
       multiplier = " k";
@@ -279,11 +279,6 @@ internal static class NodeTools {
         }
       }
     }
-    if (multiplier == "")
-      multiplier = " " + units;
-    else
-      multiplier += units;
-
     return string.Format ("{0:0.##}{1}", d, multiplier);
   }
 

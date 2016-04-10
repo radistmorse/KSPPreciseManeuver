@@ -36,7 +36,7 @@ public class PagerControl : MonoBehaviour {
   [SerializeField]
   private Button m_ButtonNext = null;
   [SerializeField]
-  private Text m_Number = null;
+  private Dropdown m_Chooser = null;
 
   private IPagerControl m_pagerControl = null;
 
@@ -44,6 +44,9 @@ public class PagerControl : MonoBehaviour {
     m_pagerControl = pagerControl;
     updatePagerValues ();
     m_pagerControl.registerUpdateAction (updatePagerValues);
+    var fixer = GetComponentsInChildren<CanvasFixer> (true);
+    if (fixer.Length > 0)
+      fixer[0].canvasLayer = pagerControl.CanvasName;
   }
 
   public void OnDestroy () {
@@ -83,7 +86,29 @@ public class PagerControl : MonoBehaviour {
       m_ButtonNext.interactable = false;
       m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
     }
-    m_Number.text = "Node " + (m_pagerControl.maneuverIdx + 1).ToString ();
+    m_Chooser.captionText.text = "Node " + (m_pagerControl.maneuverIdx + 1).ToString ();
+  }
+
+
+  internal string GetTimeForNode (int nodeidx) {
+    return m_pagerControl.getManeuverTime (nodeidx);
+  }
+  internal string GetDVForNode (int nodeidx) {
+    return m_pagerControl.getManeuverDV (nodeidx);
+  }
+
+  public void repopulateChooser() {
+    int len = m_pagerControl.maneuverCount;
+    m_Chooser.options.Clear ();
+      if (len == 0)
+        return;
+    for (int i = 1; i <= len; i++)
+        m_Chooser.options.Add (new Dropdown.OptionData ("Node\n"+i.ToString()));
+      m_Chooser.value = m_pagerControl.maneuverIdx;
+  }
+
+  public void chooserValueChange(int value) {
+    m_pagerControl.SwitchNode (value);
   }
 }
 }

@@ -25,25 +25,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+[RequireComponent (typeof (RectTransform))]
+public class OrbitInfoControl : MonoBehaviour {
+  [SerializeField]
+  private Text m_ApValue = null;
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
+  [SerializeField]
+  private Text m_PeValue = null;
 
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
+  [SerializeField]
+  private Text m_InclValue = null;
+
+  [SerializeField]
+  private Text m_EccValue = null;
+
+  private IOrbitInfoControl m_control = null;
+
+  public void SetControl(IOrbitInfoControl control) {
+    m_control = control;
+    updateControl ();
+    m_control.registerUpdateAction (updateControl);
   }
+
+  public void OnDestroy () {
+    m_control.deregisterUpdateAction (updateControl);
+    m_control = null;
+  }
+    
+  public void updateControl () {
+    m_ApValue.text = m_control.ApoapsisValue;
+    m_PeValue.text = m_control.PeriapsisValue;
+    m_InclValue.text = m_control.InclinationValue;
+    m_EccValue.text = m_control.EccentricityValue;
+  }
+}
 }

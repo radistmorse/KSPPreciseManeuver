@@ -25,25 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+
 using System;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+public interface IOrbitToolsControl {
+  void OrbitUpButtonPressed ();
+  void OrbitDnButtonPressed ();
+  void CircularizeButtonPressed ();
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
-
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
-  }
+  void registerUpdateAction (Action updateControls);
+  void deregisterUpdateAction (Action updateControls);
+}
 }

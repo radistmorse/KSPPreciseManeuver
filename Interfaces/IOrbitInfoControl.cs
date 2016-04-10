@@ -28,22 +28,13 @@
 using System;
 
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
-  void PrevButtonPressed ();
-  void FocusButtonPressed ();
-  void DelButtonPressed ();
-  void NextButtonPressed ();
+public interface IOrbitInfoControl {
+  string ApoapsisValue { get; }
+  string PeriapsisValue { get; }
+  string InclinationValue { get; }
+  string EccentricityValue { get; }
 
-  bool prevManeuverExists { get; }
-  bool nextManeuverExists { get; }
-  int maneuverIdx { get; }
-  string CanvasName { get; }
-  int maneuverCount { get; }
-  string getManeuverTime (int idx);
-  string getManeuverDV (int idx);
-
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
-    void SwitchNode (int value);
-  }
+  void registerUpdateAction (Action updateControl);
+  void deregisterUpdateAction (Action updateControl);
+}
 }

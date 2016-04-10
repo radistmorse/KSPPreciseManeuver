@@ -40,11 +40,11 @@ internal class PreciseManeuver : MonoBehaviour {
   private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
   private NodeManager manager = NodeManager.Instance;
 
-  private DraggableWindow     m_KeybindingsWindow = null;
-  private GameObject m_KeybindingsWindowObject = null;
+  private DraggableWindow m_KeybindingsWindow = null;
+  private GameObject      m_KeybindingsWindowObject = null;
 
-  private DraggableWindow     m_MainWindow = null;
-  private GameObject m_MainWindowObject = null;
+  private DraggableWindow m_MainWindow = null;
+  private GameObject      m_MainWindowObject = null;
 
   private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
 
@@ -77,7 +77,6 @@ internal class PreciseManeuver : MonoBehaviour {
       hotkeys.processGlobalHotkeys();
       if (m_MainWindowObject != null) {
         hotkeys.processRegularHotkeys();
-        mainWindow.updateValues();
 
         if (Input.GetMouseButtonUp (0))
           waitForGizmo = 3;
@@ -89,6 +88,10 @@ internal class PreciseManeuver : MonoBehaviour {
         manager.updateNodes ();
       }
     }
+
+    if (m_MainWindowObject == null) {
+      manager.clear ();
+    }
   }
 
   #region MainWindow
@@ -97,7 +100,7 @@ internal class PreciseManeuver : MonoBehaviour {
     // fade in if already open
     if (m_MainWindow != null) {
       if (m_MainWindow.IsFadingOut)
-        m_MainWindow.FadeIn ();
+        m_MainWindow.fadeIn ();
       if (config.modulesChanged)
         mainWindow.updateMainWindow (m_MainWindow);
       return;
@@ -123,8 +126,8 @@ internal class PreciseManeuver : MonoBehaviour {
       m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
       mainWindow.clearMainWindow ();
       mainWindow.updateMainWindow (m_MainWindow);
+      }
     }
-  }
 
   private void closeMainWindow () {
     if (m_MainWindow != null) {
@@ -146,7 +149,7 @@ internal class PreciseManeuver : MonoBehaviour {
     // fade in if already open
     if (m_KeybindingsWindow != null) {
       if (m_KeybindingsWindow.IsFadingOut)
-        m_KeybindingsWindow.FadeIn();
+        m_KeybindingsWindow.fadeIn();
       return;
     }
 
