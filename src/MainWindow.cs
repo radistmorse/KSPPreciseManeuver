@@ -724,8 +724,8 @@ internal class MainWindow {
   private class OrbitInfoControlInterface : IOrbitInfoControl {
 
     MainWindow _parent;
-    FastString _apoapsis = new FastString ("{0}m", false, true);
-    FastString _periapsis = new FastString ("{0}m", false, true);
+    FastString _apoapsis = new FastString ("{0}m", true, true);
+    FastString _periapsis = new FastString ("{0}m", true, true);
     FastString _inclination = new FastString ("{0:0.##}°", true, false);
     FastString _eccentricity = new FastString ("{0:0.###}", true, false);
 
