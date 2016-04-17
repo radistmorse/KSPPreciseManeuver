@@ -30,17 +30,18 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
-public class EncounterControl : MonoBehaviour {
+public class GizmoControl : MonoBehaviour {
   [SerializeField]
-  private Text m_Encounter = null;
+  private Button m_UndoButton = null;
   [SerializeField]
-  private Text m_PE = null;
-  [SerializeField]
-  private Button m_Focus = null;
+  private Button m_RedoButton = null;
 
-  private IEncounterControl m_Control = null;
+  private IGizmoControl m_Control = null;
 
-  public void SetControl(IEncounterControl control) {
+  private double ddx = 0, ddy = 0, ddz = 0, dut = 0;
+  private bool nonzero = false;
+
+  public void SetControl (IGizmoControl control) {
     m_Control = control;
     updateControl ();
     m_Control.registerUpdateAction (updateControl);
@@ -51,20 +52,60 @@ public class EncounterControl : MonoBehaviour {
     m_Control = null;
   }
 
-  public void FocusButtonAction () {
-    m_Control.focus ();
-  }
-
-  public void updateControl () {
-    m_Encounter.text = m_Control.Encounter;
-    m_PE.text = m_Control.PE;
-    if (m_Encounter.text != "N/A") {
-      m_Focus.interactable = true;
-      m_Focus.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_Focus.interactable = false;
-      m_Focus.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+  private bool _dragging;
+  public bool dragging {
+    get { return _dragging; }
+    set {
+      _dragging = value;
+      if (_dragging) {
+        //begin drag, save the node for undo
+        m_Control.beginAtomicChange ();
+      } else {
+        m_Control.endAtomicChange ();
+        //end drag, notify the elements that they can glow now
+        foreach (var gizmoElement in GetComponentsInChildren<GizmoElement> ())
+          gizmoElement.GlowOn ();
+      }
     }
   }
+
+  public void UndoAction () {
+    m_Control.Undo ();
+  }
+
+  public void RedoAction () {
+    m_Control.Redo ();
+  }
+
+
+  public void changeddv (double ddx, double ddy, double ddz, double dut) {
+    this.ddx = ddx;
+    this.ddy = ddy;
+    this.ddz = ddz;
+    this.dut = dut;
+    nonzero = (ddx != 0) || (ddy != 0) || (ddz != 0) || (dut != 0);
+  }
+
+  public void FixedUpdate () {
+    if (nonzero && m_Control != null)
+      m_Control.updateNode (ddx, ddy, ddz, dut);
+  }
+  public void updateControl () {
+    if (m_Control.undoAvailable) {
+      m_UndoButton.interactable = true;
+      m_UndoButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      m_UndoButton.interactable = false;
+      m_UndoButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
+    if (m_Control.redoAvailable) {
+      m_RedoButton.interactable = true;
+      m_RedoButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      m_RedoButton.interactable = false;
+      m_RedoButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
+  }
+
 }
 }

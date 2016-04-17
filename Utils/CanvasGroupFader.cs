@@ -37,7 +37,7 @@ public class CanvasGroupFader : MonoBehaviour {
 
   private float m_FastFadeDuration = 0.2f;
   private float m_SlowFadeDuration = 1.0f;
-  
+
   private bool m_IsFadingIn;
 
   public bool IsFadingIn {
@@ -67,7 +67,7 @@ public class CanvasGroupFader : MonoBehaviour {
     m_IsFadingIn = false;
     FadeTo(0.0f, m_FastFadeDuration, setInactive);
   }
-  
+
   private void setInactive () {
     gameObject.SetActive (false);
   }

@@ -60,15 +60,34 @@ internal class NodeManager {
     private double origUt;
     private const double epsilon = 1E-5;
 
+    private double saved_dx = 0.0;
+    private double saved_dy = 0.0;
+    private double saved_dz = 0.0;
+    private double saved_ut = 0.0;
+    private bool atomicChange = false;
+    internal bool previousSaved { get; private set; } = false;
+
+    private void savePrevious () {
+      if (atomicChange)
+        return;
+      saved_dx = dx;
+      saved_dy = dy;
+      saved_dz = dz;
+      saved_ut = _ut;
+      previousSaved = true;
+      NodeManager.Instance.notifyUndoChanged ();
+    }
+
     internal Vector3d dv { get { return new Vector3d (dx, dy, dz); } }
     internal double ut { get { return _ut; } }
     internal bool changed { get; private set; } = false;
 
     internal SavedNode (ManeuverNode node) {
-      updateOrig (node);
+      resetSavedNode (node);
     }
 
     internal void updateDiff (double ddvx, double ddvy, double ddvz, double ddut) {
+      savePrevious ();
       dx += ddvx;
       dy += ddvy;
       dz += ddvz;
@@ -76,23 +95,54 @@ internal class NodeManager {
       changed = true;
     }
     internal void updateMult (double mdvx, double mdvy, double mdvz) {
+      savePrevious ();
       dx *= mdvx;
       dy *= mdvy;
       dz *= mdvz;
       changed = true;
     }
     internal void updateDvAbs (double dvx, double dvy, double dvz) {
+      if (Double.IsNaN (dvx) || Double.IsNaN (dvy) || Double.IsNaN (dvz))
+        return;
+      savePrevious ();
       dx = dvx;
       dy = dvy;
       dz = dvz;
       changed = true;
     }
     internal void updateUtAbs (double ut) {
+      if (Double.IsNaN (ut) || ut <= 0.0)
+        return;
+      savePrevious ();
       _ut = ut;
       changed = true;
     }
+    internal void beginAtomicChange () {
+      savePrevious ();
+      atomicChange = true;
+    }
+    internal void endAtomicChange () {
+      atomicChange = false;
+    }
+    internal void revertChange () {
+      if (atomicChange || !previousSaved)
+        return;
+      double tmp1 = saved_dx;
+      double tmp2 = saved_dy;
+      double tmp3 = saved_dz;
+      double tmp4 = saved_ut;
+      saved_dx = dx;
+      saved_dy = dy;
+      saved_dz = dz;
+      saved_ut = _ut;
+      dx = tmp1;
+      dy = tmp2;
+      dz = tmp3;
+      _ut = tmp4;
+      changed = true;
+    }
 
-    internal void updateOrig (ManeuverNode node) {
+    internal void resetSavedNode (ManeuverNode node) {
       origdx = node.DeltaV.x;
       origdy = node.DeltaV.y;
       origdz = node.DeltaV.z;
@@ -101,6 +151,17 @@ internal class NodeManager {
       dy = node.DeltaV.y;
       dz = node.DeltaV.z;
       _ut = node.UT;
+      changed = false;
+      atomicChange = false;
+      previousSaved = false;
+      NodeManager.Instance.notifyUndoChanged ();
+    }
+
+    internal void updateOrig () {
+      origdx = dx;
+      origdy = dy;
+      origdz = dz;
+      origUt = _ut;
       changed = false;
     }
 
@@ -204,6 +265,20 @@ internal class NodeManager {
   internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
   internal bool previousNodeAvailable { get { return currentNodeIdx > 0; } }
 
+  internal bool undoAvailable { get { return currentSavedNode.previousSaved; } }
+
+  internal void undo () {
+    currentSavedNode.revertChange ();
+  }
+
+  internal void beginAtomicChange () {
+    currentSavedNode.beginAtomicChange ();
+  }
+
+  internal void endAtomicChange () {
+    currentSavedNode.endAtomicChange ();
+  }
+
   internal void switchNextNode () {
     if (nextNodeAvailable) {
       _currentNode = null;
@@ -244,7 +319,7 @@ internal class NodeManager {
     var dv = PreciseManeuverConfig.Instance.getPreset (name);
     currentSavedNode.updateDvAbs (dv.x, dv.y, dv.z);
   }
-  
+
   internal void turnOrbitUp () {
     turnOrbit (-PreciseManeuverConfig.Instance.incrementDeg);
   }
@@ -410,9 +485,11 @@ internal class NodeManager {
           currentNode.attachedGizmo.UT = currentSavedNode.ut;
         }
         currentNode.OnGizmoUpdated (newdv, currentSavedNode.ut);
+        currentSavedNode.updateOrig ();
       }
-      currentSavedNode.updateOrig (currentNode);
     }
+    if (!origSame)
+      currentSavedNode.resetSavedNode (currentNode);
     if (changed || !origSame)
       notifyDvUTChanged ();
   }
@@ -429,7 +506,8 @@ internal class NodeManager {
   private enum changeType {
     dvut,
     index,
-    target
+    target,
+    undo
   }
 
   private Dictionary<changeType,List<Action>> _listeners;
@@ -441,6 +519,7 @@ internal class NodeManager {
         _listeners[changeType.dvut] = new List<Action> ();
         _listeners[changeType.index] = new List<Action> ();
         _listeners[changeType.target] = new List<Action> ();
+        _listeners[changeType.undo] = new List<Action> ();
       }
       return _listeners;
     }
@@ -455,6 +534,9 @@ internal class NodeManager {
   public void listenToTargetChange (Action listener) {
     listeners[changeType.target].Add (listener);
   }
+  public void listenToUndoChange (Action listener) {
+    listeners[changeType.undo].Add (listener);
+  }
 
   public void removeListener (Action listener) {
     foreach (var list in listeners.Values)
@@ -464,7 +546,7 @@ internal class NodeManager {
   private void notifyNodeChanged () {
     /* update savednode */
     if (_currentSavedNode != null)
-      _currentSavedNode.updateOrig (currentNode);
+      _currentSavedNode.resetSavedNode (currentNode);
     else
       _currentSavedNode = new SavedNode (currentNode);
     /* update KAC alarm */
@@ -493,7 +575,12 @@ internal class NodeManager {
       act ();
   }
 
-    #endregion
+  private void notifyUndoChanged () {
+    foreach (var act in listeners[changeType.undo])
+      act ();
+  }
+
+  #endregion
 
 }
 }

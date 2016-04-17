@@ -29,6 +29,14 @@ using System;
 
 namespace KSPPreciseManeuver.UI {
 public interface IUTControl {
+  bool APAvailable { get; }
+  bool PEAvailable { get; }
+  bool ANAvailable { get; }
+  bool DNAvailable { get; }
+
+  bool X10State { get; set; }
+  string UTValue { get; }
+
   void PlusButtonPressed ();
   void MinusButtonPressed ();
 
@@ -37,13 +45,6 @@ public interface IUTControl {
   void ANButtonPressed ();
   void DNButtonPressed ();
 
-  bool APAvailable { get; }
-  bool PEAvailable { get; }
-  bool ANAvailable { get; }
-  bool DNAvailable { get; }
-
-  bool X10State { get; set; }
-  string UTValue { get; }
   void registerUpdateAction (Action action);
   void deregisterUpdateAction (Action action);
 }

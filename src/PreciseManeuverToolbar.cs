@@ -87,7 +87,7 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
   public bool IsOn {
     get {
       return appButton != null &&
-             appButton.toggleButton.Button.interactable &&
+             appButton.toggleButton.Interactable &&
              appButton.toggleButton.CurrentState == UIRadioButton.State.True;
     }
     set {
@@ -104,12 +104,12 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
   }
 
   public void Disable() {
-    if (appButton != null && appButton.toggleButton.Button.interactable)
+    if (appButton != null && appButton.toggleButton.Interactable)
       appButton.Disable();
   }
 
   public void Enable() {
-    if (appButton != null && appButton.toggleButton.Button.interactable == false)
+    if (appButton != null && appButton.toggleButton.Interactable == false)
       appButton.Enable();
   }
 

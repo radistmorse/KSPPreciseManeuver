@@ -49,7 +49,7 @@ public class EjectionControl : MonoBehaviour {
     m_control.deregisterUpdateAction (updateControl);
     m_control = null;
   }
-    
+
   public void updateControl () {
     m_AngleValue.text = m_control.AngleValue;
     m_InclinationValue.text = m_control.InclinationValue;

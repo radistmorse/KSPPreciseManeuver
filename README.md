@@ -11,7 +11,7 @@ The modular structure allows you to disable all the unneded components and make 
 
 NOTES:
 --------------
-Works with KSP 1.1 pre-release
+Works with KSP 1.1
 
 BUILD:
 --------------
@@ -37,6 +37,17 @@ USAGE:
 --------------
 The toolbar icon will appear during the mapview, and by pressing on it you can enable and disable various components of the plugin.
 
+The components are:
+- **Maneuver Pager**, allows to switch between maneuvers, focus on the current maneuver and delete it
+- **Maneuver Presets**, allows to save and load the parameters of the maneuver
+- **Precise Input**, allows to change the current maneuver precisely by the use of "+" and "-" buttons
+- **Orbit Tools**, allows to turn the orbit in normal/antinormal direction for a precise angle, and also to circularize the orbit
+- **Maneuver Gizmo**, is the maneuver gizmo that looks very similar to the stock gizmo, and behaves in a similar way
+- **Next Encounter**, shows the next encounter, allows to focus on it and shows the distance to it in the closest point (PE)
+- **Ejection angles**, shows the ejection parameters in case the orbit escapes from the SOI of the celestial body
+- **Orbit Info**, shows the parameters of the planned orbit
+- **Patches Control**, allows to change the mode of Patched Conics draw, i.e. the trajectories of the vessel
+
 The following hotkeys are available:
 - Keypad8/5: increase prograde/retrograde
 - Keypad4/6: increase/decreas radial
@@ -45,3 +56,5 @@ The following hotkeys are available:
 - Keypad2: switch different modes for trajectories (+alt for reverse)
 - Keypad0: raise the increment step (+alt for reverse)
 - "P": hide/show the window (all the hotkeys excluding the trajectories controls will stop working)
+
+Other keybindings are available, but are disabled by default.

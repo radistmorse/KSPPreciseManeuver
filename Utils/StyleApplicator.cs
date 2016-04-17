@@ -42,16 +42,10 @@ public class StyleApplicator : MonoBehaviour {
   [SerializeField]
   private ElementTypes m_ElementType = ElementTypes.None;
 
-  /// <summary>
-  ///     Gets the UI element type used by the ThemeManager for selecting how to apply the theme.
-  /// </summary>
   public ElementTypes ElementType {
     get { return m_ElementType; }
   }
 
-  /// <summary>
-  ///     Sets a the applicator to apply the selected sprite to an attached image component.
-  /// </summary>
   public void SetImage(Sprite sprite, Image.Type type) {
     Image image = GetComponent<Image>();
     if (image == null)
@@ -61,9 +55,6 @@ public class StyleApplicator : MonoBehaviour {
     image.type = type;
   }
 
-  /// <summary>
-  ///     Sets the applicator to apply the specified values to an attached selectable component.
-  /// </summary>
   public void SetSelectable(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
     Selectable selectable = GetComponent<Selectable>();
     if (selectable != null) {
@@ -78,9 +69,6 @@ public class StyleApplicator : MonoBehaviour {
     }
   }
 
-  /// <summary>
-  ///     Sets the applicator to apply the specified values to an attached toggle component.
-  /// </summary>
   public void SetToggle(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
     SetSelectable(normal, highlight, pressed, disabled);
 
@@ -91,19 +79,19 @@ public class StyleApplicator : MonoBehaviour {
     }
   }
 
-    public void SetScrollbar (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
-      Scrollbar scrollbar = GetComponent<Scrollbar>();
-      if (scrollbar != null) {
-        scrollbar.image.sprite = normal;
-        scrollbar.image.type = Image.Type.Sliced;
-        scrollbar.transition = Selectable.Transition.SpriteSwap;
-        SpriteState spriteState = scrollbar.spriteState;
-        spriteState.highlightedSprite = highlight;
-        spriteState.pressedSprite = pressed;
-        spriteState.disabledSprite = disabled;
-        scrollbar.spriteState = spriteState;
-      }
-      SetImage (background, Image.Type.Sliced);
+  public void SetScrollbar (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
+    Scrollbar scrollbar = GetComponent<Scrollbar>();
+    if (scrollbar != null) {
+      scrollbar.image.sprite = normal;
+      scrollbar.image.type = Image.Type.Sliced;
+      scrollbar.transition = Selectable.Transition.SpriteSwap;
+      SpriteState spriteState = scrollbar.spriteState;
+      spriteState.highlightedSprite = highlight;
+      spriteState.pressedSprite = pressed;
+      spriteState.disabledSprite = disabled;
+      scrollbar.spriteState = spriteState;
     }
+    SetImage (background, Image.Type.Sliced);
   }
+}
 }

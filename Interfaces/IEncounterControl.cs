@@ -30,6 +30,7 @@ using System;
 namespace KSPPreciseManeuver.UI {
 public interface IEncounterControl {
   string Encounter { get; }
+  string PE { get; }
 
   void focus ();
 

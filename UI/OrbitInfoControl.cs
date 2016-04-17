@@ -55,7 +55,7 @@ public class OrbitInfoControl : MonoBehaviour {
     m_control.deregisterUpdateAction (updateControl);
     m_control = null;
   }
-    
+
   public void updateControl () {
     m_ApValue.text = m_control.ApoapsisValue;
     m_PeValue.text = m_control.PeriapsisValue;

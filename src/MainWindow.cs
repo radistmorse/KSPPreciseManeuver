@@ -36,7 +36,7 @@ using UI;
 internal class MainWindow {
   private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
   private NodeManager nodeManager = NodeManager.Instance;
-  
+
   #region FastString
 
   private class FastString {
@@ -118,68 +118,55 @@ internal class MainWindow {
         return _parent.nodeManager.previousNodeAvailable;
       }
     }
-
     public bool nextManeuverExists {
       get {
         return _parent.nodeManager.nextNodeAvailable;
       }
     }
-
     public int maneuverIdx {
       get {
         return _parent.nodeManager.currentNodeIdx;
       }
     }
-
     public string CanvasName {
       get {
         return MainCanvasUtil.MainCanvas.sortingLayerName;
       }
     }
-
     public int maneuverCount {
       get {
         return FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count;
       }
     }
-
     internal PagerControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToIdxChange (action);
     }
     public void deregisterUpdateAction (Action action) {
       _parent.nodeManager.removeListener (action);
     }
-
     public void PrevButtonPressed () {
       _parent.nodeManager.switchPreviousNode ();
     }
-
     public void FocusButtonPressed () {
       MapView.MapCamera.SetTarget (_parent.nodeManager.currentNode.scaledSpaceTarget);
     }
-
     public void DelButtonPressed () {
       _parent.nodeManager.deleteNode ();
     }
-
     public void NextButtonPressed () {
       _parent.nodeManager.switchNextNode ();
     }
-
     public string getManeuverTime (int idx) {
       var time = NodeTools.convertUTtoHumanTime(FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT);
       return time.Replace ("Year ", "Y").Replace ("Day ", "D");
     }
-
     public string getManeuverDV (int idx) {
       var dv = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].DeltaV.magnitude;
       return "Δv: " + dv.ToString ("0.##");
     }
-
     public void SwitchNode (int value) {
       _parent.nodeManager.switchNode (value);
     }
@@ -211,29 +198,23 @@ internal class MainWindow {
         return MainCanvasUtil.MainCanvas.sortingLayerName;
       }
     }
-
     public List<string> presetNames {
       get {
         return _parent.config.getPresetNames ();
       }
     }
-
     internal SaverControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public void AddPreset (string name) {
       _parent.config.addPreset (name);
     }
-
     public void RemovePreset (string name) {
       _parent.config.removePreset (name);
     }
-
     public void loadPreset (string name) {
       _parent.nodeManager.loadPreset (name);
     }
-
     public string suggestPresetName () {
       var current = _parent.nodeManager.currentNode.patch.referenceBody;
       var next = NodeTools.findNextEncounter();
@@ -269,19 +250,16 @@ internal class MainWindow {
     internal UTControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public bool APAvailable {
       get {
         return _parent.nodeManager.currentNode.patch.isClosed ();
       }
     }
-
     public bool PEAvailable {
       get {
         return true;
       }
     }
-
     public bool ANAvailable {
       get {
         return NodeTools.getTargetOrbit () != null;
@@ -293,14 +271,12 @@ internal class MainWindow {
         return NodeTools.getTargetOrbit () != null;
       }
     }
-
     public string UTValue {
       get {
         _value.update (_parent.nodeManager.currentNode.UT);
         return _value.value;
       }
     }
-
     public bool X10State {
       get {
         return _parent.config.x10UTincrement;
@@ -310,37 +286,29 @@ internal class MainWindow {
         _parent.config.x10UTincrement = value;
       }
     }
-
     public void APButtonPressed () {
       _parent.nodeManager.changeNodeUTtoAP ();
     }
-
     public void PEButtonPressed () {
       _parent.nodeManager.changeNodeUTtoPE ();
     }
-
     public void ANButtonPressed () {
       _parent.nodeManager.changeNodeUTtoAN ();
     }
-
     public void DNButtonPressed () {
       _parent.nodeManager.changeNodeUTtoDN ();
     }
-
     public void PlusButtonPressed () {
       _parent.nodeManager.changeNodeDiff (0, 0, 0, _parent.config.incrementUt);
     }
-
     public void MinusButtonPressed () {
       _parent.nodeManager.changeNodeDiff (0, 0, 0, -_parent.config.incrementUt);
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
       _parent.nodeManager.listenToTargetChange (action);
       _parent.config.listenTox10Change (action);
     }
-
     public void deregisterUpdateAction (Action action) {
       _parent.nodeManager.removeListener (action);
       _parent.config.removeListener (action);
@@ -375,7 +343,6 @@ internal class MainWindow {
         return Color.white;
       }
     }
-
     public string AxisName {
       get {
         switch (_axis) {
@@ -389,7 +356,6 @@ internal class MainWindow {
         return "To outer space, apparently";
       }
     }
-
     public string AxisValue {
       get {
         var node = _parent.nodeManager.currentNode;
@@ -411,28 +377,24 @@ internal class MainWindow {
         return _value.value;
       }
     }
-
     public void MinusButtonPressed () {
       double dx = _axis == Axis.radial ? _parent.config.increment : 0;
       double dy = _axis == Axis.normal ? _parent.config.increment : 0;
       double dz = _axis == Axis.prograde ? _parent.config.increment : 0;
       _parent.nodeManager.changeNodeDiff (-dx, -dy, -dz, 0.0);
     }
-
     public void PlusButtonPressed () {
       double dx = _axis == Axis.radial ? _parent.config.increment : 0;
       double dy = _axis == Axis.normal ? _parent.config.increment : 0;
       double dz = _axis == Axis.prograde ? _parent.config.increment : 0;
       _parent.nodeManager.changeNodeDiff (dx, dy, dz, 0.0);
     }
-
     public void ZeroButtonPressed () {
       double dx = _axis == Axis.radial ? 0 : 1;
       double dy = _axis == Axis.normal ? 0 : 1;
       double dz = _axis == Axis.prograde ? 0 : 1;
       _parent.nodeManager.changeNodeDVMult (dx, dy, dz);
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
@@ -491,30 +453,25 @@ internal class MainWindow {
         return _localUTstr;
       }
     }
-
     public bool AlarmAvailable {
       get {
         return KACWrapper.APIReady;
       }
     }
-
     public bool AlarmEnabled {
       get {
         return _parent.nodeManager.alarmCreated ();
       }
     }
-
     internal TimeAlarmControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
     public void deregisterUpdateAction (Action action) {
       _parent.nodeManager.removeListener (action);
     }
-
     public void alarmToggle (bool state) {
       if (state)
         _parent.nodeManager.createAlarm ();
@@ -549,18 +506,15 @@ internal class MainWindow {
         return _parent.config.incrementRaw;
       }
     }
-
     internal IncrementControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public void registerUpdateAction (Action action) {
       _parent.config.listenToIncrementChange (action);
     }
     public void deregisterUpdateAction (Action action) {
       _parent.config.removeListener(action);
     }
-
     public void incrementChanged (int num) {
       _parent.config.incrementRaw = num;
     }
@@ -590,20 +544,16 @@ internal class MainWindow {
     internal OrbitToolsControlInterface (MainWindow parent) {
         _parent = parent;
     }
-
     public void registerUpdateAction (Action action) {
     }
     public void deregisterUpdateAction (Action action) {
     }
-
     public void OrbitUpButtonPressed () {
       _parent.nodeManager.turnOrbitUp();
     }
-
     public void OrbitDnButtonPressed () {
       _parent.nodeManager.turnOrbitDown();
     }
-
     public void CircularizeButtonPressed () {
       _parent.nodeManager.circularizeOrbit ();
     }
@@ -621,7 +571,87 @@ internal class MainWindow {
   }
 
     #endregion
-    
+
+  #region Gizmo
+
+  GameObject GizmoPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverGizmo");
+
+  private class GizmoControlInterface : IGizmoControl {
+
+    private MainWindow _parent;
+    private Action _controlUpdate = null;
+    private bool isUndo = true;
+    private bool undoAvailableCache = false;
+
+    public bool undoAvailable {
+      get {
+        return isUndo && _parent.nodeManager.undoAvailable;
+      }
+    }
+    public bool redoAvailable {
+      get {
+        return !isUndo && _parent.nodeManager.undoAvailable;
+      }
+    }
+    internal GizmoControlInterface (MainWindow parent) {
+      _parent = parent;
+    }
+    public void updateNode (double ddx, double ddy, double ddz, double dut) {
+      _parent.nodeManager.changeNodeDiff (ddx, ddy, ddz, dut);
+    }
+    public void registerUpdateAction (Action action) {
+      _parent.nodeManager.listenToUndoChange (undoRedoUpdate);
+      _controlUpdate = action;
+    }
+    public void deregisterUpdateAction (Action action) {
+      _parent.nodeManager.removeListener (undoRedoUpdate);
+      _controlUpdate = null;
+    }
+    public void Undo () {
+      if (isUndo && _parent.nodeManager.undoAvailable) {
+        _parent.nodeManager.undo ();
+        isUndo = false;
+        if (_controlUpdate != null)
+          _controlUpdate ();
+      }
+    }
+    public void Redo () {
+      if (!isUndo && _parent.nodeManager.undoAvailable) {
+        _parent.nodeManager.undo ();
+        isUndo = true;
+        if (_controlUpdate != null)
+          _controlUpdate ();
+      }
+    }
+    public void undoRedoUpdate () {
+      if (undoAvailableCache != _parent.nodeManager.undoAvailable || !isUndo) {
+        undoAvailableCache = _parent.nodeManager.undoAvailable;
+        isUndo = true;
+        if (_controlUpdate != null)
+          _controlUpdate ();
+      }
+    }
+    public void beginAtomicChange () {
+      _parent.nodeManager.beginAtomicChange ();
+    }
+    public void endAtomicChange () {
+      _parent.nodeManager.endAtomicChange ();
+    }
+  }
+
+  private void createGizmoControls (GameObject panel) {
+    if (GizmoPrefab == null)
+      return;
+
+    var gizmoObj = UnityEngine.Object.Instantiate (GizmoPrefab) as GameObject;
+    StyleManager.Process (gizmoObj);
+    GizmoControl gizmocontrol = gizmoObj.GetComponent<GizmoControl>();
+    gizmocontrol.SetControl (new GizmoControlInterface (this));
+    gizmoObj.transform.SetParent (panel.transform, false);
+  }
+
+  #endregion
+
   #region Encounter
 
   GameObject EncounterPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverEncounter");
@@ -629,15 +659,33 @@ internal class MainWindow {
   private class EncounterControlInterface : IEncounterControl {
 
     MainWindow _parent;
+    FastString _periapsis = new FastString ("{0}m", true, true);
+    private bool nextenc = false;
 
     internal EncounterControlInterface (MainWindow parent) {
       _parent = parent;
     }
     public string Encounter {
       get {
-        var enc = NodeTools.findNextEncounter ();
-        if (enc != null)
+        CelestialBody enc = null;
+        var plan = FlightGlobals.ActiveVessel.patchedConicSolver.flightPlan.AsReadOnly();
+        var curOrbit = FlightGlobals.ActiveVessel.orbit;
+        foreach (var o in plan) {
+          if (curOrbit.referenceBody.name != o.referenceBody.name && !o.referenceBody.isSun()) {
+            enc = o.referenceBody;
+            _periapsis.update (o.PeA);
+          }
+        }
+        nextenc = enc != null;
+        if (nextenc)
           return enc.theName;
+        return "N/A";
+      }
+    }
+    public string PE {
+      get {
+        if (nextenc)
+          return _periapsis.value;
         return "N/A";
       }
     }
@@ -681,21 +729,18 @@ internal class MainWindow {
     internal EjectionControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public string AngleValue {
       get {
         _angle.update (FlightGlobals.ActiveVessel.orbit.getEjectionAngle (_parent.nodeManager.currentNode));
         return _angle.value;
       }
     }
-
     public string InclinationValue {
       get {
         _inclination.update (FlightGlobals.ActiveVessel.orbit.getEjectionInclination (_parent.nodeManager.currentNode));
         return _inclination.value;
       }
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
@@ -732,35 +777,30 @@ internal class MainWindow {
     internal OrbitInfoControlInterface (MainWindow parent) {
       _parent = parent;
     }
-
     public string ApoapsisValue {
       get {
         _apoapsis.update (_parent.nodeManager.currentNode.nextPatch.ApA);
         return _apoapsis.value;
       }
     }
-
     public string PeriapsisValue {
       get {
         _periapsis.update (_parent.nodeManager.currentNode.nextPatch.PeA);
         return _periapsis.value;
       }
     }
-
     public string InclinationValue {
       get {
         _inclination.update (_parent.nodeManager.currentNode.nextPatch.inclination);
         return _inclination.value;
       }
     }
-
     public string EccentricityValue {
       get {
         _eccentricity.update (_parent.nodeManager.currentNode.nextPatch.eccentricity);
         return _eccentricity.value;
       }
     }
-
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
@@ -795,14 +835,12 @@ internal class MainWindow {
         return _parent.config.conicsMode;
       }
     }
-
     internal ConicsControlInterface (MainWindow parent) {
       _parent = parent;
     }
     public void conicsModeChanged (int num) {
       _parent.config.conicsMode = num;
     }
-
     public void MoreConicPatches () {
       FlightGlobals.ActiveVessel.patchedConicSolver.IncreasePatchLimit ();
     }
@@ -833,7 +871,7 @@ internal class MainWindow {
   #endregion
 
   #region Main Window
-  
+
   internal void updateMainWindow (DraggableWindow window) {
     if (panels == null)
       panels = new GameObject[size];
@@ -866,6 +904,8 @@ internal class MainWindow {
     fillSection (PreciseManeuverConfig.ModuleType.INPUT, window, createUtAxisControls);
     // ORBIT TOOLS
     fillSection (PreciseManeuverConfig.ModuleType.TOOLS, window, createOrbitToolsControls);
+    // GIZMO
+    fillSection (PreciseManeuverConfig.ModuleType.GIZMO, window, createGizmoControls);
     // ENCOUNTER
     fillSection (PreciseManeuverConfig.ModuleType.ENCOT, window, createEncounterControls);
     // EJECTION

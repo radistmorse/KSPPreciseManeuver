@@ -60,11 +60,11 @@ public class ConicsControl : MonoBehaviour {
       m_control.conicsModeChanged (num);
   }
 
-  public void MoreConicPatches () { 
+  public void MoreConicPatches () {
     m_control.MoreConicPatches ();
   }
 
-  public void LessConicPatches () { 
+  public void LessConicPatches () {
     m_control.LessConicPatches ();
   }
 

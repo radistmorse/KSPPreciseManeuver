@@ -1,7 +1,8 @@
-2.0, 2016-04-10
+2.0, 2016-04-17
 - Deprecating IMGUI, new prefab-based GUI
 - Modular structure for GUI
 - New preset module for saving and loading maneuvers
+- New gizmo module that resembles the stock gizmo
 
 1.1.1, 2016-01-05
 - Check orbit parameters for sanity before use

@@ -43,6 +43,8 @@
     <Compile Include="Interfaces\IEncounterControl.cs" />
     <Compile Include="Interfaces\IConicsControl.cs" />
     <Compile Include="UI\ConicsControl.cs" />
+    <Compile Include="UI\GizmoControl.cs" />
+    <Compile Include="Interfaces\IGizmoControl.cs" />
     <Compile Include="UI\ISaverControl.cs" />
     <Compile Include="UI\OrbitInfoControl.cs" />
     <Compile Include="UI\OrbitToolsControl.cs" />
@@ -56,6 +58,7 @@
     <Compile Include="UI\AxisControl.cs" />
     <Compile Include="UI\RepeatButton.cs" />
     <Compile Include="UI\KeybindingControl.cs" />
+    <Compile Include="Utils\GizmoElement.cs" />
     <Compile Include="Utils\InputCaretFixer.cs" />
     <Compile Include="Utils\DropDownManeuverPager.cs" />
     <Compile Include="Utils\CanvasFixer.cs" />
@@ -66,7 +69,7 @@
     <Compile Include="Interfaces\ISectionControl.cs" />
     <Compile Include="Properties\AssemblyInfo.Unity.cs" />
     <Compile Include="Utils\StyleApplicator.cs" />
-    <Compile Include="UI\Window.cs" />
+    <Compile Include="UI\DraggableWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -29,11 +29,11 @@ using System;
 
 namespace KSPPreciseManeuver.UI {
 public interface ITimeAlarmControl {
-  void alarmToggle (bool state);
-
   string TimeValue { get; }
   bool AlarmAvailable { get; }
   bool AlarmEnabled { get; }
+
+  void alarmToggle (bool state);
 
   void registerUpdateAction (Action updateTimeAlarm);
   void deregisterUpdateAction (Action updateTimeAlarm);

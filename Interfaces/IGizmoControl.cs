@@ -28,9 +28,17 @@
 using System;
 
 namespace KSPPreciseManeuver.UI {
-public interface IEjectionControl {
-  string AngleValue { get; }
-  string InclinationValue { get; }
+public interface IGizmoControl {
+  bool undoAvailable { get; }
+  bool redoAvailable { get; }
+
+  void Undo ();
+  void Redo ();
+
+  void beginAtomicChange ();
+  void endAtomicChange ();
+
+  void updateNode (double ddx, double ddy, double ddz, double dut);
 
   void registerUpdateAction (Action updateControl);
   void deregisterUpdateAction (Action updateControl);
