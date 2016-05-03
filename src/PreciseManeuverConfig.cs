@@ -134,13 +134,23 @@ internal class PreciseManeuverConfig {
     if (_increment < 2) {
       _increment += 1;
       notifyIncrementChanged ();
+	  return;
     }
+	if (_increment == 2) { /* cycles to other end of increment scale for one button operation */
+				_increment = -2;
+		notifyIncrementChanged();
+	}
   }
   internal void setIncrementDown () {
     if (_increment > -2) {
       _increment -= 1;
       notifyIncrementChanged ();
+	  return;
     }
+	if (_increment == -2) { /* cycles to other end of increment scale for one button operation */
+				_increment = 2;
+		notifyIncrementChanged();
+	}
   }
   private bool _x10UTincrement = false;
   internal bool x10UTincrement {

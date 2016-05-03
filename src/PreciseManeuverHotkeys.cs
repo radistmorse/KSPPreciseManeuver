@@ -135,7 +135,7 @@ internal class PreciseManeuverHotkeys {
     newKeyControl (window, "Focus on next encounter", PreciseManeuverConfig.HotkeyType.FOCNENC);
     newKeyControl (window, "Focus on vessel", PreciseManeuverConfig.HotkeyType.FOCVESL);
     newKeyControl (window, "Show more trajectories", PreciseManeuverConfig.HotkeyType.PLUSORB);
-    newKeyControl (window, "Show less trajectories", PreciseManeuverConfig.HotkeyType.MINUORB);
+    newKeyControl (window, "Show fewer trajectories", PreciseManeuverConfig.HotkeyType.MINUORB);
     newKeyControl (window, "Toggle x10 time", PreciseManeuverConfig.HotkeyType.PAGEX10);
     newKeyControl (window, "Next maneuver", PreciseManeuverConfig.HotkeyType.NEXTMAN);
     newKeyControl (window, "Prev maneuver", PreciseManeuverConfig.HotkeyType.PREVMAN);

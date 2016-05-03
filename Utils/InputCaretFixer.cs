@@ -30,30 +30,37 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 
-namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (InputField))]
-public class InputCaretFixer : MonoBehaviour, ISelectHandler {
-  private bool alreadyFixed;
+namespace KSPPreciseManeuver.UI
+{
+    [RequireComponent(typeof(InputField))]
+    public class InputCaretFixer : MonoBehaviour, ISelectHandler
+    {
+        private bool alreadyFixed;
 
-  public void OnSelect (BaseEventData eventData) {
-    StartCoroutine (FixCaret ());
-  }
+        public void OnSelect(BaseEventData eventData)
+        {
+            StartCoroutine(FixCaret());
+        }
 
-  IEnumerator FixCaret () {
-    if (alreadyFixed) {
-      yield break;
+        IEnumerator FixCaret()
+        {
+            if (alreadyFixed)
+            {
+                yield break;
+            }
+
+            string caretName = gameObject.name + " Input Caret";
+            RectTransform caretTransform = null;
+            do
+            {
+                caretTransform = (RectTransform)transform.Find(caretName);
+                if (!caretTransform)
+                    yield return null;
+            } while (!caretTransform);
+
+            caretTransform.anchorMin = new Vector2(0.0f, -0.3f);
+
+            alreadyFixed = true;
+        }
     }
-
-    string caretName = gameObject.name + " Input Caret";
-    RectTransform caretTransorm = null;
-    do {
-      caretTransorm = (RectTransform)transform.Find (caretName);
-      if (!caretTransorm)
-        yield return null;
-    } while (!caretTransorm);
-
-    caretTransorm.anchorMin = new Vector2 (0.0f, -0.3f);
-
-    alreadyFixed = true;
-  }
 }
