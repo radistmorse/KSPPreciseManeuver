@@ -40,6 +40,9 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   private Toggle m_ShowKeybindingsToggle = null;
 
   [SerializeField]
+  private Slider m_ScaleGUISlider = null;
+
+  [SerializeField]
   private GameObject m_MenuSectionPrefab = null;
 
   [SerializeField]
@@ -71,6 +74,10 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
       m_MenuControl.IsKeybindingsVisible = visible;
   }
 
+  public void SetGUIScale(float scale) {
+    if (m_MenuControl != null)
+      m_MenuControl.scaleGUIValue = scale;
+  }
 
   public void SetMenuControl(IMenuControl menuControl) {
     m_MenuControl = menuControl;
@@ -97,12 +104,14 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   public void updateControls() {
     m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
     m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
     m_ShowMainWindowToggle.isOn = m_MenuControl.IsMainWindowVisible;
     m_ShowKeybindingsToggle.isOn = m_MenuControl.IsKeybindingsVisible;
+    m_ScaleGUISlider.value = m_MenuControl.scaleGUIValue;
     m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
     m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
   }
-
 
   public void Update() {
     // update anchor position

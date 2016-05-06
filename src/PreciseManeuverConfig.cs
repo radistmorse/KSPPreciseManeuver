@@ -74,6 +74,19 @@ internal class PreciseManeuverConfig {
     }
   }
 
+  private float _guiScale = 1f;
+  internal float guiScale {
+    get { return _guiScale; }
+    set {
+      if (value != _guiScale) {
+        _guiScale = value;
+        notifyScaleChanged ();
+      }
+    }
+  }
+
+  internal float gizmoSensitivity { get; set; } = 0;
+
   #region MainWindow
 
   private bool _showMainWindow = true;
@@ -307,7 +320,6 @@ internal class PreciseManeuverConfig {
     KeyCode.None,       //PREVMAN
     KeyCode.None        //MNVRDEL
   };
-  private bool[] hotkeyPresses = Enumerable.Repeat(false, Enum.GetValues(typeof(HotkeyType)).Length).ToArray ();
 
   internal void setHotkey (HotkeyType type, KeyCode code) {
     hotkeys[(int)type] = code;
@@ -315,18 +327,6 @@ internal class PreciseManeuverConfig {
 
   internal KeyCode getHotkey (HotkeyType type) {
     return hotkeys[(int)type];
-  }
-
-  internal void registerHotkeyPress (HotkeyType type) {
-    hotkeyPresses[(int)type] = true;
-  }
-
-  internal bool isHotkeyRegistered (HotkeyType type) {
-    if (hotkeyPresses[(int)type] == true) {
-      hotkeyPresses[(int)type] = false;
-      return true;
-    }
-    return false;
   }
 
   #endregion
@@ -337,7 +337,8 @@ internal class PreciseManeuverConfig {
     x10,
     increment,
     visibility,
-    conicsmode
+    conicsmode,
+    scale
   }
 
   private Dictionary<changeType, List<Action>> _listeners;
@@ -350,6 +351,7 @@ internal class PreciseManeuverConfig {
         _listeners[changeType.increment] = new List<Action> ();
         _listeners[changeType.visibility] = new List<Action> ();
         _listeners[changeType.conicsmode] = new List<Action> ();
+        _listeners[changeType.scale] = new List<Action> ();
       }
       return _listeners;
     }
@@ -369,6 +371,10 @@ internal class PreciseManeuverConfig {
 
   public void listenToConicsModeChange (Action listener) {
     listeners[changeType.conicsmode].Add (listener);
+  }
+
+  public void listenToScaleChange (Action listener) {
+    listeners[changeType.scale].Add (listener);
   }
 
   public void removeListener (Action listener) {
@@ -396,6 +402,11 @@ internal class PreciseManeuverConfig {
       act ();
   }
 
+  private void notifyScaleChanged () {
+    foreach (var act in listeners[changeType.scale])
+      act ();
+  }
+
   #endregion
 
   #region Save/Load
@@ -412,6 +423,9 @@ internal class PreciseManeuverConfig {
 
     config["increment"] = _increment;
     config["x10UTincrement"] = x10UTincrement;
+
+    config["scale"] = (int)(guiScale*1000f);
+    config["sensitivity"] = (int)(gizmoSensitivity*10000f);
 
     config["mainWindowX"] = (int)_mainWindowPos.x;
     config["mainWindowY"] = (int)_mainWindowPos.y;
@@ -446,6 +460,10 @@ internal class PreciseManeuverConfig {
 
       _increment = config.GetValue<int> ("increment", _increment);
       x10UTincrement = config.GetValue<bool> ("x10UTincrement", x10UTincrement);
+
+      guiScale = (float)config.GetValue<int> ("scale", (int)(guiScale*1000f)) / 1000f;
+      gizmoSensitivity = (float)config.GetValue<int> ("scale", (int)(gizmoSensitivity*10000f)) / 10000f;
+
 
       _mainWindowPos.x = config.GetValue<int> ("mainWindowX", (int)_mainWindowPos.x);
       _mainWindowPos.y = config.GetValue<int> ("mainWindowY", (int)_mainWindowPos.y);

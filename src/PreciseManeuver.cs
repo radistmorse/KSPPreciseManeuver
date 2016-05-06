@@ -126,18 +126,28 @@ internal class PreciseManeuver : MonoBehaviour {
       m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
       mainWindow.clearMainWindow ();
       mainWindow.updateMainWindow (m_MainWindow);
-      }
     }
+    scaleMainWindow ();
+    config.listenToScaleChange (scaleMainWindow);
+  }
+
+  private void scaleMainWindow () {
+    if (m_MainWindowObject == null)
+      return;
+    m_MainWindowObject.GetComponent<RectTransform> ().localScale = Vector3.one * config.guiScale;
+  }
 
   private void closeMainWindow () {
     if (m_MainWindow != null) {
       if (!m_MainWindow.IsFadingOut) {
         config.mainWindowPos = m_MainWindow.RectTransform.position;
         m_MainWindow.fadeClose ();
+        config.removeListener (scaleMainWindow);
       }
     } else if (m_MainWindowObject != null) {
       Destroy (m_MainWindowObject);
       mainWindow.clearMainWindow ();
+      config.removeListener (scaleMainWindow);
     }
   }
 

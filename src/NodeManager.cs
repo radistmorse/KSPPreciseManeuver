@@ -31,6 +31,7 @@ using System.Collections.Generic;
 
 namespace KSPPreciseManeuver {
 internal class NodeManager {
+
   #region Singleton
 
   private NodeManager () {
@@ -185,6 +186,7 @@ internal class NodeManager {
       return _currentNode;
     }
   }
+
   internal int currentNodeIdx { get; private set; } = -1;
   private int nodeCount = 0;
   /* Variables that help find the newly selected nodes */
@@ -199,12 +201,12 @@ internal class NodeManager {
       return _currentSavedNode;
     }
   }
-  /* KAC */
-  private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
 
   private Orbit target = null;
 
   #region KAC integration
+
+  private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
 
   internal void initAlarm () {
     KACWrapper.InitKACWrapper ();
@@ -250,10 +252,12 @@ internal class NodeManager {
   }
 
   internal void changeNodeUTtoAP () {
-    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToAp);
+    // a deliberate error that may fix some crashes
+    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToAp + 1E-3);
   }
   internal void changeNodeUTtoPE () {
-    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToPe);
+    // a deliberate error that may fix some crashes
+    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToPe + 1E-3);
   }
   internal void changeNodeUTtoAN () {
     currentSavedNode.updateUtAbs (currentNode.patch.getTargetANUT (target));
@@ -323,6 +327,7 @@ internal class NodeManager {
   internal void turnOrbitUp () {
     turnOrbit (-PreciseManeuverConfig.Instance.incrementDeg);
   }
+
   internal void turnOrbitDown () {
     turnOrbit (PreciseManeuverConfig.Instance.incrementDeg);
   }

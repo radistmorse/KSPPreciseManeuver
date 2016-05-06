@@ -45,7 +45,7 @@
     <Compile Include="UI\ConicsControl.cs" />
     <Compile Include="UI\GizmoControl.cs" />
     <Compile Include="Interfaces\IGizmoControl.cs" />
-    <Compile Include="UI\ISaverControl.cs" />
+    <Compile Include="Interfaces\ISaverControl.cs" />
     <Compile Include="UI\OrbitInfoControl.cs" />
     <Compile Include="UI\OrbitToolsControl.cs" />
     <Compile Include="UI\EjectionControl.cs" />

@@ -165,7 +165,7 @@ internal class MainWindow {
     }
     public string getManeuverDV (int idx) {
       var dv = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].DeltaV.magnitude;
-      return "Δv: " + dv.ToString ("0.##");
+      return dv.ToString ("0.##");
     }
     public void SwitchNode (int value) {
       _parent.nodeManager.switchNode (value);
@@ -593,6 +593,14 @@ internal class MainWindow {
         return !isUndo && _parent.nodeManager.undoAvailable;
       }
     }
+    public float sensitivity {
+      get {
+        return _parent.config.gizmoSensitivity;
+      }
+      set {
+        _parent.config.gizmoSensitivity = value;
+      }
+    }
     internal GizmoControlInterface (MainWindow parent) {
       _parent = parent;
     }
@@ -924,7 +932,7 @@ internal class MainWindow {
     panels = null;
   }
 
-    #endregion
+  #endregion
 
 }
 }

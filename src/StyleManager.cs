@@ -71,6 +71,13 @@ internal static class StyleManager {
                                  skin.verticalScrollbarThumb.disabled.background,
                                  skin.verticalScrollbar.normal.background);
       break;
+      case StyleApplicator.ElementTypes.Slider:
+        applicator.SetSlider (skin.horizontalSliderThumb.normal.background,
+                              skin.horizontalSliderThumb.highlight.background,
+                              skin.horizontalSliderThumb.active.background,
+                              skin.horizontalSliderThumb.disabled.background,
+                              skin.horizontalSlider.normal.background);
+      break;
     }
   }
 }

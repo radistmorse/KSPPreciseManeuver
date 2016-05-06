@@ -54,9 +54,8 @@ public class SaverControl : MonoBehaviour {
   public void SetControl (ISaverControl saverControl) {
     m_saverControl = saverControl;
     updateControls ();
-    var fixer = GetComponentsInChildren<CanvasFixer> (true);
-    if (fixer.Length > 0)
-      fixer[0].canvasLayer = saverControl.CanvasName;
+    foreach (var fixer in GetComponentsInChildren<CanvasFixer> (true))
+      fixer.m_canvasLayer = saverControl.CanvasName;
     repopulateChooser ();
   }
 

@@ -1,5 +1,6 @@
-2.0, 2016-04-17
+2.0, 2016-05-06
 - Deprecating IMGUI, new prefab-based GUI
+- Scalable GUI
 - Modular structure for GUI
 - New preset module for saving and loading maneuvers
 - New gizmo module that resembles the stock gizmo

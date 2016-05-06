@@ -32,6 +32,8 @@ public interface IGizmoControl {
   bool undoAvailable { get; }
   bool redoAvailable { get; }
 
+  float sensitivity { get; set; }
+
   void Undo ();
   void Redo ();
 

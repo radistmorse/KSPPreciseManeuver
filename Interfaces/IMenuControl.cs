@@ -36,6 +36,7 @@ public interface IMenuControl {
   bool IsKeybindingsVisible { get; set; }
 
   bool IsOn { get; }
+  float scaleGUIValue { get; set; }
 
   void registerUpdateAction (Action action);
   void deregisterUpdateAction (Action action);

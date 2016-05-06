@@ -73,6 +73,7 @@ internal static class NodeTools {
     return 3;
 
   }
+
   /// <summary>
   /// Returns the orbit of the currently targeted item or null if there is none.
   /// </summary>
@@ -284,10 +285,9 @@ internal static class NodeTools {
 
   internal static KeyCode fetchKey () {
 
-    foreach (KeyCode code in Enum.GetValues (typeof (KeyCode))) {
+    foreach (KeyCode code in Enum.GetValues (typeof (KeyCode)))
       if (Input.GetKeyDown (code) && ((int)code < (int)KeyCode.Mouse0 || (int)code > (int)KeyCode.Mouse6))
         return code;
-    }
 
     return KeyCode.None;
   }

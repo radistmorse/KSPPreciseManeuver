@@ -30,11 +30,13 @@ using UnityEngine;
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class CanvasFixer : MonoBehaviour {
-  internal string canvasLayer { get; set; } = "";
+  [SerializeField]
+  internal string m_canvasLayer = "";
+
   public void Awake () {
     var canv = GetComponent<Canvas>();
     if (canv != null)
-      canv.sortingLayerName = canvasLayer;
+      canv.sortingLayerName = m_canvasLayer;
   }
 }
 }

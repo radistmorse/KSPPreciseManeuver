@@ -35,6 +35,8 @@ public class GizmoControl : MonoBehaviour {
   private Button m_UndoButton = null;
   [SerializeField]
   private Button m_RedoButton = null;
+  [SerializeField]
+  private Slider m_SensitivitySlider = null;
 
   private IGizmoControl m_Control = null;
 
@@ -43,6 +45,7 @@ public class GizmoControl : MonoBehaviour {
 
   public void SetControl (IGizmoControl control) {
     m_Control = control;
+    m_SensitivitySlider.value = m_Control.sensitivity;
     updateControl ();
     m_Control.registerUpdateAction (updateControl);
   }
@@ -77,13 +80,23 @@ public class GizmoControl : MonoBehaviour {
     m_Control.Redo ();
   }
 
+  public void SensitivityChange (float val) {
+    m_Control.sensitivity = val;
+  }
 
   public void changeddv (double ddx, double ddy, double ddz, double dut) {
-    this.ddx = ddx;
-    this.ddy = ddy;
-    this.ddz = ddz;
-    this.dut = dut;
-    nonzero = (ddx != 0) || (ddy != 0) || (ddz != 0) || (dut != 0);
+    double scale = 1.0;
+    if (m_SensitivitySlider.value > 0.0) {
+      scale = m_SensitivitySlider.value*9.0 + 1.0;
+    }
+    if (m_SensitivitySlider.value < 0.0) {
+      scale = 1.0 / (1.0 - m_SensitivitySlider.value * 9.0);
+    }
+    this.ddx = ddx * scale;
+    this.ddy = ddy * scale;
+    this.ddz = ddz * scale;
+    this.dut = dut * scale;
+    nonzero = (ddx != 0.0) || (ddy != 0.0) || (ddz != 0.0) || (dut != 0.0);
   }
 
   public void FixedUpdate () {

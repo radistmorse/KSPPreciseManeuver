@@ -68,12 +68,14 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
   }
 
   public void OnPointerDown(PointerEventData data) {
-    //m_RectTransform.SetAsLastSibling();
+    m_RectTransform.SetAsLastSibling();
   }
 
   public void OnBeginDrag(BaseEventData data) {
     var eventData = data as PointerEventData;
     RectTransformUtility.ScreenPointToLocalPointInRectangle(m_RectTransform, eventData.position, eventData.pressEventCamera, out m_BeginMousePosition);
+    m_BeginMousePosition.x = m_BeginMousePosition.x * m_RectTransform.localScale.x;
+    m_BeginMousePosition.y = m_BeginMousePosition.y * m_RectTransform.localScale.y;
 
     if (m_CanvasRectTransform != null) {
       Vector3[] panelCorners = new Vector3[4];
@@ -92,12 +94,10 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
 
   public void OnDrag(BaseEventData data) {
     var eventData = data as PointerEventData;
-    Vector2 pointerPostion = ClampToWindow(eventData.position);
-
     Vector2 localPointerPosition;
-    if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-        m_CanvasRectTransform, pointerPostion, eventData.pressEventCamera, out localPointerPosition))
-      m_RectTransform.localPosition = localPointerPosition - m_BeginMousePosition;
+      if (RectTransformUtility.ScreenPointToLocalPointInRectangle (
+                   m_CanvasRectTransform, ClampToWindow (eventData.position), eventData.pressEventCamera, out localPointerPosition))
+        m_RectTransform.localPosition = localPointerPosition - m_BeginMousePosition;
   }
 
   private Vector2 ClampToWindow(Vector2 data) {

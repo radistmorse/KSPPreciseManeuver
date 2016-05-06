@@ -45,15 +45,16 @@ public class InputCaretFixer : MonoBehaviour, ISelectHandler {
     }
 
     string caretName = gameObject.name + " Input Caret";
-    RectTransform caretTransorm = null;
+    RectTransform caretTransform = null;
     do {
-      caretTransorm = (RectTransform)transform.Find (caretName);
-      if (!caretTransorm)
+      caretTransform = (RectTransform)transform.Find (caretName);
+      if (!caretTransform)
         yield return null;
-    } while (!caretTransorm);
+    } while (!caretTransform);
 
-    caretTransorm.anchorMin = new Vector2 (0.0f, -0.3f);
+    caretTransform.anchorMin = new Vector2 (0.0f, -0.3f);
 
     alreadyFixed = true;
   }
+}
 }

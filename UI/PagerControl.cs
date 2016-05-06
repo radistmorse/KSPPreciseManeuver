@@ -44,9 +44,8 @@ public class PagerControl : MonoBehaviour {
     m_pagerControl = pagerControl;
     updatePagerValues ();
     m_pagerControl.registerUpdateAction (updatePagerValues);
-    var fixer = GetComponentsInChildren<CanvasFixer> (true);
-    if (fixer.Length > 0)
-      fixer[0].canvasLayer = pagerControl.CanvasName;
+    foreach (var fixer in GetComponentsInChildren<CanvasFixer> (true))
+      fixer.m_canvasLayer = pagerControl.CanvasName;
   }
 
   public void OnDestroy () {
@@ -58,14 +57,17 @@ public class PagerControl : MonoBehaviour {
     if (m_pagerControl != null)
       m_pagerControl.PrevButtonPressed ();
   }
+
   public void FocusButtonAction () {
     if (m_pagerControl != null)
       m_pagerControl.FocusButtonPressed ();
   }
+
   public void DelButtonAction () {
     if (m_pagerControl != null)
       m_pagerControl.DelButtonPressed ();
   }
+
   public void NextButtonAction () {
     if (m_pagerControl != null)
       m_pagerControl.NextButtonPressed ();
@@ -89,10 +91,10 @@ public class PagerControl : MonoBehaviour {
     m_Chooser.captionText.text = "Node " + (m_pagerControl.maneuverIdx + 1).ToString ();
   }
 
-
   internal string GetTimeForNode (int nodeidx) {
     return m_pagerControl.getManeuverTime (nodeidx);
   }
+
   internal string GetDVForNode (int nodeidx) {
     return m_pagerControl.getManeuverDV (nodeidx);
   }
@@ -100,11 +102,11 @@ public class PagerControl : MonoBehaviour {
   public void repopulateChooser() {
     int len = m_pagerControl.maneuverCount;
     m_Chooser.options.Clear ();
-      if (len == 0)
-        return;
+    if (len == 0)
+      return;
     for (int i = 1; i <= len; i++)
-        m_Chooser.options.Add (new Dropdown.OptionData ("Node\n"+i.ToString()));
-      m_Chooser.value = m_pagerControl.maneuverIdx;
+      m_Chooser.options.Add (new Dropdown.OptionData ("Node\n"+i.ToString()));
+    m_Chooser.value = m_pagerControl.maneuverIdx;
   }
 
   public void chooserValueChange(int value) {

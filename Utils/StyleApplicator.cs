@@ -36,7 +36,8 @@ public class StyleApplicator : MonoBehaviour {
     Input,
     Button,
     ButtonToggle,
-    Scrollbar
+    Scrollbar,
+    Slider
   }
 
   [SerializeField]
@@ -90,6 +91,27 @@ public class StyleApplicator : MonoBehaviour {
       spriteState.pressedSprite = pressed;
       spriteState.disabledSprite = disabled;
       scrollbar.spriteState = spriteState;
+    }
+    SetImage (background, Image.Type.Sliced);
+  }
+
+  public void SetSlider (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
+    foreach (var image in GetComponentsInChildren<Image> ()) {
+      if (image.gameObject.name == "Background") {
+        image.sprite = background;
+        image.type = Image.Type.Sliced;
+      }
+    }
+    Slider slider = GetComponent<Slider>();
+    if (slider != null) {
+      slider.image.sprite = normal;
+      slider.image.type = Image.Type.Sliced;
+      slider.transition = Selectable.Transition.SpriteSwap;
+      SpriteState spriteState = slider.spriteState;
+      spriteState.highlightedSprite = highlight;
+      spriteState.pressedSprite = pressed;
+      spriteState.disabledSprite = disabled;
+      slider.spriteState = spriteState;
     }
     SetImage (background, Image.Type.Sliced);
   }

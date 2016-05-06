@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PreciseManeuver Plugin for Kerbal Space Program")]
-[assembly: AssemblyDescription("A plugin that allows to precisely edit manuever nodes")]
+[assembly: AssemblyDescription("A tool that lets you precisely edit your maneuvers")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PreciseManeuver")]
