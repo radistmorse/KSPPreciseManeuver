@@ -148,6 +148,7 @@ public class ToolbarMenu : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
   public void DisableMainWindow () {
     m_ShowMainWindowToggle.interactable = false;
+    m_ShowMainWindowToggle.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
   }
 
   public void Update() {

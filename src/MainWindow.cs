@@ -408,11 +408,9 @@ internal class MainWindow {
     }
     public void BeginAtomicChange () {
       _parent.nodeManager.beginAtomicChange ();
-        Debug.Log ("!!!!!!!!!!!!!!!!!!begin");
     }
     public void EndAtomicChange () {
       _parent.nodeManager.endAtomicChange ();
-        Debug.Log ("!!!!!!!!!!!!!!!!!!end");
     }
     public void ZeroButtonPressed () {
       double dx = _axis == Axis.radial ? 0 : 1;
@@ -609,7 +607,7 @@ internal class MainWindow {
     orbitToolsObj.transform.SetParent (panel.transform, false);
   }
 
-    #endregion
+  #endregion
 
   #region Gizmo
 
@@ -954,7 +952,7 @@ internal class MainWindow {
     panels = null;
   }
 
-    #endregion
+  #endregion
 
 }
 }

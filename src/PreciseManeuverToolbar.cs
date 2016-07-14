@@ -45,7 +45,7 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
 
 
   public bool IsMainWindowVisible {
-    get { return PreciseManeuverConfig.Instance.showMainWindow; }
+    get { return PreciseManeuverConfig.Instance.showMainWindow && NodeTools.patchedConicsUnlocked; }
 
     set { PreciseManeuverConfig.Instance.showMainWindow = value; }
   }

@@ -40,5 +40,5 @@ public interface IOrbitToolsControl {
 
   void registerUpdateAction (Action updateControls);
   void deregisterUpdateAction (Action updateControls);
-  }
+}
 }
