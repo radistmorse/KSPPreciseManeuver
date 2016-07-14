@@ -46,7 +46,8 @@ public class EjectionControl : MonoBehaviour {
   }
 
   public void OnDestroy () {
-    m_control.deregisterUpdateAction (updateControl);
+    if (m_control != null)
+      m_control.deregisterUpdateAction (updateControl);
     m_control = null;
   }
 

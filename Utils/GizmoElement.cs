@@ -130,10 +130,10 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
       m_drag.sizeDelta = size;
 
       double ddv = 0;
-      if (proj > 5)
-        ddv = Math.Pow (10, ((proj - 5) / m_ClampDragMax) * 3.5 - 2);
-      if (proj < -5)
-        ddv = -Math.Pow (10, ((-proj - 5) / m_ClampDragMin) * 2.0 - 2);
+      if (proj > 0)
+        ddv = Math.Pow (10, ((proj) / m_ClampDragMax) * 3.0 - 2.0) - 0.01;
+      if (proj < 0)
+        ddv = 0.01 - Math.Pow (10, ((-proj) / m_ClampDragMin) * 1.0 - 2.0);
       m_Control.changeddv (axisMult.x * ddv, axisMult.y * ddv, axisMult.z * ddv, 0.0);
     } else {
       Vector2 pos = m_drag.localPosition;

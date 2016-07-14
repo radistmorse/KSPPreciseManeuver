@@ -35,24 +35,23 @@ public class AxisControl : MonoBehaviour {
   private InputField m_AxisValue = null;
   [SerializeField]
   private Text m_AxisName = null;
+  [SerializeField]
+  private Button m_EditFieldButton = null;
 
   private IAxisControl m_axisControl = null;
 
   public void SetAxisControl(IAxisControl axisControl) {
     m_axisControl = axisControl;
-    if (m_AxisName != null) {
-      m_AxisName.color = m_axisControl.AxisColor;
-      m_AxisName.text = m_axisControl.AxisName;
-    }
-    if (m_AxisValue != null) {
-      m_AxisValue.textComponent.color = m_axisControl.AxisColor;
-      m_AxisValue.text = m_axisControl.AxisValue;
-    }
+    m_AxisName.color = m_axisControl.AxisColor;
+    m_AxisName.text = m_axisControl.AxisName;
+    m_AxisValue.textComponent.color = m_axisControl.AxisColor;
+    updateAxisValue ();
     m_axisControl.registerUpdateAction (updateAxisValue);
   }
 
   public void OnDestroy () {
-    m_axisControl.deregisterUpdateAction (updateAxisValue);
+    if (m_axisControl != null)
+      m_axisControl.deregisterUpdateAction (updateAxisValue);
     m_axisControl = null;
   }
 
@@ -64,13 +63,34 @@ public class AxisControl : MonoBehaviour {
     if (m_axisControl != null)
       m_axisControl.MinusButtonPressed ();
   }
+  public void RepeatButtonStart () {
+      m_axisControl.BeginAtomicChange ();
+  }
+  public void RepeatButtonStop () {
+      m_axisControl.EndAtomicChange ();
+  }
   public void ZeroButtonAction () {
     if (m_axisControl != null)
       m_axisControl.ZeroButtonPressed ();
   }
+  public void EditButtonAction () {
+    m_AxisValue.interactable = true;
+    m_EditFieldButton.interactable = false;
+    m_AxisValue.ActivateInputField ();
+  }
+
+  public void InputFieldEndEdit (string text) {
+    double value;
+    if ((Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) && m_axisControl != null && double.TryParse(text, out value))
+      m_axisControl.UpdateValueAbs (value);
+
+    m_AxisValue.interactable = false;
+    m_EditFieldButton.interactable = true;
+    updateAxisValue ();
+  }
 
   public void updateAxisValue () {
-    if (m_AxisValue != null && m_axisControl != null)
+    if (m_AxisValue.interactable == false && m_axisControl != null)
       m_AxisValue.text = m_axisControl.AxisValue;
   }
 }

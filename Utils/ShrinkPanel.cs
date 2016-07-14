@@ -1,4 +1,4 @@
-/*******************************************************************************
+﻿/*******************************************************************************
  * Copyright (c) 2016, George Sedov
  * All rights reserved.
  *
@@ -25,39 +25,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
+using UnityEngine;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (Button))]
-class RepeatButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
-
-  [SerializeField]
-  private UnityEvent OnRepeatedClick = null;
-
-  private bool pressed = false;
-  private int buttonPressedInterval = 0;
-
-  internal void FixedUpdate () {
-    if (pressed == true) {
-      if (buttonPressedInterval > 20 || buttonPressedInterval == 0) {
-        if (OnRepeatedClick != null)
-          OnRepeatedClick.Invoke ();
-      }
-      buttonPressedInterval++;
-    } else {
-      buttonPressedInterval = 0;
-    }
+public class ShrinkPanel : HorizontalOrVerticalLayoutGroup {
+  public override void CalculateLayoutInputHorizontal () {
+    base.CalculateLayoutInputHorizontal ();
+    CalcAlongAxis (0, true);
   }
 
-  public void OnPointerDown (PointerEventData eventData) {
-    pressed = true;
+  public override void CalculateLayoutInputVertical () {
+    CalcAlongAxis (1, true);
+    SetLayoutInputForAxis (minHeight, preferredHeight * GetComponent<RectTransform> ().localScale.y, flexibleHeight, 1);
   }
 
-  public void OnPointerUp (PointerEventData eventData) {
-    pressed = false;
+  public override void SetLayoutHorizontal () {
+    SetChildrenAlongAxis (0, true);
+  }
+
+  public override void SetLayoutVertical () {
+    SetChildrenAlongAxis (1, true);
   }
 }
 }

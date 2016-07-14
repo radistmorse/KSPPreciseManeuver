@@ -102,6 +102,7 @@ internal class PreciseManeuverHotkeys {
       repeatButtonPressInterval = 0;
     }
     repeatButtonPressed = true;
+    nodeManager.beginAtomicChange ();
     if (repeatButtonPressInterval > 20 || repeatButtonPressInterval == 0)
       return true;
     else
@@ -344,6 +345,10 @@ internal class PreciseManeuverHotkeys {
       if (repeatButtonReleaseInterval < 2) {
         repeatButtonReleaseInterval++;
       } else {
+        if (repeatButtonReleaseInterval < 100) {
+          nodeManager.endAtomicChange ();
+          repeatButtonReleaseInterval = 100;
+        }
         repeatButtonPressInterval = 0;
         repeatButtonPressedCode = KeyCode.None;
       }

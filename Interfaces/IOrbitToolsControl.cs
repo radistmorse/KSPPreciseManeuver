@@ -32,9 +32,13 @@ namespace KSPPreciseManeuver.UI {
 public interface IOrbitToolsControl {
   void OrbitUpButtonPressed ();
   void OrbitDnButtonPressed ();
+
+  void BeginAtomicChange ();
+  void EndAtomicChange ();
+
   void CircularizeButtonPressed ();
 
   void registerUpdateAction (Action updateControls);
   void deregisterUpdateAction (Action updateControls);
-}
+  }
 }

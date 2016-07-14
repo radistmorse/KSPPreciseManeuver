@@ -50,6 +50,12 @@ public class OrbitToolsControl : MonoBehaviour {
     if (m_control != null)
       m_control.OrbitDnButtonPressed ();
   }
+  public void RepeatButtonStart () {
+      m_control.BeginAtomicChange ();
+  }
+  public void RepeatButtonStop () {
+      m_control.EndAtomicChange ();
+  }
   public void CircularizeButtonAction () {
     if (m_control != null)
       m_control.CircularizeButtonPressed ();

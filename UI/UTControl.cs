@@ -69,6 +69,12 @@ public class UTControl : MonoBehaviour {
     if (m_UTControl != null)
       m_UTControl.MinusButtonPressed ();
   }
+  public void RepeatButtonStart () {
+      m_UTControl.BeginAtomicChange ();
+  }
+  public void RepeatButtonStop () {
+      m_UTControl.EndAtomicChange ();
+  }
   public void APButtonAction () {
     if (m_UTControl != null)
       m_UTControl.APButtonPressed ();

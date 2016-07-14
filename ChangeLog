@@ -1,3 +1,14 @@
+2.1, 2016-07-14
+- Removed the dead zone in gizmo tool
+- Adjusted the sensitivity of the gizmo
+- Exapanded "undo" to save more than one change
+- Changes from gui buttons and hotkeys now also undoable
+- Fixed KAC integration
+- Fixed the weird toolbar behaviour in some cases
+- Eye candy for main window
+- Added the ability to put the main window into background
+- Honor the F2 (hide the UI) hotkey
+
 2.0, 2016-05-06
 - Deprecating IMGUI, new prefab-based GUI
 - Scalable GUI

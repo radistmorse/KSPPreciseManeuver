@@ -56,17 +56,18 @@ internal class MainWindow {
       this.abbriv = abbriv;
     }
     internal bool update (double value) {
-      var previous = current;
-      current = abs ? Math.Abs (value) : value;
-      if (!double.IsNaN (current) && (double.IsNaN (previous) || Math.Abs (previous - current) > epsilon)) {
+      value = abs ? Math.Abs (value) : value;
+      if (!double.IsNaN (value) && (double.IsNaN (current) || Math.Abs (current - value) > epsilon)) {
+        current = value;
         if (abbriv)
           this.value = String.Format (format, NodeTools.formatMeters (current));
         else
           this.value = String.Format (format, current);
         return true;
       }
-      if (double.IsNaN (current) && !double.IsNaN (previous)) {
+      if (double.IsNaN (value) && !double.IsNaN (current)) {
         this.value = "N/A";
+        current = value;
         return true;
       }
       return false;
@@ -89,18 +90,28 @@ internal class MainWindow {
     { PreciseManeuverConfig.ModuleType.PATCH, 10 },
   };
   private readonly int size = 12;
+  
+  private void fillSection (PreciseManeuverConfig.ModuleType type, DraggableWindow window, Action<GameObject> createControls, bool initial = false) {
+    fillSection (sectionPosition[type], config.getModuleState (type), window, createControls, initial);
+  }
 
-  private void fillSection (PreciseManeuverConfig.ModuleType type, DraggableWindow window, Action<GameObject> createControls) {
-    int num = sectionPosition[type];
-    if (config.getModuleState (type)) {
+  private void fillSection (int num, bool state, DraggableWindow window, Action<GameObject> createControls, bool initial = false) {
+    if (state) {
       if (panels[num] == null) {
         panels[num] = window.createInnerContentPanel (num);
+        if (!initial) {
+          var fader = panels[num].GetComponent<CanvasGroupFader> ();
+          fader.setTransparent ();
+          fader.fadeIn ();
+        }
         createControls (panels[num]);
+      } else {
+        if (panels[num].GetComponent<CanvasGroupFader> ().IsFadingOut )
+          panels[num].GetComponent<CanvasGroupFader> ().fadeIn ();
       }
     } else {
       if (panels[num] != null) {
-        UnityEngine.Object.Destroy (panels[num]);
-        panels[num] = null;
+        panels[num].GetComponent<CanvasGroupFader> ().fadeClose ();
       }
     }
   }
@@ -304,6 +315,12 @@ internal class MainWindow {
     public void MinusButtonPressed () {
       _parent.nodeManager.changeNodeDiff (0, 0, 0, -_parent.config.incrementUt);
     }
+    public void BeginAtomicChange () {
+      _parent.nodeManager.beginAtomicChange ();
+    }
+    public void EndAtomicChange () {
+      _parent.nodeManager.endAtomicChange ();
+    }
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
       _parent.nodeManager.listenToTargetChange (action);
@@ -389,12 +406,28 @@ internal class MainWindow {
       double dz = _axis == Axis.prograde ? _parent.config.increment : 0;
       _parent.nodeManager.changeNodeDiff (dx, dy, dz, 0.0);
     }
+    public void BeginAtomicChange () {
+      _parent.nodeManager.beginAtomicChange ();
+        Debug.Log ("!!!!!!!!!!!!!!!!!!begin");
+    }
+    public void EndAtomicChange () {
+      _parent.nodeManager.endAtomicChange ();
+        Debug.Log ("!!!!!!!!!!!!!!!!!!end");
+    }
     public void ZeroButtonPressed () {
       double dx = _axis == Axis.radial ? 0 : 1;
       double dy = _axis == Axis.normal ? 0 : 1;
       double dz = _axis == Axis.prograde ? 0 : 1;
       _parent.nodeManager.changeNodeDVMult (dx, dy, dz);
     }
+
+    public void UpdateValueAbs (double value) {
+      double dx = _axis == Axis.radial ? value : _parent.nodeManager.currentNode.DeltaV.x;
+      double dy = _axis == Axis.normal ? value : _parent.nodeManager.currentNode.DeltaV.y;
+      double dz = _axis == Axis.prograde ? value : _parent.nodeManager.currentNode.DeltaV.z;
+      _parent.nodeManager.changeNodeDVAbs (dx, dy, dz);
+    }
+
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
@@ -554,6 +587,12 @@ internal class MainWindow {
     public void OrbitDnButtonPressed () {
       _parent.nodeManager.turnOrbitDown();
     }
+    public void BeginAtomicChange () {
+      _parent.nodeManager.beginAtomicChange ();
+    }
+    public void EndAtomicChange () {
+      _parent.nodeManager.endAtomicChange ();
+    }
     public void CircularizeButtonPressed () {
       _parent.nodeManager.circularizeOrbit ();
     }
@@ -580,17 +619,17 @@ internal class MainWindow {
 
     private MainWindow _parent;
     private Action _controlUpdate = null;
-    private bool isUndo = true;
     private bool undoAvailableCache = false;
+    private bool redoAvailableCache = false;
 
     public bool undoAvailable {
       get {
-        return isUndo && _parent.nodeManager.undoAvailable;
+        return _parent.nodeManager.undoAvailable;
       }
     }
     public bool redoAvailable {
       get {
-        return !isUndo && _parent.nodeManager.undoAvailable;
+        return _parent.nodeManager.redoAvailable;
       }
     }
     public float sensitivity {
@@ -616,27 +655,23 @@ internal class MainWindow {
       _controlUpdate = null;
     }
     public void Undo () {
-      if (isUndo && _parent.nodeManager.undoAvailable) {
+      if (_parent.nodeManager.undoAvailable) {
         _parent.nodeManager.undo ();
-        isUndo = false;
-        if (_controlUpdate != null)
-          _controlUpdate ();
+        _controlUpdate?.Invoke ();
       }
     }
     public void Redo () {
-      if (!isUndo && _parent.nodeManager.undoAvailable) {
-        _parent.nodeManager.undo ();
-        isUndo = true;
-        if (_controlUpdate != null)
-          _controlUpdate ();
+      if (_parent.nodeManager.redoAvailable) {
+        _parent.nodeManager.redo ();
+        _controlUpdate?.Invoke ();
       }
     }
     public void undoRedoUpdate () {
-      if (undoAvailableCache != _parent.nodeManager.undoAvailable || !isUndo) {
+      if (undoAvailableCache != _parent.nodeManager.undoAvailable ||
+          redoAvailableCache != _parent.nodeManager.redoAvailable) {
         undoAvailableCache = _parent.nodeManager.undoAvailable;
-        isUndo = true;
-        if (_controlUpdate != null)
-          _controlUpdate ();
+        redoAvailableCache = _parent.nodeManager.redoAvailable;
+        _controlUpdate?.Invoke ();
       }
     }
     public void beginAtomicChange () {
@@ -883,45 +918,32 @@ internal class MainWindow {
   internal void updateMainWindow (DraggableWindow window) {
     if (panels == null)
       panels = new GameObject[size];
-    window.DivideContentPanel (panels.Length);
-    // PAGER
-    fillSection (PreciseManeuverConfig.ModuleType.PAGER, window, createPagerControls);
-    // TIME & ALARM (always on)
-    int num = 1;
-    if (panels[num] == null) {
-      panels[num] = window.createInnerContentPanel (num);
-      createTimeAlarmControls (panels[num]);
-    }
-    // SAVER
-    fillSection (PreciseManeuverConfig.ModuleType.SAVER, window, createSaverControls);
-    // INCREMENT (on if manual || tools)
-    num = 3;
-    if (config.getModuleState (PreciseManeuverConfig.ModuleType.INPUT) ||
-        config.getModuleState (PreciseManeuverConfig.ModuleType.TOOLS)) {
-      if (panels[num] == null) {
-        panels[num] = window.createInnerContentPanel (num);
-        createIncrementControls (panels[num]);
-      }
-    } else {
-      if (panels[num] != null) {
-        UnityEngine.Object.Destroy (panels[num]);
-        panels[num] = null;
-      }
-    }
-    // MANUAL INPUT
-    fillSection (PreciseManeuverConfig.ModuleType.INPUT, window, createUtAxisControls);
-    // ORBIT TOOLS
-    fillSection (PreciseManeuverConfig.ModuleType.TOOLS, window, createOrbitToolsControls);
-    // GIZMO
-    fillSection (PreciseManeuverConfig.ModuleType.GIZMO, window, createGizmoControls);
-    // ENCOUNTER
-    fillSection (PreciseManeuverConfig.ModuleType.ENCOT, window, createEncounterControls);
-    // EJECTION
-    fillSection (PreciseManeuverConfig.ModuleType.EJECT, window, createEjectionControls);
-    // ORBIT INFO
-    fillSection (PreciseManeuverConfig.ModuleType.ORBIT, window, createOrbitInfoControls);
-    // ORBIT INFO
-    fillSection (PreciseManeuverConfig.ModuleType.PATCH, window, createConicsControls);
+
+    bool initial = window.DivideContentPanel (panels.Length);
+    // 0 - PAGER
+    fillSection (PreciseManeuverConfig.ModuleType.PAGER, window, createPagerControls, initial);
+    // 1 - TIME & ALARM (always on)
+    fillSection (1, true, window, createTimeAlarmControls, initial);
+    // 2 - SAVER
+    fillSection (PreciseManeuverConfig.ModuleType.SAVER, window, createSaverControls, initial);
+    // 3 - INCREMENT (on if manual || tools)
+    bool state = config.getModuleState (PreciseManeuverConfig.ModuleType.INPUT) ||
+                 config.getModuleState (PreciseManeuverConfig.ModuleType.TOOLS);
+    fillSection (3, state, window, createIncrementControls, initial);
+    // 4 - MANUAL INPUT
+    fillSection (PreciseManeuverConfig.ModuleType.INPUT, window, createUtAxisControls, initial);
+    // 5 - ORBIT TOOLS
+    fillSection (PreciseManeuverConfig.ModuleType.TOOLS, window, createOrbitToolsControls, initial);
+    // 6 - GIZMO
+    fillSection (PreciseManeuverConfig.ModuleType.GIZMO, window, createGizmoControls, initial);
+    // 7 - ENCOUNTER
+    fillSection (PreciseManeuverConfig.ModuleType.ENCOT, window, createEncounterControls, initial);
+    // 8 - EJECTION
+    fillSection (PreciseManeuverConfig.ModuleType.EJECT, window, createEjectionControls, initial);
+    // 9 - ORBIT INFO
+    fillSection (PreciseManeuverConfig.ModuleType.ORBIT, window, createOrbitInfoControls, initial);
+    // 10 - CONICS
+    fillSection (PreciseManeuverConfig.ModuleType.PATCH, window, createConicsControls, initial);
   }
 
   internal void clearMainWindow () {
@@ -932,7 +954,7 @@ internal class MainWindow {
     panels = null;
   }
 
-  #endregion
+    #endregion
 
 }
 }

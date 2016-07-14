@@ -51,7 +51,8 @@ public class ConicsControl : MonoBehaviour {
   }
 
   public void OnDestroy () {
-    m_control.deregisterUpdateAction (updateControls);
+    if (m_control != null)
+      m_control.deregisterUpdateAction (updateControls);
     m_control = null;
   }
 

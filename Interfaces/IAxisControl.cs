@@ -31,12 +31,18 @@ namespace KSPPreciseManeuver.UI {
 public interface IAxisControl {
   void PlusButtonPressed ();
   void MinusButtonPressed ();
+
+  void BeginAtomicChange ();
+  void EndAtomicChange ();
+
   void ZeroButtonPressed ();
+
+  void UpdateValueAbs (double value);
 
   string AxisName { get; }
   string AxisValue { get; }
   UnityEngine.Color AxisColor { get; }
   void registerUpdateAction (Action action);
   void deregisterUpdateAction (Action action);
-}
+  }
 }

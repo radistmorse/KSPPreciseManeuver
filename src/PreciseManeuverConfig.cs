@@ -64,6 +64,8 @@ internal class PreciseManeuverConfig {
     }
   }
 
+  internal bool uiActive { get; set; } = true;
+
   internal int conicsMode {
     get {
       return NodeTools.getConicsMode ();
@@ -99,10 +101,13 @@ internal class PreciseManeuverConfig {
       }
     }
   }
+
+  internal bool isInBackground { get; set; } = false;
+
   private Vector3 _mainWindowPos = new Vector3 ();
   internal Vector3 mainWindowPos {
     get { return _mainWindowPos; }
-    set { _mainWindowPos = value; }
+    set { _mainWindowPos = value; if (isInBackground) _mainWindowPos.y += 10; }
   }
 
   #endregion
@@ -415,6 +420,9 @@ internal class PreciseManeuverConfig {
     Debug.Log ("Saving PreciseManeuver settings.");
     PluginConfiguration config = KSP.IO.PluginConfiguration.CreateForType<PreciseManeuver> (null);
 
+    config["enabled"] = _showMainWindow;
+    config["background"] = isInBackground;
+
     foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
       config[type.ToString ()] = hotkeys[(int)type].ToString ();
 
@@ -452,6 +460,9 @@ internal class PreciseManeuverConfig {
     config.load ();
 
     try {
+      _showMainWindow = config.GetValue<bool> ("enabled", _showMainWindow);
+      isInBackground = config.GetValue<bool> ("background", isInBackground);
+      
       foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
         hotkeys[(int)type] = (KeyCode)Enum.Parse (typeof (KeyCode), config.GetValue<String> (type.ToString (), hotkeys[(int)type].ToString ()));
 
@@ -462,7 +473,7 @@ internal class PreciseManeuverConfig {
       x10UTincrement = config.GetValue<bool> ("x10UTincrement", x10UTincrement);
 
       guiScale = (float)config.GetValue<int> ("scale", (int)(guiScale*1000f)) / 1000f;
-      gizmoSensitivity = (float)config.GetValue<int> ("scale", (int)(gizmoSensitivity*10000f)) / 10000f;
+      gizmoSensitivity = (float)config.GetValue<int> ("sensitivity", (int)(gizmoSensitivity*10000f)) / 10000f;
 
 
       _mainWindowPos.x = config.GetValue<int> ("mainWindowX", (int)_mainWindowPos.x);

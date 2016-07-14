@@ -25,23 +25,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent(typeof(RectTransform))]
-public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
+[RequireComponent(typeof(CanvasGroupFader))]
+public class DraggableWindow : MonoBehaviour {
   [SerializeField]
   private Text m_Title = null;
 
   [SerializeField]
   private Transform m_Content = null;
 
+  [SerializeField]
+  private GameObject m_Header = null;
+
   private Vector2 m_BeginMousePosition;
   private RectTransform m_RectTransform;
   private RectTransform m_CanvasRectTransform;
+
+  private bool inBackground = false;
+
+  private CanvasGroupFader m_fader;
 
   private List<GameObject> m_ContentSections = new List<GameObject>();
 
@@ -53,18 +61,45 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
     }
   }
 
+  public bool IsFadingOut { get { return m_fader.IsFadingOut; } }
+
+  public void fadeIn () {
+    m_fader.fadeIn ();
+  }
+
+  public void fadeClose () {
+    m_fader.fadeClose ();
+  }
+
   public void setMainCanvasTransform(RectTransform transform) {
     m_CanvasRectTransform = transform;
   }
 
-  override protected void Awake() {
-    base.Awake();
+  public void Awake() {
+    m_fader = GetComponent<CanvasGroupFader> ();
+    m_fader.collapseOnFade = false;
     m_RectTransform = GetComponent<RectTransform>();
   }
 
   protected virtual void Start() {
-    setTransparent();
-    fadeIn();
+    m_fader.setTransparent();
+    m_fader.fadeIn();
+  }
+
+  public void MoveToBackground (bool state) {
+    if (inBackground != state) {
+      inBackground = state;
+      m_Header.SetActive (!inBackground);
+      var position = m_RectTransform.localPosition;
+      if (inBackground) {
+        GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 0.5f);
+        position.y -= 10;
+      } else {
+        GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+        position.y += 10;
+      }
+      m_RectTransform.localPosition = position;
+    }
   }
 
   public void OnPointerDown(PointerEventData data) {
@@ -95,9 +130,9 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
   public void OnDrag(BaseEventData data) {
     var eventData = data as PointerEventData;
     Vector2 localPointerPosition;
-      if (RectTransformUtility.ScreenPointToLocalPointInRectangle (
-                   m_CanvasRectTransform, ClampToWindow (eventData.position), eventData.pressEventCamera, out localPointerPosition))
-        m_RectTransform.localPosition = localPointerPosition - m_BeginMousePosition;
+    if (RectTransformUtility.ScreenPointToLocalPointInRectangle (
+                 m_CanvasRectTransform, ClampToWindow (eventData.position), eventData.pressEventCamera, out localPointerPosition))
+      m_RectTransform.localPosition = localPointerPosition - m_BeginMousePosition;
   }
 
   private Vector2 ClampToWindow(Vector2 data) {
@@ -116,9 +151,9 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
       childObject.transform.SetParent (m_Content, false);
   }
 
-  public void DivideContentPanel (int num) {
+  public bool DivideContentPanel (int num) {
     if (m_ContentSections.Count > 0)
-      return;
+      return false;
     for (int i = 0; i < num; i++) {
       var outerpanel = new GameObject("PreciseManeuverOuterPanel"+i.ToString());
       outerpanel.AddComponent<RectTransform> ();
@@ -126,15 +161,19 @@ public class DraggableWindow : CanvasGroupFader/*, IPointerDownHandler*/ {
       m_ContentSections.Add (outerpanel);
       AddToContent (outerpanel);
     }
+    return true;
   }
+
   public GameObject createInnerContentPanel (int num) {
     if (m_ContentSections.Count <= num)
       return null;
     var innerpanel = new GameObject("PreciseManeuverInnerPanel"+num.ToString());
     innerpanel.AddComponent<RectTransform> ();
-    var layout = innerpanel.AddComponent<VerticalLayoutGroup> ();
+    var layout = innerpanel.AddComponent<ShrinkPanel> ();
     layout.padding = new RectOffset (4, 4, 4, 4);
     layout.spacing = 2.0f;
+    var fader = innerpanel.AddComponent<CanvasGroupFader> ();
+    fader.collapseOnFade = true;
     innerpanel.transform.SetParent (m_ContentSections[num].transform, false);
     return innerpanel;
   }

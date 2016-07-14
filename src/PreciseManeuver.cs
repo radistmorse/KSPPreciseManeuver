@@ -50,6 +50,10 @@ internal class PreciseManeuver : MonoBehaviour {
 
   private int waitForGizmo = 0;
 
+  internal void Start () {
+    KACWrapper.InitKACWrapper ();
+  }
+
   internal void OnDisable() {
     closeKeybindingsWindow();
     closeMainWindow ();
@@ -60,14 +64,14 @@ internal class PreciseManeuver : MonoBehaviour {
     if (!NodeTools.patchedConicsUnlocked)
       return;
 
-    if (config.showKeymapperWindow)
+    if (config.showKeymapperWindow && config.uiActive)
       openKeybindingsWindow ();
-    if (!config.showKeymapperWindow)
+    else
       closeKeybindingsWindow ();
 
-    if (config.showMainWindow && canShowNodeEditor)
+    if (config.showMainWindow && config.uiActive && canShowNodeEditor)
       openMainWindow ();
-    if (!config.showMainWindow || !canShowNodeEditor)
+    else
       closeMainWindow ();
 
     if (m_KeybindingsWindowObject != null)
@@ -99,6 +103,7 @@ internal class PreciseManeuver : MonoBehaviour {
   private void openMainWindow () {
     // fade in if already open
     if (m_MainWindow != null) {
+      m_MainWindow.MoveToBackground (config.isInBackground);
       if (m_MainWindow.IsFadingOut)
         m_MainWindow.fadeIn ();
       if (config.modulesChanged)
@@ -126,6 +131,7 @@ internal class PreciseManeuver : MonoBehaviour {
       m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
       mainWindow.clearMainWindow ();
       mainWindow.updateMainWindow (m_MainWindow);
+      m_MainWindow.MoveToBackground (config.isInBackground);
     }
     scaleMainWindow ();
     config.listenToScaleChange (scaleMainWindow);

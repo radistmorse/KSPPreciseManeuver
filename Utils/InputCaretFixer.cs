@@ -33,7 +33,7 @@ using System.Collections;
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (InputField))]
 public class InputCaretFixer : MonoBehaviour, ISelectHandler {
-  private bool alreadyFixed;
+  private bool alreadyFixed = false;
 
   public void OnSelect (BaseEventData eventData) {
     StartCoroutine (FixCaret ());

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -56,8 +56,9 @@
     <Compile Include="UI\PagerControl.cs" />
     <Compile Include="UI\UTControl.cs" />
     <Compile Include="UI\AxisControl.cs" />
-    <Compile Include="UI\RepeatButton.cs" />
+    <Compile Include="Utils\RepeatButton.cs" />
     <Compile Include="UI\KeybindingControl.cs" />
+    <Compile Include="Utils\ShrinkPanel.cs" />
     <Compile Include="Utils\GizmoElement.cs" />
     <Compile Include="Utils\InputCaretFixer.cs" />
     <Compile Include="Utils\DropDownManeuverPager.cs" />
@@ -74,11 +75,11 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
-      <HintPath>Libs\UnityEngine.dll</HintPath>
+      <HintPath>..\Libs\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libs\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

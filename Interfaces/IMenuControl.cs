@@ -32,8 +32,8 @@ using System;
 namespace KSPPreciseManeuver.UI {
 public interface IMenuControl {
   bool IsMainWindowVisible { get; set; }
-
   bool IsKeybindingsVisible { get; set; }
+  bool IsInBackground { get; set; }
 
   bool IsOn { get; }
   float scaleGUIValue { get; set; }

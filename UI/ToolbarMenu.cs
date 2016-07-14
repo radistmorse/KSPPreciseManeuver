@@ -25,19 +25,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent(typeof(RectTransform))]
-public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler {
+[RequireComponent(typeof(CanvasGroupFader))]
+public class ToolbarMenu : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler {
   [SerializeField]
   private Toggle m_ShowMainWindowToggle = null;
 
   [SerializeField]
   private Toggle m_ShowKeybindingsToggle = null;
+
+  [SerializeField]
+  private Toggle m_BackgroundToggle = null;
 
   [SerializeField]
   private Slider m_ScaleGUISlider = null;
@@ -48,16 +52,28 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
   [SerializeField]
   private Transform m_SectionsTransform = null;
 
+  private CanvasGroupFader m_fader;
+
   private IMenuControl m_MenuControl;
   private RectTransform m_RectTransform;
 
+  public bool IsFadingOut { get { return m_fader.IsFadingOut; } }
+
+  public void fadeIn () {
+    m_fader.fadeIn ();
+  }
+
+  public void fadeClose () {
+    m_fader.fadeClose ();
+  }
+
   public void OnPointerEnter(PointerEventData eventData) {
-    fadeIn();
+    m_fader.fadeIn();
   }
 
   public void OnPointerExit(PointerEventData eventData) {
-      if (m_MenuControl != null && m_MenuControl.IsOn == false)
-        fadeCloseSlow ();
+    if (m_MenuControl != null && m_MenuControl.IsOn == false && !m_fader.IsFadingOut)
+      m_fader.fadeCloseSlow ();
   }
 
   public void OnPointerDown (PointerEventData data) {
@@ -74,6 +90,11 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
       m_MenuControl.IsKeybindingsVisible = visible;
   }
 
+  public void SetBackground(bool state) {
+    if (m_MenuControl != null)
+      m_MenuControl.IsInBackground = state;
+  }
+
   public void SetGUIScale(float scale) {
     if (m_MenuControl != null)
       m_MenuControl.scaleGUIValue = scale;
@@ -86,14 +107,15 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
     m_MenuControl.registerUpdateAction (updateControls);
   }
 
-  protected override void Awake() {
-    base.Awake();
+  public void Awake() {
+    m_fader = GetComponent<CanvasGroupFader> ();
+    m_fader.collapseOnFade = false;
     m_RectTransform = GetComponent<RectTransform>();
   }
 
   protected virtual void Start() {
-    setTransparent();
-    fadeIn();
+    m_fader.setTransparent();
+    m_fader.fadeIn();
   }
 
   public void OnDestroy () {
@@ -105,17 +127,32 @@ public class ToolbarMenu : CanvasGroupFader, IPointerEnterHandler, IPointerExitH
     m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
     m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
     m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
     m_ShowMainWindowToggle.isOn = m_MenuControl.IsMainWindowVisible;
     m_ShowKeybindingsToggle.isOn = m_MenuControl.IsKeybindingsVisible;
     m_ScaleGUISlider.value = m_MenuControl.scaleGUIValue;
+    if (m_MenuControl.IsMainWindowVisible) {
+      m_BackgroundToggle.interactable = true;
+      m_BackgroundToggle.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      m_BackgroundToggle.isOn = m_MenuControl.IsInBackground;
+    } else {
+      m_BackgroundToggle.isOn = false;
+      m_BackgroundToggle.interactable = false;
+      m_BackgroundToggle.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    }
     m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
     m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
     m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+  }
+
+  public void DisableMainWindow () {
+    m_ShowMainWindowToggle.interactable = false;
   }
 
   public void Update() {
     // update anchor position
-    if (m_RectTransform != null) {
+    if (m_RectTransform != null && !m_fader.IsFadingOut) {
       m_RectTransform.position = m_MenuControl.GetAnchor();
       m_MenuControl.ClampToScreen(m_RectTransform);
     }

@@ -25,30 +25,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 namespace KSPPreciseManeuver.UI {
-public interface IUTControl {
-  bool APAvailable { get; }
-  bool PEAvailable { get; }
-  bool ANAvailable { get; }
-  bool DNAvailable { get; }
+[RequireComponent (typeof (Button))]
+class RepeatButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
-  bool X10State { get; set; }
-  string UTValue { get; }
+  [SerializeField]
+  private UnityEvent OnRepeatedClick = null;
+  [SerializeField]
+  private UnityEvent OnRepeatClickStart = null;
+  [SerializeField]
+  private UnityEvent OnRepeatClickEnd = null;
 
-  void PlusButtonPressed ();
-  void MinusButtonPressed ();
+  private bool pressed = false;
+  private int buttonPressedInterval = 0;
 
-  void BeginAtomicChange ();
-  void EndAtomicChange ();
+  internal void FixedUpdate () {
+    if (pressed == true) {
+      if (buttonPressedInterval > 20 || buttonPressedInterval == 0) {
+        OnRepeatedClick.Invoke ();
+      }
+      buttonPressedInterval++;
+    } else {
+      buttonPressedInterval = 0;
+    }
+  }
 
-  void APButtonPressed ();
-  void PEButtonPressed ();
-  void ANButtonPressed ();
-  void DNButtonPressed ();
+  public void OnPointerDown (PointerEventData eventData) {
+    pressed = true;
+    OnRepeatClickStart?.Invoke ();
+  }
 
-  void registerUpdateAction (Action action);
-  void deregisterUpdateAction (Action action);
+  public void OnPointerUp (PointerEventData eventData) {
+    pressed = false;
+    OnRepeatClickEnd?.Invoke ();
+  }
 }
 }

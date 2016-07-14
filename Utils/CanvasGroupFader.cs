@@ -28,11 +28,30 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent(typeof(CanvasGroup))]
+[RequireComponent (typeof (CanvasGroup))]
 public class CanvasGroupFader : MonoBehaviour {
-  private CanvasGroup m_CanvasGroup;
+
+  internal bool collapseOnFade = false;
+
+  private CanvasGroup _canvasGroup = null;
+  private CanvasGroup canvasGroup {
+    get {
+      if (_canvasGroup == null)
+        _canvasGroup = GetComponent<CanvasGroup> ();
+      return _canvasGroup;
+    }
+  }
+  private RectTransform _rectTransform = null;
+  private RectTransform rectTransform {
+    get {
+      if (_rectTransform == null)
+        _rectTransform = GetComponent<RectTransform> ();
+      return _rectTransform;
+    }
+  }
   private IEnumerator m_FadeCoroutine;
 
   private float m_FastFadeDuration = 0.2f;
@@ -48,8 +67,9 @@ public class CanvasGroupFader : MonoBehaviour {
     get { return m_FadeCoroutine != null && !m_IsFadingIn; }
   }
 
-  public void setTransparent() {
-    setAlpha (0.0f);
+  public void setTransparent () {
+    setState (0.0f);
+    gameObject.SetActive (false);
   }
 
   public void fadeIn () {
@@ -58,14 +78,14 @@ public class CanvasGroupFader : MonoBehaviour {
     FadeTo (1.0f, m_FastFadeDuration);
   }
 
-  public void fadeClose() {
+  public void fadeClose () {
     m_IsFadingIn = false;
-    FadeTo(0.0f, m_FastFadeDuration, Destroy);
+    FadeTo (0.0f, m_FastFadeDuration, Destroy);
   }
 
-  public void fadeOut() {
+  public void fadeOut () {
     m_IsFadingIn = false;
-    FadeTo(0.0f, m_FastFadeDuration, setInactive);
+    FadeTo (0.0f, m_FastFadeDuration, setInactive);
   }
 
   private void setInactive () {
@@ -77,58 +97,61 @@ public class CanvasGroupFader : MonoBehaviour {
     FadeTo (0.0f, m_SlowFadeDuration, Destroy);
   }
 
-  private void FadeTo(float alpha, float duration, Action callback = null) {
-    if (m_CanvasGroup == null)
+  private void FadeTo (float alpha, float duration, Action callback = null) {
+    if (canvasGroup == null)
       return;
 
-    Fade(m_CanvasGroup.alpha, alpha, duration, callback);
+    Fade (canvasGroup.alpha, alpha, duration, callback);
   }
 
-  private void setAlpha (float alpha) {
-    if (m_CanvasGroup == null)
-      return;
-
-    alpha = Mathf.Clamp01 (alpha);
-    m_CanvasGroup.alpha = alpha;
-  }
-
-  protected virtual void Awake() {
-    m_CanvasGroup = GetComponent<CanvasGroup>();
-  }
-
-  private void Fade(float from, float to, float duration, Action callback) {
-    if (m_FadeCoroutine != null)
-      StopCoroutine(m_FadeCoroutine);
-
-    if (Math.Abs(from - to) < 0.1) {
-      setAlpha(to);
-    } else {
-      m_FadeCoroutine = FadeCoroutine(from, to, duration, callback);
-      StartCoroutine(m_FadeCoroutine);
+  private void setState (float state) {
+    state = Mathf.Clamp01 (state);
+    canvasGroup.alpha = state;
+    if (collapseOnFade) {
+      var scale = Vector3.one;
+      scale.y = state;
+      rectTransform.localScale = scale;
+      if (rectTransform.parent.parent is RectTransform)
+        LayoutRebuilder.MarkLayoutForRebuild (rectTransform.parent.parent as RectTransform);
     }
   }
 
-  private IEnumerator FadeCoroutine(float from, float to, float duration, Action callback) {
+  private void Fade (float from, float to, float duration, Action callback) {
+    if (m_FadeCoroutine != null)
+      StopCoroutine (m_FadeCoroutine);
+
+    if (from == to)
+      return;
+
+    if (Math.Abs (from - to) < 0.1) {
+      setState (to);
+    } else {
+      m_FadeCoroutine = FadeCoroutine (from, to, duration, callback);
+      StartCoroutine (m_FadeCoroutine);
+    }
+  }
+
+  private IEnumerator FadeCoroutine (float from, float to, float duration, Action callback) {
     // wait for end of frame so that only the last call to fade that frame is honoured.
-    yield return new WaitForEndOfFrame();
+    yield return new WaitForEndOfFrame ();
 
     float progress = 0.0f;
 
     while (progress <= 1.0f) {
       progress += Time.deltaTime / duration;
-      setAlpha(Mathf.Lerp(from, to, progress));
+      setState (Mathf.Lerp (from, to, progress));
       yield return null;
     }
 
-    callback?.Invoke();
+    callback?.Invoke ();
 
     m_FadeCoroutine = null;
   }
 
-  protected virtual void Destroy() {
+  protected virtual void Destroy () {
     // disable game object first due to an issue within unity 5.2.4f1 that shows a single frame at full opaque alpha just before destruction
-    gameObject.SetActive(false);
-    Destroy(gameObject);
+    gameObject.SetActive (false);
+    Destroy (gameObject);
   }
 }
 }

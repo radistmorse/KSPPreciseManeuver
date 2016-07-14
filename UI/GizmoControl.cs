@@ -51,7 +51,8 @@ public class GizmoControl : MonoBehaviour {
   }
 
   public void OnDestroy () {
-    m_Control.deregisterUpdateAction (updateControl);
+    if (m_Control != null)
+      m_Control.deregisterUpdateAction (updateControl);
     m_Control = null;
   }
 
@@ -85,13 +86,8 @@ public class GizmoControl : MonoBehaviour {
   }
 
   public void changeddv (double ddx, double ddy, double ddz, double dut) {
-    double scale = 1.0;
-    if (m_SensitivitySlider.value > 0.0) {
-      scale = m_SensitivitySlider.value*9.0 + 1.0;
-    }
-    if (m_SensitivitySlider.value < 0.0) {
-      scale = 1.0 / (1.0 - m_SensitivitySlider.value * 9.0);
-    }
+    double scale = Mathf.Pow (10, m_SensitivitySlider.value);
+
     this.ddx = ddx * scale;
     this.ddy = ddy * scale;
     this.ddz = ddz * scale;

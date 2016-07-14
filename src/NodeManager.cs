@@ -34,9 +34,8 @@ internal class NodeManager {
 
   #region Singleton
 
-  private NodeManager () {
-    initAlarm ();
-  }
+  private NodeManager () {}
+
   static private NodeManager _instance;
   static internal NodeManager Instance {
     get {
@@ -51,36 +50,70 @@ internal class NodeManager {
   #region SavedNode internal class
 
   private class SavedNode {
-    private double dx = 0.0;
-    private double dy = 0.0;
-    private double dz = 0.0;
-    private double origdx;
-    private double origdy;
-    private double origdz;
-    private double _ut = 0.0;
-    private double origUt;
+
+    private struct Vector4d {
+      internal double x;
+      internal double y;
+      internal double z;
+      internal double t;
+    }
+
+    private class StateChain {
+      internal StateChain prev = null;
+      internal Vector4d cur;
+      internal StateChain next = null;
+      internal bool notLast = false;
+      private int index;
+
+      private static StateChain first = null;
+
+      private static readonly int maxLen = 30;
+
+      private StateChain () {}
+
+      internal static StateChain addToChain (StateChain prev) {
+        StateChain newNode = new StateChain ();
+        newNode.cur = prev.cur;
+        newNode.prev = prev;
+        newNode.index = prev.index + 1;
+        prev.next = newNode;
+        prev.notLast = true;
+
+        if (newNode.index - first.index > maxLen) {
+          // remove the first item in the chain
+          first = first.next;
+          first.prev = null;
+        }
+
+        return newNode;
+      }
+
+      internal static StateChain newChain (Vector4d state) {
+        StateChain newNode = new StateChain ();
+        newNode.cur = state;
+        newNode.index = 1;
+        first = newNode;
+        return newNode;
+      }
+    }
+
+    private Vector4d orig_state = new Vector4d ();
+
+    private StateChain chain = null;
+
     private const double epsilon = 1E-5;
 
-    private double saved_dx = 0.0;
-    private double saved_dy = 0.0;
-    private double saved_dz = 0.0;
-    private double saved_ut = 0.0;
     private bool atomicChange = false;
-    internal bool previousSaved { get; private set; } = false;
 
-    private void savePrevious () {
+    private void addToChain () {
       if (atomicChange)
         return;
-      saved_dx = dx;
-      saved_dy = dy;
-      saved_dz = dz;
-      saved_ut = _ut;
-      previousSaved = true;
+      chain = StateChain.addToChain (chain);
       NodeManager.Instance.notifyUndoChanged ();
     }
 
-    internal Vector3d dv { get { return new Vector3d (dx, dy, dz); } }
-    internal double ut { get { return _ut; } }
+    internal Vector3d dv { get { return new Vector3d (chain.cur.x, chain.cur.y, chain.cur.z); } }
+    internal double ut { get { return chain.cur.t; } }
     internal bool changed { get; private set; } = false;
 
     internal SavedNode (ManeuverNode node) {
@@ -88,89 +121,89 @@ internal class NodeManager {
     }
 
     internal void updateDiff (double ddvx, double ddvy, double ddvz, double ddut) {
-      savePrevious ();
-      dx += ddvx;
-      dy += ddvy;
-      dz += ddvz;
-      _ut += ddut;
+      addToChain ();
+      chain.cur.x += ddvx;
+      chain.cur.y += ddvy;
+      chain.cur.z += ddvz;
+      chain.cur.t += ddut;
       changed = true;
     }
     internal void updateMult (double mdvx, double mdvy, double mdvz) {
-      savePrevious ();
-      dx *= mdvx;
-      dy *= mdvy;
-      dz *= mdvz;
+      addToChain ();
+      chain.cur.x *= mdvx;
+      chain.cur.y *= mdvy;
+      chain.cur.z *= mdvz;
       changed = true;
     }
     internal void updateDvAbs (double dvx, double dvy, double dvz) {
       if (Double.IsNaN (dvx) || Double.IsNaN (dvy) || Double.IsNaN (dvz))
         return;
-      savePrevious ();
-      dx = dvx;
-      dy = dvy;
-      dz = dvz;
+      addToChain ();
+      chain.cur.x = dvx;
+      chain.cur.y = dvy;
+      chain.cur.z = dvz;
       changed = true;
     }
     internal void updateUtAbs (double ut) {
       if (Double.IsNaN (ut) || ut <= 0.0)
         return;
-      savePrevious ();
-      _ut = ut;
+      addToChain ();
+      chain.cur.t = ut;
       changed = true;
     }
     internal void beginAtomicChange () {
-      savePrevious ();
+      addToChain ();
       atomicChange = true;
     }
     internal void endAtomicChange () {
       atomicChange = false;
     }
-    internal void revertChange () {
-      if (atomicChange || !previousSaved)
+
+    internal bool undoAvailable {
+      get { return chain.prev != null; }
+    }
+
+    internal void undo () {
+      if (atomicChange || chain.prev == null)
         return;
-      double tmp1 = saved_dx;
-      double tmp2 = saved_dy;
-      double tmp3 = saved_dz;
-      double tmp4 = saved_ut;
-      saved_dx = dx;
-      saved_dy = dy;
-      saved_dz = dz;
-      saved_ut = _ut;
-      dx = tmp1;
-      dy = tmp2;
-      dz = tmp3;
-      _ut = tmp4;
+      chain = chain.prev;
       changed = true;
+      NodeManager.Instance.notifyUndoChanged ();
+    }
+
+    internal bool redoAvailable {
+      get { return chain.notLast; }
+    }
+
+    internal void redo () {
+      if (atomicChange || !chain.notLast)
+        return;
+      chain = chain.next;
+      changed = true;
+      NodeManager.Instance.notifyUndoChanged ();
     }
 
     internal void resetSavedNode (ManeuverNode node) {
-      origdx = node.DeltaV.x;
-      origdy = node.DeltaV.y;
-      origdz = node.DeltaV.z;
-      origUt = node.UT;
-      dx = node.DeltaV.x;
-      dy = node.DeltaV.y;
-      dz = node.DeltaV.z;
-      _ut = node.UT;
+      orig_state.x = node.DeltaV.x;
+      orig_state.y = node.DeltaV.y;
+      orig_state.z = node.DeltaV.z;
+      orig_state.t = node.UT;
+      chain = StateChain.newChain (orig_state);
       changed = false;
       atomicChange = false;
-      previousSaved = false;
       NodeManager.Instance.notifyUndoChanged ();
     }
 
     internal void updateOrig () {
-      origdx = dx;
-      origdy = dy;
-      origdz = dz;
-      origUt = _ut;
+      orig_state = chain.cur;
       changed = false;
     }
 
     internal bool origSame (ManeuverNode node) {
-      return (Math.Abs (origdx - node.DeltaV.x) < epsilon &&
-              Math.Abs (origdy - node.DeltaV.y) < epsilon &&
-              Math.Abs (origdz - node.DeltaV.z) < epsilon &&
-              Math.Abs (origUt - node.UT) < epsilon);
+      return (Math.Abs (orig_state.x - node.DeltaV.x) < epsilon &&
+              Math.Abs (orig_state.y - node.DeltaV.y) < epsilon &&
+              Math.Abs (orig_state.z - node.DeltaV.z) < epsilon &&
+              Math.Abs (orig_state.t - node.UT) < epsilon);
     }
   }
 
@@ -186,7 +219,6 @@ internal class NodeManager {
       return _currentNode;
     }
   }
-
   internal int currentNodeIdx { get; private set; } = -1;
   private int nodeCount = 0;
   /* Variables that help find the newly selected nodes */
@@ -207,10 +239,6 @@ internal class NodeManager {
   #region KAC integration
 
   private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
-
-  internal void initAlarm () {
-    KACWrapper.InitKACWrapper ();
-  }
 
   internal void createAlarm () {
     if (!KACWrapper.APIReady)
@@ -251,6 +279,10 @@ internal class NodeManager {
     currentSavedNode.updateMult (mdvx, mdvy, mdvz);
   }
 
+  internal void changeNodeDVAbs (double dvx, double dvy, double dvz) {
+    currentSavedNode.updateDvAbs (dvx, dvy, dvz);
+  }
+
   internal void changeNodeUTtoAP () {
     // a deliberate error that may fix some crashes
     currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToAp + 1E-3);
@@ -269,10 +301,16 @@ internal class NodeManager {
   internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
   internal bool previousNodeAvailable { get { return currentNodeIdx > 0; } }
 
-  internal bool undoAvailable { get { return currentSavedNode.previousSaved; } }
+  internal bool undoAvailable { get { return currentSavedNode.undoAvailable; } }
 
   internal void undo () {
-    currentSavedNode.revertChange ();
+    currentSavedNode.undo ();
+  }
+
+  internal bool redoAvailable { get { return currentSavedNode.redoAvailable; } }
+
+  internal void redo () {
+    currentSavedNode.redo ();
   }
 
   internal void beginAtomicChange () {
@@ -327,7 +365,6 @@ internal class NodeManager {
   internal void turnOrbitUp () {
     turnOrbit (-PreciseManeuverConfig.Instance.incrementDeg);
   }
-
   internal void turnOrbitDown () {
     turnOrbit (PreciseManeuverConfig.Instance.incrementDeg);
   }
