@@ -233,6 +233,12 @@ internal class MainWindow {
         return current.name + " → " + next.name;
       return "";
     }
+    public void lockKeyboard () {
+      _parent.config.setKeyboardInputLock ();
+    }
+    public void unlockKeyboard () {
+      _parent.config.resetKeyboardInputLock ();
+    }
   }
 
   private void createSaverControls (GameObject panel) {
@@ -282,6 +288,16 @@ internal class MainWindow {
         return NodeTools.getTargetOrbit () != null;
       }
     }
+    public bool POAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed ();
+      }
+    }
+    public bool MOAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed () && (_parent.nodeManager.currentNode.UT - Planetarium.GetUniversalTime () - _parent.nodeManager.currentNode.patch.period) > 0.0;
+      }
+    }
     public string UTValue {
       get {
         _value.update (_parent.nodeManager.currentNode.UT);
@@ -308,6 +324,12 @@ internal class MainWindow {
     }
     public void DNButtonPressed () {
       _parent.nodeManager.changeNodeUTtoDN ();
+    }
+    public void POButtonPressed () {
+      _parent.nodeManager.changeNodeUTPlusOrbit ();
+    }
+    public void MOButtonPressed () {
+      _parent.nodeManager.changeNodeUTMinusOrbit ();
     }
     public void PlusButtonPressed () {
       _parent.nodeManager.changeNodeDiff (0, 0, 0, _parent.config.incrementUt);
@@ -431,6 +453,12 @@ internal class MainWindow {
     }
     public void deregisterUpdateAction (Action action) {
       _parent.nodeManager.removeListener (action);
+    }
+    public void lockKeyboard () {
+      _parent.config.setKeyboardInputLock ();
+    }
+    public void unlockKeyboard () {
+      _parent.config.resetKeyboardInputLock ();
     }
   }
 
@@ -630,6 +658,26 @@ internal class MainWindow {
         return _parent.nodeManager.redoAvailable;
       }
     }
+    public bool APAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed ();
+      }
+    }
+    public bool PEAvailable {
+      get {
+        return true;
+      }
+    }
+    public bool POAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed ();
+      }
+    }
+    public bool MOAvailable {
+      get {
+        return _parent.nodeManager.currentNode.patch.isClosed () && (_parent.nodeManager.currentNode.UT - Planetarium.GetUniversalTime () - _parent.nodeManager.currentNode.patch.period) > 0.0;
+      }
+    }
     public float sensitivity {
       get {
         return _parent.config.gizmoSensitivity;
@@ -646,6 +694,7 @@ internal class MainWindow {
     }
     public void registerUpdateAction (Action action) {
       _parent.nodeManager.listenToUndoChange (undoRedoUpdate);
+      _parent.nodeManager.listenToValuesChange (action);
       _controlUpdate = action;
     }
     public void deregisterUpdateAction (Action action) {
@@ -663,6 +712,18 @@ internal class MainWindow {
         _parent.nodeManager.redo ();
         _controlUpdate?.Invoke ();
       }
+    }
+    public void APButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoAP ();
+    }
+    public void PEButtonPressed () {
+      _parent.nodeManager.changeNodeUTtoPE ();
+    }
+    public void POButtonPressed () {
+      _parent.nodeManager.changeNodeUTPlusOrbit ();
+    }
+    public void MOButtonPressed () {
+      _parent.nodeManager.changeNodeUTMinusOrbit ();
     }
     public void undoRedoUpdate () {
       if (undoAvailableCache != _parent.nodeManager.undoAvailable ||

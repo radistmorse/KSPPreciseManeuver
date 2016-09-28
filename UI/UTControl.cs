@@ -43,6 +43,10 @@ public class UTControl : MonoBehaviour {
   private Button m_ANButton = null;
   [SerializeField]
   private Button m_DNButton = null;
+  [SerializeField]
+  private Button m_POButton = null;
+  [SerializeField]
+  private Button m_MOButton = null;
 
   private IUTControl m_UTControl = null;
 
@@ -91,6 +95,14 @@ public class UTControl : MonoBehaviour {
     if (m_UTControl != null)
       m_UTControl.DNButtonPressed ();
   }
+  public void POButtonAction () {
+    if (m_UTControl != null)
+      m_UTControl.POButtonPressed ();
+  }
+  public void MOButtonAction () {
+    if (m_UTControl != null)
+      m_UTControl.MOButtonPressed ();
+  }
 
   public void updateControls () {
     m_UTValue.text = m_UTControl.UTValue;
@@ -98,33 +110,21 @@ public class UTControl : MonoBehaviour {
     m_x10Toggle.isOn = m_UTControl.X10State;
     m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
 
-    if (m_UTControl.APAvailable) {
-      m_APButton.interactable = true;
-      m_APButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+    enableButton (m_APButton, m_UTControl.APAvailable);
+    enableButton (m_PEButton, m_UTControl.PEAvailable);
+    enableButton (m_ANButton, m_UTControl.ANAvailable);
+    enableButton (m_DNButton, m_UTControl.DNAvailable);
+    enableButton (m_POButton, m_UTControl.POAvailable);
+    enableButton (m_MOButton, m_UTControl.MOAvailable);
+  }
+
+  private void enableButton (Button button, bool state) {
+    if (state) {
+      button.interactable = true;
+      button.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
     } else {
-      m_APButton.interactable = false;
-      m_APButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-    }
-    if (m_UTControl.PEAvailable) {
-      m_PEButton.interactable = true;
-      m_PEButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_PEButton.interactable = false;
-      m_PEButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-    }
-    if (m_UTControl.ANAvailable) {
-      m_ANButton.interactable = true;
-      m_ANButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_ANButton.interactable = false;
-      m_ANButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-    }
-    if (m_UTControl.DNAvailable) {
-      m_DNButton.interactable = true;
-      m_DNButton.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_DNButton.interactable = false;
-      m_DNButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      button.interactable = false;
+      button.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
     }
   }
 }

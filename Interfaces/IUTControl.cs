@@ -33,6 +33,8 @@ public interface IUTControl {
   bool PEAvailable { get; }
   bool ANAvailable { get; }
   bool DNAvailable { get; }
+  bool POAvailable { get; }
+  bool MOAvailable { get; }
 
   bool X10State { get; set; }
   string UTValue { get; }
@@ -47,6 +49,8 @@ public interface IUTControl {
   void PEButtonPressed ();
   void ANButtonPressed ();
   void DNButtonPressed ();
+  void POButtonPressed ();
+  void MOButtonPressed ();
 
   void registerUpdateAction (Action action);
   void deregisterUpdateAction (Action action);

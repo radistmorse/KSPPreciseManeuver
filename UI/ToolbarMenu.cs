@@ -33,7 +33,7 @@ using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent(typeof(CanvasGroupFader))]
-public class ToolbarMenu : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler {
+public class ToolbarMenu : MonoBehaviour {
   [SerializeField]
   private Toggle m_ShowMainWindowToggle = null;
 
@@ -67,16 +67,18 @@ public class ToolbarMenu : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     m_fader.fadeClose ();
   }
 
-  public void OnPointerEnter(PointerEventData eventData) {
+  public void OnPointerEnter() {
+    m_MenuControl.OnMenuPointerEnter ();
     m_fader.fadeIn();
   }
 
-  public void OnPointerExit(PointerEventData eventData) {
+  public void OnPointerExit() {
+    m_MenuControl.OnMenuPointerExit ();
     if (m_MenuControl != null && m_MenuControl.IsOn == false && !m_fader.IsFadingOut)
       m_fader.fadeCloseSlow ();
   }
 
-  public void OnPointerDown (PointerEventData data) {
+  public void OnPointerDown () {
     m_RectTransform.SetAsLastSibling ();
   }
 

@@ -36,5 +36,7 @@ public interface ISaverControl {
   void RemovePreset (string name);
   void loadPreset (string name);
   string suggestPresetName ();
+  void lockKeyboard ();
+  void unlockKeyboard ();
 }
 }

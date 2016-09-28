@@ -37,6 +37,14 @@ public class GizmoControl : MonoBehaviour {
   private Button m_RedoButton = null;
   [SerializeField]
   private Slider m_SensitivitySlider = null;
+  [SerializeField]
+  private Button m_APButton = null;
+  [SerializeField]
+  private Button m_PEButton = null;
+  [SerializeField]
+  private Button m_POButton = null;
+  [SerializeField]
+  private Button m_MOButton = null;
 
   private IGizmoControl m_Control = null;
 
@@ -84,6 +92,18 @@ public class GizmoControl : MonoBehaviour {
   public void SensitivityChange (float val) {
     m_Control.sensitivity = val;
   }
+  public void APButtonAction () {
+    m_Control.APButtonPressed ();
+  }
+  public void PEButtonAction () {
+    m_Control.PEButtonPressed ();
+  }
+  public void POButtonAction () {
+    m_Control.POButtonPressed ();
+  }
+  public void MOButtonAction () {
+    m_Control.MOButtonPressed ();
+  }
 
   public void changeddv (double ddx, double ddy, double ddz, double dut) {
     double scale = Mathf.Pow (10, m_SensitivitySlider.value);
@@ -114,6 +134,10 @@ public class GizmoControl : MonoBehaviour {
       m_RedoButton.interactable = false;
       m_RedoButton.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
     }
+    m_APButton.interactable = m_Control.APAvailable;
+    m_PEButton.interactable = m_Control.PEAvailable;
+    m_POButton.interactable = m_Control.POAvailable;
+    m_MOButton.interactable = m_Control.MOAvailable;
   }
 
 }

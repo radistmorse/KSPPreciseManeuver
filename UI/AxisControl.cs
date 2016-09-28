@@ -76,6 +76,7 @@ public class AxisControl : MonoBehaviour {
   public void EditButtonAction () {
     m_AxisValue.interactable = true;
     m_EditFieldButton.interactable = false;
+    m_axisControl.lockKeyboard ();
     m_AxisValue.ActivateInputField ();
   }
 
@@ -86,6 +87,7 @@ public class AxisControl : MonoBehaviour {
 
     m_AxisValue.interactable = false;
     m_EditFieldButton.interactable = true;
+    m_axisControl.unlockKeyboard ();
     updateAxisValue ();
   }
 

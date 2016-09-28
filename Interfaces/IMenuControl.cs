@@ -43,6 +43,9 @@ public interface IMenuControl {
 
   void ClampToScreen(RectTransform rectTransform);
 
+  void OnMenuPointerEnter ();
+  void OnMenuPointerExit ();
+
   Vector3 GetAnchor();
 
   IList<ISectionControl> GetSections();

@@ -192,5 +192,12 @@ public class SaverControl : MonoBehaviour {
       chooserValueChange (savedChooserValue);
     }
   }
+
+  public void inputFieldSelected () {
+    m_saverControl.lockKeyboard ();
+  }
+  public void inputFieldDeselected () {
+    m_saverControl.unlockKeyboard ();
+  }
 }
 }

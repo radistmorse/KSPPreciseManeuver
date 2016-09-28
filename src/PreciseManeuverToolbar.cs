@@ -36,13 +36,14 @@ using UI;
 [KSPAddon (KSPAddon.Startup.MainMenu, true)]
 class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
 
-  private ApplicationLauncherButton appButton;
+  private ApplicationLauncherButton appButton = null;
   private Texture appButtonTexture;
 
   private ToolbarMenu m_ToolbarMenu;
   private GameObject m_MenuObject;
   private GameObject m_MenuPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject>("PreciseManeuverMenu");
 
+  private bool m_MenuPointerIn = false;
 
   public bool IsMainWindowVisible {
     get { return PreciseManeuverConfig.Instance.showMainWindow && NodeTools.patchedConicsUnlocked; }
@@ -148,6 +149,15 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
       appButton.SetTrue ();
   }
 
+  public void OnMenuPointerEnter () {
+      m_MenuPointerIn = true;
+      InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverMenuControlLock");
+  }
+
+  public void OnMenuPointerExit () {
+      m_MenuPointerIn = false;
+      InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
+  }
 
   internal void Awake () {
     DontDestroyOnLoad (this);
@@ -173,7 +183,7 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
 
   private void OnGUIApplicationLauncherReady () {
     // create button
-    if (ApplicationLauncher.Ready)
+    if (ApplicationLauncher.Ready && appButton == null)
       appButton = ApplicationLauncher.Instance.AddModApplication (ShowMenu, HideMenu, ShowMenu, HideMenuIfDisabled, Enable, Disable,
                                                                   ApplicationLauncher.AppScenes.MAPVIEW, appButtonTexture);
   }
@@ -211,7 +221,7 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
   }
 
   protected void HideMenuIfDisabled () {
-    if (!IsOn)
+    if (!IsOn && !m_MenuPointerIn)
       Close ();
   }
 
@@ -219,8 +229,10 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
     if (m_ToolbarMenu != null) {
       if (!m_ToolbarMenu.IsFadingOut)
         m_ToolbarMenu.fadeClose ();
+      InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
     } else if (m_MenuObject != null) {
       Destroy (m_MenuObject);
+      InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
     }
   }
 

@@ -37,10 +37,6 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\Libs\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="KSPUtil, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Libs\KSPUtil.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Core" />

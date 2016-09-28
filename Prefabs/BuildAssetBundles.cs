@@ -1,4 +1,4 @@
-// 
+﻿// 
 //     Kerbal Engineer Redux
 // 
 //     Copyright (C) 2016 CYBUTEK
@@ -24,6 +24,6 @@ public class BuildAssetBundles : MonoBehaviour
     [MenuItem("Build/Asset Bundles")]
     public static void Build()
     {
-        BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/");
+        BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/", BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows64);
     }
 }

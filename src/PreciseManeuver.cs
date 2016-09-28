@@ -132,6 +132,8 @@ internal class PreciseManeuver : MonoBehaviour {
       mainWindow.clearMainWindow ();
       mainWindow.updateMainWindow (m_MainWindow);
       m_MainWindow.MoveToBackground (config.isInBackground);
+      m_MainWindow.OnWindowPointerEnter = setWindow1InputLock;
+      m_MainWindow.OnWindowPointerExit = resetWindow1InputLock;
     }
     scaleMainWindow ();
     config.listenToScaleChange (scaleMainWindow);
@@ -149,11 +151,13 @@ internal class PreciseManeuver : MonoBehaviour {
         config.mainWindowPos = m_MainWindow.RectTransform.position;
         m_MainWindow.fadeClose ();
         config.removeListener (scaleMainWindow);
+        resetWindow1InputLock ();
       }
     } else if (m_MainWindowObject != null) {
       Destroy (m_MainWindowObject);
       mainWindow.clearMainWindow ();
       config.removeListener (scaleMainWindow);
+      resetWindow1InputLock ();
     }
   }
 
@@ -188,6 +192,8 @@ internal class PreciseManeuver : MonoBehaviour {
       m_KeybindingsWindow.SetTitle("PRECISE MANEUVER KEYBINDINGS");
       m_KeybindingsWindow.setMainCanvasTransform(MainCanvasUtil.MainCanvasRect);
       hotkeys.fillKeymapperWindow(m_KeybindingsWindow);
+      m_KeybindingsWindow.OnWindowPointerEnter = setWindow2InputLock;
+      m_KeybindingsWindow.OnWindowPointerExit = resetWindow2InputLock;
     }
   }
 
@@ -196,13 +202,28 @@ internal class PreciseManeuver : MonoBehaviour {
       if (!m_KeybindingsWindow.IsFadingOut) {
         config.keymapperWindowPos = m_KeybindingsWindow.RectTransform.position;
         m_KeybindingsWindow.fadeClose ();
+        resetWindow2InputLock ();
       }
     } else if (m_KeybindingsWindowObject != null) {
       Destroy (m_KeybindingsWindowObject);
+      resetWindow2InputLock ();
     }
   }
 
   #endregion
+
+  private void setWindow1InputLock () {
+    InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow1ControlLock");
+  }
+  private void resetWindow1InputLock () {
+    InputLockManager.RemoveControlLock ("PreciseManeuverWindow1ControlLock");
+  }
+  private void setWindow2InputLock () {
+    InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow2ControlLock");
+  }
+  private void resetWindow2InputLock () {
+    InputLockManager.RemoveControlLock ("PreciseManeuverWindow2ControlLock");
+  }
 
   private bool canShowNodeEditor {
     get {

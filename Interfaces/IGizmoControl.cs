@@ -31,11 +31,20 @@ namespace KSPPreciseManeuver.UI {
 public interface IGizmoControl {
   bool undoAvailable { get; }
   bool redoAvailable { get; }
+  bool APAvailable { get; }
+  bool PEAvailable { get; }
+  bool POAvailable { get; }
+  bool MOAvailable { get; }
 
   float sensitivity { get; set; }
 
   void Undo ();
   void Redo ();
+
+  void APButtonPressed ();
+  void PEButtonPressed ();
+  void POButtonPressed ();
+  void MOButtonPressed ();
 
   void beginAtomicChange ();
   void endAtomicChange ();
@@ -44,5 +53,5 @@ public interface IGizmoControl {
 
   void registerUpdateAction (Action updateControl);
   void deregisterUpdateAction (Action updateControl);
-}
+  }
 }

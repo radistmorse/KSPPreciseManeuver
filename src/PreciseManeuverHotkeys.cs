@@ -35,6 +35,12 @@ internal class PreciseManeuverHotkeys {
   private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
   private NodeManager nodeManager = NodeManager.Instance;
 
+  private bool keyboardLocked {
+    get {
+      return (InputLockManager.LockMask & (ulong)ControlTypes.KEYBOARDINPUT) == (ulong)ControlTypes.KEYBOARDINPUT;
+    }
+  }
+
   #region GUI Controls
 
   private class KeybindingControlInterface : UI.IKeybindingsControl {
@@ -97,6 +103,8 @@ internal class PreciseManeuverHotkeys {
   private int repeatButtonPressInterval = 0;
   private int repeatButtonReleaseInterval = 0;
   private bool repeatButtonDelay (KeyCode code) {
+    if (repeatButtonPressed)
+      return false;
     if (code != repeatButtonPressedCode) {
       repeatButtonPressedCode = code;
       repeatButtonPressInterval = 0;
@@ -186,7 +194,7 @@ internal class PreciseManeuverHotkeys {
   #region Global Hotkeys
 
   internal void processGlobalHotkeys () {
-    if (Input.anyKey && GUIUtility.keyboardControl == 0) {
+    if (Input.anyKey && GUIUtility.keyboardControl == 0 && !keyboardLocked) {
       // hide/show window
       if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.HIDEWIN)))
         config.showMainWindow = !config.showMainWindow;
@@ -220,7 +228,7 @@ internal class PreciseManeuverHotkeys {
       return;
     }
 
-    if (Input.anyKey && GUIUtility.keyboardControl == 0) {
+    if (Input.anyKey && GUIUtility.keyboardControl == 0 && !keyboardLocked) {
 
       ManeuverNode node = nodeManager.currentNode;
 

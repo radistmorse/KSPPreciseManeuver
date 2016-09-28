@@ -1,3 +1,10 @@
+2.2-pre, 2016-09-29
+- Works with KSP 1.2
+- New +/- orbit buttons
+- New AP/PE buttons for gizmo
+- Axis input fields are now editable
+- Clickthrough prevention
+
 2.1, 2016-07-14
 - Removed the dead zone in gizmo tool
 - Adjusted the sensitivity of the gizmo

@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -53,6 +54,9 @@ public class DraggableWindow : MonoBehaviour {
   private List<GameObject> m_ContentSections = new List<GameObject>();
 
   private float clampx1, clampx2, clampy1, clampy2;
+
+  public Action OnWindowPointerEnter = null;
+  public Action OnWindowPointerExit = null;
 
   public RectTransform RectTransform {
     get {
@@ -101,8 +105,16 @@ public class DraggableWindow : MonoBehaviour {
     }
   }
 
-  public void OnPointerDown(PointerEventData data) {
+  public void OnPointerDown() {
     m_RectTransform.SetAsLastSibling();
+  }
+
+  public void OnPointerEnter () {
+    OnWindowPointerEnter?.Invoke ();
+  }
+
+  public void OnPointerExit () {
+    OnWindowPointerExit?.Invoke ();
   }
 
   public void OnBeginDrag(BaseEventData data) {

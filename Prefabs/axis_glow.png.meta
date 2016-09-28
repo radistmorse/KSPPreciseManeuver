@@ -17,7 +17,7 @@ TextureImporter:
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
-    heightScale: 0.25
+    heightScale: .25
     normalMapFilter: 0
   isReadable: 0
   grayScaleToAlpha: 0
@@ -29,8 +29,8 @@ TextureImporter:
   textureFormat: -1
   maxTextureSize: 32
   textureSettings:
-    filterMode: -1
-    aniso: 16
+    filterMode: 2
+    aniso: 8
     mipBias: -1
     wrapMode: 1
   nPOTScale: 0
@@ -39,18 +39,17 @@ TextureImporter:
   compressionQuality: 50
   allowsAlphaSplitting: 0
   spriteMode: 1
-  spriteExtrude: 1
+  spriteExtrude: 0
   spriteMeshType: 1
   alignment: 4
-  spritePivot: {x: 0, y: 0.5}
+  spritePivot: {x: 0, y: .5}
   spriteBorder: {x: 7, y: 14, z: 16, w: 14}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
-  textureType: 8
+  textureType: 5
   buildTargetSettings: []
   spriteSheet:
     sprites: []
-    outline: []
   spritePackingTag: 
   userData: 
   assetBundleName: 

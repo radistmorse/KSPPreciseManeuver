@@ -42,7 +42,9 @@ public interface IAxisControl {
   string AxisName { get; }
   string AxisValue { get; }
   UnityEngine.Color AxisColor { get; }
+  void lockKeyboard ();
+  void unlockKeyboard ();
   void registerUpdateAction (Action action);
   void deregisterUpdateAction (Action action);
-  }
+}
 }

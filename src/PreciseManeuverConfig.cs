@@ -89,6 +89,14 @@ internal class PreciseManeuverConfig {
 
   internal float gizmoSensitivity { get; set; } = 0;
 
+  internal void setKeyboardInputLock () {
+    InputLockManager.SetControlLock (ControlTypes.KEYBOARDINPUT, "PreciseManeuverKeyboardControlLock");
+  }
+
+  internal void resetKeyboardInputLock () {
+    InputLockManager.RemoveControlLock ("PreciseManeuverKeyboardControlLock");
+  }
+
   #region MainWindow
 
   private bool _showMainWindow = true;

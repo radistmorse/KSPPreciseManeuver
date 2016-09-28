@@ -35,7 +35,7 @@ TextureImporter:
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
-    heightScale: 0.25
+    heightScale: .25
     normalMapFilter: 0
   isReadable: 0
   grayScaleToAlpha: 0
@@ -47,8 +47,8 @@ TextureImporter:
   textureFormat: -1
   maxTextureSize: 128
   textureSettings:
-    filterMode: -1
-    aniso: 16
+    filterMode: 2
+    aniso: 8
     mipBias: -1
     wrapMode: 1
   nPOTScale: 0
@@ -57,14 +57,14 @@ TextureImporter:
   compressionQuality: 50
   allowsAlphaSplitting: 0
   spriteMode: 2
-  spriteExtrude: 1
+  spriteExtrude: 0
   spriteMeshType: 1
   alignment: 0
-  spritePivot: {x: 0.5, y: 0.5}
+  spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
-  textureType: 8
+  textureType: 5
   buildTargetSettings: []
   spriteSheet:
     sprites:
@@ -72,186 +72,93 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 85.33333
-        width: 42.666668
-        height: 42.66667
+        y: 85.3333282
+        width: 42.6666679
+        height: 42.6666718
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -17.5, y: 11.833328}
-        - {x: -17.5, y: 2.8333282}
-        - {x: -13.5, y: -8.166672}
-        - {x: -7.5, y: -16.166672}
-        - {x: 7.5, y: -16.166672}
-        - {x: 16.5, y: -2.1666718}
-        - {x: 16.5, y: 11.833328}
     - name: Axis Normal Down
       rect:
         serializedVersion: 2
         x: 42
-        y: 85.33333
-        width: 42.66667
-        height: 42.66667
+        y: 85.3333282
+        width: 42.6666718
+        height: 42.6666718
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: 12.5, y: 15.833328}
-        - {x: -9.5, y: 15.833328}
-        - {x: -15.5, y: 13.833328}
-        - {x: -15.5, y: -11.166672}
-        - {x: -9.5, y: -16.166672}
-        - {x: 6.5, y: -16.166672}
-        - {x: 13.5, y: -13.166672}
-        - {x: 16.5, y: -4.1666718}
-        - {x: 18.5, y: 2.8333282}
-        - {x: 18.5, y: 11.833328}
     - name: Axis Maneuver
       rect:
         serializedVersion: 2
         x: 84
-        y: 85.33333
-        width: 42.66667
-        height: 42.66667
+        y: 85.3333282
+        width: 42.6666718
+        height: 42.6666718
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -19.5, y: 19.833328}
-        - {x: -19.5, y: -20.166672}
-        - {x: 16.5, y: -20.166672}
-        - {x: 20.5, y: -13.166672}
-        - {x: 20.5, y: 19.833328}
     - name: Axis Radial In
       rect:
         serializedVersion: 2
         x: 0
-        y: 43.333332
-        width: 42.666668
-        height: 42.666668
+        y: 43.3333321
+        width: 42.6666679
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -9.5, y: 13.833332}
-        - {x: -15.5, y: 8.833332}
-        - {x: -15.5, y: -10.166668}
-        - {x: -12.5, y: -14.166668}
-        - {x: 13.5, y: -14.166668}
-        - {x: 16.5, y: -5.166668}
-        - {x: 16.5, y: 9.833332}
-        - {x: 13.5, y: 13.833332}
     - name: Axis Radial Out
       rect:
         serializedVersion: 2
         x: 42
-        y: 43.333332
-        width: 42.66667
-        height: 42.666668
+        y: 43.3333321
+        width: 42.6666718
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -13.5, y: 13.833332}
-        - {x: -13.5, y: -12.166668}
-        - {x: -11.5, y: -14.166668}
-        - {x: 12.5, y: -14.166668}
-        - {x: 14.5, y: -13.166668}
-        - {x: 14.5, y: 13.833332}
     - name: Axis Target In
       rect:
         serializedVersion: 2
         x: 84
-        y: 43.333332
-        width: 42.66667
-        height: 42.666668
+        y: 43.3333321
+        width: 42.6666718
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -3.5, y: 21.833332}
-        - {x: -4.5, y: 20.833332}
-        - {x: -19.5, y: 4.833332}
-        - {x: -19.5, y: -14.166668}
-        - {x: 20.5, y: -14.166668}
-        - {x: 20.5, y: 0.83333206}
-        - {x: 7.5, y: 21.833332}
     - name: Axis Prograde
       rect:
         serializedVersion: 2
         x: 0
-        y: 1.3333321
-        width: 42.666668
-        height: 42.666668
+        y: 1.33333206
+        width: 42.6666679
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -8.5, y: 15.833332}
-        - {x: -21.5, y: 7.833332}
-        - {x: -21.5, y: -6.166668}
-        - {x: -7.5, y: -21.166668}
-        - {x: 4.5, y: -21.166668}
-        - {x: 21.5, y: -4.166668}
-        - {x: 21.5, y: 7.833332}
-        - {x: 9.5, y: 15.833332}
     - name: Axis Retrograde
       rect:
         serializedVersion: 2
         x: 42
-        y: 1.3333321
-        width: 42.66667
-        height: 42.666668
+        y: 1.33333206
+        width: 42.6666718
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: -21.5, y: 15.833332}
-        - {x: -21.5, y: -6.166668}
-        - {x: -5.5, y: -21.166668}
-        - {x: 12.5, y: -21.166668}
-        - {x: 21.5, y: -7.166668}
-        - {x: 21.5, y: 15.833332}
     - name: Axis Target Out
       rect:
         serializedVersion: 2
         x: 84
-        y: 1.3333321
-        width: 42.66667
-        height: 42.666668
+        y: 1.33333206
+        width: 42.6666718
+        height: 42.6666679
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline:
-      - - {x: 18.5, y: -20.166668}
-        - {x: 20.5, y: -12.166668}
-        - {x: 20.5, y: -0.16666794}
-        - {x: 10.5, y: -0.16666794}
-        - {x: 8.5, y: -2.166668}
-        - {x: 10.5, y: -0.16666794}
-        - {x: 14.5, y: -0.16666794}
-        - {x: 19.5, y: 1.8333321}
-        - {x: 20.5, y: 5.833332}
-        - {x: 20.5, y: 12.833332}
-        - {x: 9.5, y: 19.833332}
-        - {x: 2.5, y: 19.833332}
-        - {x: 0.5, y: 17.833332}
-        - {x: 0.5, y: 9.833332}
-        - {x: 2.5, y: 7.833332}
-        - {x: 0.5, y: 5.833332}
-        - {x: 0.5, y: 14.833332}
-        - {x: -1.5, y: 16.833332}
-        - {x: -10.5, y: 16.833332}
-        - {x: -19.5, y: 6.833332}
-        - {x: -19.5, y: -13.166668}
-        - {x: -12.5, y: -20.166668}
-        - {x: -1.5, y: -20.166668}
-        - {x: 0.5, y: -18.166668}
-        - {x: 0.5, y: -11.166668}
-        - {x: 0.5, y: -20.166668}
-    outline: []
   spritePackingTag: 
   userData: 
-  assetBundleName: precisemaneuverprefabs
+  assetBundleName: 
   assetBundleVariant: 

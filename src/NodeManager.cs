@@ -297,6 +297,14 @@ internal class NodeManager {
   internal void changeNodeUTtoDN () {
     currentSavedNode.updateUtAbs (currentNode.patch.getTargetDNUT (target));
   }
+  internal void changeNodeUTPlusOrbit () {
+    if (currentNode.patch.isClosed ())
+      currentSavedNode.updateDiff (0.0,0.0,0.0, currentNode.patch.period);
+  }
+  internal void changeNodeUTMinusOrbit () {
+    if (currentNode.patch.isClosed () && (currentNode.UT - Planetarium.GetUniversalTime()) > 0.0)
+      currentSavedNode.updateDiff (0.0,0.0,0.0, -currentNode.patch.period);
+  }
 
   internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
   internal bool previousNodeAvailable { get { return currentNodeIdx > 0; } }
