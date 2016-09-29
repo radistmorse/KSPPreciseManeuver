@@ -693,12 +693,13 @@ internal class MainWindow {
       _parent.nodeManager.changeNodeDiff (ddx, ddy, ddz, dut);
     }
     public void registerUpdateAction (Action action) {
-      _parent.nodeManager.listenToUndoChange (undoRedoUpdate);
-      _parent.nodeManager.listenToValuesChange (action);
       _controlUpdate = action;
+      _parent.nodeManager.listenToUndoChange (undoRedoUpdate);
+      _parent.nodeManager.listenToValuesChange (_controlUpdate);
     }
     public void deregisterUpdateAction (Action action) {
       _parent.nodeManager.removeListener (undoRedoUpdate);
+      _parent.nodeManager.removeListener (_controlUpdate);
       _controlUpdate = null;
     }
     public void Undo () {
