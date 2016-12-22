@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
  * Copyright (c) 2013-2014, Justin Bengtson
  * Copyright (c) 2015, George Sedov
  * All rights reserved.
@@ -256,9 +256,29 @@ internal static class NodeTools {
       year = (long)Math.Floor (UT / (365 * 24 * 60 * 60)) + 1; // Ensure we don't get a "Year 0" here.
     }
 
-    return "Year " + year + " Day " + day + " " + hour + ":" + (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+    return "Year " + year + ", Day " + day + ", " + hour + ":" + (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
   }
+  
+  internal static void copyToClipboard (Orbit o, ManeuverNode node) {
+    string message = "Precise Maneuver Information\r\n";
+    message += String.Format ("Depart at:      {0}\r\n", convertUTtoHumanTime(node.UT));
+    message += String.Format ("       UT:      {0:0}\r\n", node.UT);
+    string e = String.Format ("{0:0.00° from prograde;0.00° from retrograde}",o.getEjectionAngle(node));
+    if (e == "NaN")
+        e = "N/A";
+    message += String.Format ("Ejection Angle: {0}\r\n", e);
+    e = String.Format ("{0:0.00}°", o.getEjectionInclination(node));
+    if (e == "NaN°")
+        e = "N/A";
+    message += String.Format ("Ejection Inc.:  {0}\r\n", e);
+    message += String.Format ("Prograde Δv:    {0:0.0} m/s\r\n", node.DeltaV.z);
+    message += String.Format ("Normal Δv:      {0:0.0} m/s\r\n", node.DeltaV.y);
+    message += String.Format ("Radial Δv:      {0:0.0} m/s\r\n", node.DeltaV.x);
+    message += String.Format ("Total Δv:       {0:0} m/s", node.DeltaV.magnitude);
 
+    GUIUtility.systemCopyBuffer = message;
+  }
+  
   /// <summary>
   /// Formats the given double into meters.
   /// </summary>

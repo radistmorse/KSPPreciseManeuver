@@ -172,7 +172,7 @@ internal class MainWindow {
     }
     public string getManeuverTime (int idx) {
       var time = NodeTools.convertUTtoHumanTime(FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT);
-      return time.Replace ("Year ", "Y").Replace ("Day ", "D");
+      return time.Replace ("Year ", "Y").Replace ("Day ", "D").Replace (",", "");
     }
     public string getManeuverDV (int idx) {
       var dv = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].DeltaV.magnitude;
@@ -621,6 +621,13 @@ internal class MainWindow {
     }
     public void CircularizeButtonPressed () {
       _parent.nodeManager.circularizeOrbit ();
+    }
+    public void CopyButtonPressed () {
+      NodeTools.copyToClipboard (FlightGlobals.ActiveVessel.orbit, _parent.nodeManager.currentNode);
+    }
+    public void PasteButtonPressed () {
+      string clipboard = GUIUtility.systemCopyBuffer;
+      _parent.nodeManager.changeNodeFromString(clipboard);
     }
   }
 

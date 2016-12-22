@@ -1,0 +1,30 @@
+{
+    "NAME": "Precise Maneuver",
+    "DOWNLOAD": "https://github.com/radistmorse/KSPPreciseManeuver/releases",
+    "URL": "https://raw.githubusercontent.com/radistmorse/KSPPreciseManeuver/master/PreciseManeuver.version",
+    "GITHUB": {
+        "USERNAME": "radistmorse",
+        "REPOSITORY": "KSPPreciseManeuver"
+    },
+    "VERSION": {
+        "MAJOR": 2,
+        "MINOR": 2,
+        "PATCH": 1,
+        "BUILD": 0
+    },
+    "KSP_VERSION": {
+        "MAJOR": 1,
+        "MINOR": 2,
+        "PATCH": 0
+    },
+    "KSP_VERSION_MIN": {
+        "MAJOR": 1,
+        "MINOR": 2,
+        "PATCH": 0
+    },
+    "KSP_VERSION_MAX": {
+        "MAJOR": 1,
+        "MINOR": 2,
+        "PATCH": 99
+    }
+}

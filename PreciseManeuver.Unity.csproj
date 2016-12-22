@@ -60,7 +60,6 @@
     <Compile Include="UI\KeybindingControl.cs" />
     <Compile Include="Utils\ShrinkPanel.cs" />
     <Compile Include="Utils\GizmoElement.cs" />
-    <Compile Include="Utils\InputCaretFixer.cs" />
     <Compile Include="Utils\DropDownManeuverPager.cs" />
     <Compile Include="Utils\CanvasFixer.cs" />
     <Compile Include="Utils\CanvasGroupFader.cs" />

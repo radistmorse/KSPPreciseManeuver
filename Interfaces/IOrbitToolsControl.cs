@@ -38,6 +38,9 @@ public interface IOrbitToolsControl {
 
   void CircularizeButtonPressed ();
 
+  void CopyButtonPressed ();
+  void PasteButtonPressed ();
+
   void registerUpdateAction (Action updateControls);
   void deregisterUpdateAction (Action updateControls);
 }

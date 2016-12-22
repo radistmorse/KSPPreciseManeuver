@@ -60,6 +60,14 @@ public class OrbitToolsControl : MonoBehaviour {
     if (m_control != null)
       m_control.CircularizeButtonPressed ();
   }
+  public void CopyButtonAction () {
+    if (m_control != null)
+      m_control.CopyButtonPressed ();
+  }
+  public void PasteButtonAction () {
+    if (m_control != null)
+      m_control.PasteButtonPressed ();
+  }
 
   public void updateControls () {
   }

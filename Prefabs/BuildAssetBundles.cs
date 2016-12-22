@@ -24,6 +24,6 @@ public class BuildAssetBundles : MonoBehaviour
     [MenuItem("Build/Asset Bundles")]
     public static void Build()
     {
-        BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/", BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows64);
+        BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/", BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows64);//, BuildAssetBundleOptions.UncompressedAssetBundle);
     }
 }

@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
  * Copyright (c) 2015-2016, George Sedov
  * All rights reserved.
  *
@@ -299,11 +299,42 @@ internal class NodeManager {
   }
   internal void changeNodeUTPlusOrbit () {
     if (currentNode.patch.isClosed ())
-      currentSavedNode.updateDiff (0.0,0.0,0.0, currentNode.patch.period);
+      currentSavedNode.updateDiff (0.0, 0.0, 0.0, currentNode.patch.period);
   }
   internal void changeNodeUTMinusOrbit () {
-    if (currentNode.patch.isClosed () && (currentNode.UT - Planetarium.GetUniversalTime()) > 0.0)
-      currentSavedNode.updateDiff (0.0,0.0,0.0, -currentNode.patch.period);
+    if (currentNode.patch.isClosed () && (currentNode.UT - currentNode.patch.period - Planetarium.GetUniversalTime()) > 0.0)
+      currentSavedNode.updateDiff (0.0, 0.0, 0.0, -currentNode.patch.period);
+  }
+  internal void changeNodeFromString (string str) {
+    var reader = new System.IO.StringReader (str);
+    string line;
+    double nx = currentNode.DeltaV.x;
+    double ny = currentNode.DeltaV.y;
+    double nz = currentNode.DeltaV.z;
+    bool nextlineut = false;
+    while ((line = reader.ReadLine ()) != null) {
+      var splitline = line.Split(' ');
+      if (line.Contains ("Depart at")) {
+        nextlineut = true;
+      } else {
+        if (line.Contains ("UT") && nextlineut) {
+          double ut;
+          if (double.TryParse (splitline[splitline.Length - 1], out ut))
+            currentSavedNode.updateUtAbs (ut);
+        } else if (line.Contains ("Prograde Δv")) {
+          if (!double.TryParse (splitline[splitline.Length - 2], out nz))
+            nz = currentNode.DeltaV.z;
+        } else if (line.Contains ("Normal Δv")) {
+          if (!double.TryParse (splitline[splitline.Length - 2], out ny))
+            ny = currentNode.DeltaV.y;
+        } else if (line.Contains ("Radial Δv")) {
+          if (!double.TryParse (splitline[splitline.Length - 2], out nx))
+            nx = currentNode.DeltaV.x;
+        }
+        nextlineut = false;
+      }
+    }
+    currentSavedNode.updateDvAbs (nx, ny, nz);
   }
 
   internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
