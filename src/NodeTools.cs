@@ -134,19 +134,8 @@ internal static class NodeTools {
   /// <param name="o">The Orbit to calculate the UT from.</param>
   internal static double getEquatorialDNUT (this Orbit o) {
     //TODO: Add safeguards for bad UTs, may need to be refactored to NodeManager
-    Vector3d DNVector = QuaternionD.AngleAxis ((o.LAN + 180).Angle360(), Planetarium.Zup.Z) * Planetarium.Zup.X;
+    Vector3d DNVector = QuaternionD.AngleAxis ((o.LAN + 180) % 360, Planetarium.Zup.Z) * Planetarium.Zup.X;
     return o.GetUTforTrueAnomaly (o.GetTrueAnomalyOfZupVector (DNVector), 2);
-  }
-
-  /// <summary>
-  /// Adjusts the specified angle to between 0 and 360 degrees.
-  /// </summary>
-  /// <param name="d">The specified angle to restrict.</param>
-  internal static double Angle360 (this double d) {
-    d %= 360;
-    if (d < 0)
-      return d + 360;
-    return d;
   }
 
   internal static CelestialBody findNextEncounter () {
@@ -172,8 +161,9 @@ internal static class NodeTools {
       // Calculate the angle between the node's position and the reference body's velocity at nodeUT
       Vector3d prograde = body.orbit.getOrbitalVelocityAtUT (node.UT);
       Vector3d position = o.getRelativePositionAtUT (node.UT);
-      double eangle = ((Math.Atan2 (prograde.y, prograde.x) - Math.Atan2 (position.y, position.x)) * 180.0 / Math.PI).Angle360();
-
+      double eangle = ((Math.Atan2 (prograde.y, prograde.x) - Math.Atan2 (position.y, position.x)) * 180.0 / Math.PI);
+      if (eangle < 0)
+        eangle += 360;
       // Correct to angle from retrograde if needed.
       if (eangle > 180) {
         eangle = 180 - eangle;
@@ -277,6 +267,28 @@ internal static class NodeTools {
     message += String.Format ("Total Δv:       {0:0} m/s", node.DeltaV.magnitude);
 
     GUIUtility.systemCopyBuffer = message;
+  }
+
+  internal static double getUTdiffForAngle (this Orbit o, double ut, double angle) {
+      double tA = o.TrueAnomalyAtUT(ut);
+      tA += angle;
+      if (tA < 0)
+        tA += Math.PI * 2;
+      if (tA > (Math.PI * 2))
+        tA -= Math.PI * 2;
+      double old_obT = o.getObtAtUT (ut);
+      // yo dawg! so I heard you like anomalies!
+      double new_obT = o.getObTAtMeanAnomaly (o.GetMeanAnomaly (o.GetEccentricAnomaly (tA)));
+
+      double diff = new_obT - old_obT;
+      double period = o.period;
+
+      if (diff < -period / 2)
+        diff += period;
+      if (diff > period / 2)
+        diff -= period;
+
+      return diff;
   }
   
   /// <summary>

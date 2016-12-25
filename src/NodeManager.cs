@@ -311,6 +311,7 @@ internal class NodeManager {
     double nx = currentNode.DeltaV.x;
     double ny = currentNode.DeltaV.y;
     double nz = currentNode.DeltaV.z;
+    double nut = currentNode.UT;
     bool nextlineut = false;
     while ((line = reader.ReadLine ()) != null) {
       var splitline = line.Split(' ');
@@ -318,9 +319,8 @@ internal class NodeManager {
         nextlineut = true;
       } else {
         if (line.Contains ("UT") && nextlineut) {
-          double ut;
-          if (double.TryParse (splitline[splitline.Length - 1], out ut))
-            currentSavedNode.updateUtAbs (ut);
+          if (!double.TryParse (splitline[splitline.Length - 1], out nut))
+            nut = currentNode.UT;
         } else if (line.Contains ("Prograde Δv")) {
           if (!double.TryParse (splitline[splitline.Length - 2], out nz))
             nz = currentNode.DeltaV.z;
@@ -330,11 +330,35 @@ internal class NodeManager {
         } else if (line.Contains ("Radial Δv")) {
           if (!double.TryParse (splitline[splitline.Length - 2], out nx))
             nx = currentNode.DeltaV.x;
+        } else if (line.Contains ("Ejection Angle")) {
+          double target_eangle;
+          if (splitline.Length > 3
+           && double.TryParse (splitline[splitline.Length - 3].Replace("°", ""), out target_eangle)
+           && splitline[splitline.Length - 2] == "to"
+           && (splitline[splitline.Length - 1] == "prograde"
+            || splitline[splitline.Length - 1] == "retrograde")
+           && currentNode.patch.isClosed ()) {
+            if (splitline[splitline.Length - 1] == "retrograde")
+              target_eangle += 180;
+            target_eangle *= Orbit.Deg2Rad;
+            Vector3d prograde = currentNode.patch.referenceBody.orbit.getOrbitalVelocityAtUT (nut);
+            Vector3d position = currentNode.patch.getRelativePositionAtUT (nut);
+            double eangle = Math.Atan2 (prograde.y, prograde.x) - Math.Atan2 (position.y, position.x);
+            if (eangle < 0)
+              eangle += Math.PI * 2;
+
+            nut += NodeTools.getUTdiffForAngle (currentNode.patch, nut, eangle - target_eangle);
+          }
         }
         nextlineut = false;
       }
     }
-    currentSavedNode.updateDvAbs (nx, ny, nz);
+    if (nx != currentNode.DeltaV.x || ny != currentNode.DeltaV.y || nz != currentNode.DeltaV.z || nut != currentNode.UT) {
+      currentSavedNode.beginAtomicChange ();
+      currentSavedNode.updateDvAbs (nx, ny, nz);
+      currentSavedNode.updateUtAbs (nut);
+      currentSavedNode.endAtomicChange ();
+    }
   }
 
   internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
