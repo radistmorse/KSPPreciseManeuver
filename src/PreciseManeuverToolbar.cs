@@ -179,6 +179,10 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
     // unsubscribe event listeners
     GameEvents.onGUIApplicationLauncherReady.Remove (OnGUIApplicationLauncherReady);
     GameEvents.onGUIApplicationLauncherUnreadifying.Remove (OnGUIApplicationLauncherUnreadifying);
+    GameEvents.onHideUI.Remove (OnHideUI);
+    GameEvents.onShowUI.Remove (OnShowUI);
+    GameEvents.OnMapEntered.Remove (ShowMenuIfEnabled);
+    GameEvents.OnMapExited.Remove (HideMenu);
   }
 
   private void OnGUIApplicationLauncherReady () {

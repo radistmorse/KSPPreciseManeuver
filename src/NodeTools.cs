@@ -253,14 +253,13 @@ internal static class NodeTools {
     string message = "Precise Maneuver Information\r\n";
     message += String.Format ("Depart at:      {0}\r\n", convertUTtoHumanTime(node.UT));
     message += String.Format ("       UT:      {0:0}\r\n", node.UT);
-    string e = String.Format ("{0:0.00° from prograde;0.00° from retrograde}",o.getEjectionAngle(node));
-    if (e == "NaN")
-        e = "N/A";
-    message += String.Format ("Ejection Angle: {0}\r\n", e);
-    e = String.Format ("{0:0.00}°", o.getEjectionInclination(node));
-    if (e == "NaN°")
-        e = "N/A";
-    message += String.Format ("Ejection Inc.:  {0}\r\n", e);
+    double eang = o.getEjectionAngle(node);
+    if (!double.IsNaN (eang)) {
+      string e = String.Format ("{0:0.00° to prograde;0.00° to retrograde}",o.getEjectionAngle(node));
+      message += String.Format ("Ejection Angle: {0}\r\n", e);
+      e = String.Format ("{0:0.00}°", o.getEjectionInclination(node));
+      message += String.Format ("Ejection Inc.:  {0}\r\n", e);
+    }
     message += String.Format ("Prograde Δv:    {0:0.0} m/s\r\n", node.DeltaV.z);
     message += String.Format ("Normal Δv:      {0:0.0} m/s\r\n", node.DeltaV.y);
     message += String.Format ("Radial Δv:      {0:0.0} m/s\r\n", node.DeltaV.x);
