@@ -105,7 +105,7 @@ public class PagerControl : MonoBehaviour {
     if (len == 0)
       return;
     for (int i = 1; i <= len; i++)
-      m_Chooser.options.Add (new Dropdown.OptionData ("Node\n"+i.ToString()));
+      m_Chooser.options.Add (new Dropdown.OptionData ("Node "+i.ToString()));
     m_Chooser.value = m_pagerControl.maneuverIdx;
   }
 

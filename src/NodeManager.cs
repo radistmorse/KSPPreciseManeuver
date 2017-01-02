@@ -221,8 +221,7 @@ internal class NodeManager {
   }
   internal int currentNodeIdx { get; private set; } = -1;
   private int nodeCount = 0;
-  /* Variables that help find the newly selected nodes */
-  private bool nodeRecentlyAdded = false;
+  /* list that helps find the newly selected nodes */
   private List<ManeuverNode> prevGizmos = null;
   /* Internal copy of the node */
   private SavedNode _currentSavedNode = null;
@@ -495,34 +494,24 @@ internal class NodeManager {
     var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
     var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null);
     var tmp = curList.ToList ();
-    /* first, if the node was just created, choose it */
-    if (nodeRecentlyAdded) {
-      var node = solver.maneuverNodes.Last ();
+    /* let's see if user is hovering a mouse *
+     * over any gizmo. That would be a hint. */
+    if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
+      var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
       if (node != _currentNode) {
         _currentNode = node;
         notifyNodeChanged ();
       }
-      nodeRecentlyAdded = false;
     } else {
-      /* then, let's see if user is hovering a mouse *
-       * over any gizmo. That would be a hint.       */
-      if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
-        var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
+      /* then, let's see if we can find any     *
+       * new gizmos that were created recently. */
+      if (prevGizmos != null)
+        curList = curList.Except (prevGizmos);
+      if (curList.Count () == 1) {
+        var node = curList.First ();
         if (node != _currentNode) {
           _currentNode = node;
           notifyNodeChanged ();
-        }
-      } else {
-        /* finally, let's see if we can find any  *
-         * new gizmos that were created recently. */
-        if (prevGizmos != null)
-          curList = curList.Except (prevGizmos);
-        if (curList.Count () == 1) {
-          var node = curList.First ();
-          if (node != _currentNode) {
-            _currentNode = node;
-            notifyNodeChanged ();
-          }
         }
       }
     }
@@ -533,10 +522,7 @@ internal class NodeManager {
     bool idxboolcache1 = nextNodeAvailable;
     bool idxboolcache2 = previousNodeAvailable;
     var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
-    int tmp = solver.maneuverNodes.Count;
-    if (tmp > nodeCount)
-      nodeRecentlyAdded = true;
-    nodeCount = tmp;
+    nodeCount = solver.maneuverNodes.Count;
 
     /* setting the current node */
     int idx = -1;
