@@ -279,13 +279,13 @@ internal class MainWindow {
     }
     public bool ANAvailable {
       get {
-        return NodeTools.getTargetOrbit () != null;
+        return NodeTools.getTargetOrbit (_parent.nodeManager.currentNode.patch.referenceBody)  != null;
       }
     }
 
     public bool DNAvailable {
       get {
-        return NodeTools.getTargetOrbit () != null;
+        return NodeTools.getTargetOrbit (_parent.nodeManager.currentNode.patch.referenceBody)  != null;
       }
     }
     public bool POAvailable {

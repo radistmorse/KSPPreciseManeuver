@@ -78,17 +78,21 @@ internal static class NodeTools {
   /// Returns the orbit of the currently targeted item or null if there is none.
   /// </summary>
   /// <returns>The orbit or null.</returns>
-  internal static Orbit getTargetOrbit () {
+  internal static Orbit getTargetOrbit (CelestialBody refbody) {
     ITargetable tgt = FlightGlobals.fetch.VesselTarget;
-    if (tgt != null) {
-      // if we have a null vessel it's a celestial body
-      if (tgt.GetVessel () == null) {
-        return tgt.GetOrbit ();
-      }
-      // otherwise make sure we're not targeting ourselves.
-      if (!FlightGlobals.fetch.activeVessel.Equals (tgt.GetVessel ())) {
-        return tgt.GetOrbit ();
-      }
+    if (tgt == null || FlightGlobals.ActiveVessel == tgt.GetVessel ())
+      return null;
+
+    Orbit o = tgt.GetOrbit ();
+    if (o.referenceBody == refbody)
+      return o;
+
+    while (o.nextPatch != null) {
+      if (o.isClosed ())
+        return null;
+      o = o.nextPatch;
+      if (o.referenceBody == refbody)
+        return o;
     }
     return null;
   }
@@ -100,9 +104,8 @@ internal static class NodeTools {
   /// <param name="a">The orbit to find the UT on.</param>
   /// <param name="b">The target orbit.</param>
   internal static double getTargetANUT (this Orbit a, Orbit b) {
-    //TODO: Add safeguards for bad UTs, may need to be refactored to NodeManager
-    Vector3d ANVector = Vector3d.Cross (b.h, a.GetOrbitNormal()).normalized;
-    return a.GetUTforTrueAnomaly (a.GetTrueAnomalyOfZupVector (ANVector), 2);
+    Vector3d ANVector = Vector3d.Cross (a.GetOrbitNormal ().xzy, b.GetOrbitNormal ().xzy).normalized;
+    return a.getOrbitZupUT (ANVector.xzy);
   }
 
   /// <summary>
@@ -112,30 +115,27 @@ internal static class NodeTools {
   /// <param name="a">The orbit to find the UT on.</param>
   /// <param name="b">The target orbit.</param>
   internal static double getTargetDNUT (this Orbit a, Orbit b) {
-    //TODO: Add safeguards for bad UTs, may need to be refactored to NodeManager
-    Vector3d DNVector = Vector3d.Cross (a.GetOrbitNormal(), b.h).normalized;
-    return a.GetUTforTrueAnomaly (a.GetTrueAnomalyOfZupVector (DNVector), 2);
+    Vector3d DNVector = Vector3d.Cross (b.GetOrbitNormal ().xzy, a.GetOrbitNormal ().xzy).normalized;
+    return a.getOrbitZupUT (DNVector.xzy);
   }
 
-  /// <summary>
-  /// Gets the UT for the equatorial AN.
-  /// </summary>
-  /// <returns>The equatorial AN UT.</returns>
-  /// <param name="o">The Orbit to calculate the UT from.</param>
-  internal static double getEquatorialANUT (this Orbit o) {
-    //TODO: Add safeguards for bad UTs, may need to be refactored to NodeManager
-    return o.GetUTforTrueAnomaly (o.GetTrueAnomalyOfZupVector (o.GetANVector()), 2);
-  }
+  private static double getOrbitZupUT (this Orbit a, Vector3d Zup) {
+    double new_obT = a.getObTAtMeanAnomaly (a.GetMeanAnomaly (a.GetEccentricAnomaly (a.GetTrueAnomalyOfZupVector (Zup))));
+    double cur_obT = a.getObtAtUT (Planetarium.GetUniversalTime ());
 
-  /// <summary>
-  /// Gets the UT for the equatorial DN.
-  /// </summary>
-  /// <returns>The equatorial DN UT.</returns>
-  /// <param name="o">The Orbit to calculate the UT from.</param>
-  internal static double getEquatorialDNUT (this Orbit o) {
-    //TODO: Add safeguards for bad UTs, may need to be refactored to NodeManager
-    Vector3d DNVector = QuaternionD.AngleAxis ((o.LAN + 180) % 360, Planetarium.Zup.Z) * Planetarium.Zup.X;
-    return o.GetUTforTrueAnomaly (o.GetTrueAnomalyOfZupVector (DNVector), 2);
+    double new_ut = Planetarium.GetUniversalTime () - cur_obT + new_obT;
+
+    if (new_obT > cur_obT) {
+      if (!a.isClosed () && a.EndUT < new_ut)
+        return Double.NaN;
+      else
+        return new_ut;
+    } else {
+      if (a.isClosed ())
+        return new_ut + a.period;
+      else
+        return Double.NaN;
+    }
   }
 
   internal static CelestialBody findNextEncounter () {

@@ -347,6 +347,9 @@ internal class NodeManager {
               eangle += Math.PI * 2;
 
             nut += NodeTools.getUTdiffForAngle (currentNode.patch, nut, eangle - target_eangle);
+            
+            while (nut < Planetarium.GetUniversalTime ())
+              nut += currentNode.patch.period;
           }
         }
         nextlineut = false;
@@ -558,7 +561,7 @@ internal class NodeManager {
   }
 
   internal void updateNodes () {
-    var newtarget = NodeTools.getTargetOrbit();
+    var newtarget = NodeTools.getTargetOrbit(currentNode.patch.referenceBody);
 
     if (newtarget != target) {
       target = newtarget;
