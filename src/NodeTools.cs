@@ -157,6 +157,9 @@ internal static class NodeTools {
   internal static double getEjectionAngle (this Orbit o, ManeuverNode node) {
     if (node.nextPatch.patchEndTransition == Orbit.PatchTransitionType.ESCAPE) {
       CelestialBody body = o.referenceBody;
+      
+      if (body.isSun ())
+        return double.NaN;
 
       // Calculate the angle between the node's position and the reference body's velocity at nodeUT
       Vector3d prograde = body.orbit.getOrbitalVelocityAtUT (node.UT);
@@ -178,6 +181,10 @@ internal static class NodeTools {
   internal static double getEjectionInclination (this Orbit o, ManeuverNode node) {
     if (node.nextPatch.patchEndTransition == Orbit.PatchTransitionType.ESCAPE) {
       CelestialBody body = o.referenceBody;
+      
+      if (body.isSun ())
+        return double.NaN;
+
       Orbit bodyOrbit = body.orbit;
       Orbit orbitAfterEscape = node.nextPatch.nextPatch;
       return bodyOrbit.getRelativeInclination (orbitAfterEscape);

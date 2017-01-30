@@ -784,6 +784,7 @@ internal class MainWindow {
           if (curOrbit.referenceBody.name != o.referenceBody.name && !o.referenceBody.isSun()) {
             enc = o.referenceBody;
             _periapsis.update (o.PeA);
+            break;
           }
         }
         nextenc = enc != null;
