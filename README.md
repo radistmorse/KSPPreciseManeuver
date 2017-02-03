@@ -11,7 +11,7 @@ The modular structure allows you to disable all the unneded components and make 
 
 NOTES:
 --------------
-Works with KSP 1.1
+Works with KSP 1.2
 
 BUILD:
 --------------
@@ -23,10 +23,9 @@ UnityEngine.dll
 UnityEngine.UI.dll
 Assembly-CSharp.dll
 Assembly-CSharp-firstpass.dll
-KSPUtil.dll
 ```
-All five files can be taken from the KSP_Data/Managed directory of your KSP installation.  
-Also, you will need the AssetBundle file with unity prefabs, which can be generated in Unity Editor from prefabs in /Prefabs folder.
+All four files can be taken from the KSP_Data/Managed directory of your KSP installation.  
+Also, you will need the AssetBundle file with unity prefabs, which can be generated in Unity Editor from prefabs in /Prefabs folder. The asset bundle name is expected to be 'precisemaneuverprefabs'.
 
 INSTALLATION:
 --------------
@@ -41,14 +40,14 @@ The components are:
 - **Maneuver Pager**, allows to switch between maneuvers, focus on the current maneuver and delete it
 - **Maneuver Presets**, allows to save and load the parameters of the maneuver
 - **Precise Input**, allows to change the current maneuver precisely by the use of "+" and "-" buttons
-- **Orbit Tools**, allows to turn the orbit in normal/antinormal direction for a precise angle, and also to circularize the orbit
+- **Orbit Tools**, allows to turn the orbit in normal/antinormal direction for a precise angle, to circularize the orbit, and to copy/paste the maneuver. The copy/paste format is similar to the Transfer Window Planner, and the maneuver can be pasted from it. 
 - **Maneuver Gizmo**, is the maneuver gizmo that looks very similar to the stock gizmo, and behaves in a similar way
 - **Next Encounter**, shows the next encounter, allows to focus on it and shows the distance to it in the closest point (PE)
 - **Ejection angles**, shows the ejection parameters in case the orbit escapes from the SOI of the celestial body
 - **Orbit Info**, shows the parameters of the planned orbit
 - **Patches Control**, allows to change the mode of Patched Conics draw, i.e. the trajectories of the vessel
 
-The following hotkeys are available:
+The following hotkeys are available by default:
 - Keypad8/5: increase prograde/retrograde
 - Keypad4/6: increase/decreas radial
 - Keypad7/9: increase/decrease normal

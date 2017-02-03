@@ -74,10 +74,6 @@ internal static class NodeTools {
 
   }
 
-  /// <summary>
-  /// Returns the orbit of the currently targeted item or null if there is none.
-  /// </summary>
-  /// <returns>The orbit or null.</returns>
   internal static Orbit getTargetOrbit (CelestialBody refbody) {
     ITargetable tgt = FlightGlobals.fetch.VesselTarget;
     if (tgt == null || FlightGlobals.ActiveVessel == tgt.GetVessel ())
@@ -97,23 +93,11 @@ internal static class NodeTools {
     return null;
   }
 
-  /// <summary>
-  /// Gets the UT for the ascending node in reference to the target orbit.
-  /// </summary>
-  /// <returns>The UT for the ascending node in reference to the target orbit.</returns>
-  /// <param name="a">The orbit to find the UT on.</param>
-  /// <param name="b">The target orbit.</param>
   internal static double getTargetANUT (this Orbit a, Orbit b) {
     Vector3d ANVector = Vector3d.Cross (a.GetOrbitNormal ().xzy, b.GetOrbitNormal ().xzy).normalized;
     return a.getOrbitZupUT (ANVector.xzy);
   }
 
-  /// <summary>
-  /// Gets the UT for the descending node in reference to the target orbit.
-  /// </summary>
-  /// <returns>The UT for the descending node in reference to the target orbit.</returns>
-  /// <param name="a">The orbit to find the UT on.</param>
-  /// <param name="b">The target orbit.</param>
   internal static double getTargetDNUT (this Orbit a, Orbit b) {
     Vector3d DNVector = Vector3d.Cross (b.GetOrbitNormal ().xzy, a.GetOrbitNormal ().xzy).normalized;
     return a.getOrbitZupUT (DNVector.xzy);
