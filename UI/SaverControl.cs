@@ -60,6 +60,7 @@ public class SaverControl : MonoBehaviour {
   }
 
   public void OnDestroy () {
+    m_Chooser.Hide ();
     m_saverControl = null;
   }
 

@@ -49,6 +49,7 @@ public class PagerControl : MonoBehaviour {
   }
 
   public void OnDestroy () {
+    m_Chooser.Hide ();
     m_pagerControl.deregisterUpdateAction (updatePagerValues);
     m_pagerControl = null;
   }
