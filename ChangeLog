@@ -1,3 +1,6 @@
+2.2.5, 2017-02-19
+- Fix dropdown blocker which caused the UI block in some cases
+
 2.2.4, 2017-02-03
 - Reworked AN/DN calculation
 
