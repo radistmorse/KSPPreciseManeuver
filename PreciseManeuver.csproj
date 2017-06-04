@@ -51,7 +51,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\StyleManager.cs" />
+    <Compile Include="src\GUIComponentManager.cs" />
     <Compile Include="src\PreciseManeuverToolbar.cs" />
     <Compile Include="src\KACWrapper.cs" />
     <Compile Include="src\PreciseManeuverHotkeys.cs" />
@@ -76,5 +76,8 @@
       <Project>{3ebb00a5-1bbe-46c1-ae28-01b5f6c603f6}</Project>
       <Name>PreciseManeuver.Unity</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Localization\localization.cfg" />
   </ItemGroup>
 </Project>

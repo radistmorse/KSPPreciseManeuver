@@ -25,9 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-using KSPPreciseManeuver.UI;
 using UnityEngine;
+using UnityEngine.UI;
+using KSP.Localization;
 
 namespace KSPPreciseManeuver {
 internal class PreciseManeuverHotkeys {
@@ -53,6 +53,11 @@ internal class PreciseManeuverHotkeys {
       _name = name;
     }
 
+    public UnityEngine.Events.UnityAction<string> replaceTextComponentWithTMPro (Text text) {
+        var ugui = GUIComponentManager.replaceTextWithTMPro (text);
+        return ugui.SetText;
+    }
+
     public KeyCode code {
       get { return PreciseManeuverConfig.Instance.getHotkey (_type); }
     }
@@ -61,7 +66,7 @@ internal class PreciseManeuverHotkeys {
       get { return _name; }
     }
 
-    public void setKey (Action<KeyCode> callback) {
+    public void setKey (UnityEngine.Events.UnityAction<KeyCode> callback) {
       if (_parent.expectingConfigHotkey) {
         // We are already expecting another hotkey, so abort that first
         _parent.onSetCallback (PreciseManeuverConfig.Instance.getHotkey (_parent.expectedHotkey));
@@ -92,7 +97,7 @@ internal class PreciseManeuverHotkeys {
   private double expectedTime = 0.0;
   private const float expectedTimeout = 5.0f;
   private int expectedHotkeyCooldown = 0;
-  private Action<KeyCode> onSetCallback;
+  private UnityEngine.Events.UnityAction<KeyCode> onSetCallback;
 
   #endregion
 
@@ -124,40 +129,49 @@ internal class PreciseManeuverHotkeys {
   private GameObject m_KeybindingsCtrlPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverKeyControl");
 
   internal void fillKeymapperWindow (UI.DraggableWindow window) {
-    newKeyControl (window, "Hide/show window", PreciseManeuverConfig.HotkeyType.HIDEWIN);
-    newKeyControl (window, "Increment prograde", PreciseManeuverConfig.HotkeyType.PROGINC);
-    newKeyControl (window, "Decrement prograde", PreciseManeuverConfig.HotkeyType.PROGDEC);
-    newKeyControl (window, "Zero prograde", PreciseManeuverConfig.HotkeyType.PROGZER);
-    newKeyControl (window, "Increment normal", PreciseManeuverConfig.HotkeyType.NORMINC);
-    newKeyControl (window, "Decrement normal", PreciseManeuverConfig.HotkeyType.NORMDEC);
-    newKeyControl (window, "Zero normal", PreciseManeuverConfig.HotkeyType.NORMZER);
-    newKeyControl (window, "Increment radial", PreciseManeuverConfig.HotkeyType.RADIINC);
-    newKeyControl (window, "Decrement radial", PreciseManeuverConfig.HotkeyType.RADIDEC);
-    newKeyControl (window, "Zero radial", PreciseManeuverConfig.HotkeyType.RADIZER);
-    newKeyControl (window, "Increment time", PreciseManeuverConfig.HotkeyType.TIMEINC);
-    newKeyControl (window, "Decrement time", PreciseManeuverConfig.HotkeyType.TIMEDEC);
-    newKeyControl (window, "Circularize orbit", PreciseManeuverConfig.HotkeyType.CIRCORB);
-    newKeyControl (window, "Turn orbit up", PreciseManeuverConfig.HotkeyType.TURNOUP);
-    newKeyControl (window, "Turn orbit down", PreciseManeuverConfig.HotkeyType.TURNODN);
-    newKeyControl (window, "Change increment (w/Alt)", PreciseManeuverConfig.HotkeyType.PAGEINC);
-    newKeyControl (window, "Change orbit mode (w/Alt)", PreciseManeuverConfig.HotkeyType.PAGECON);
-    newKeyControl (window, "Focus on next encounter", PreciseManeuverConfig.HotkeyType.FOCNENC);
-    newKeyControl (window, "Focus on vessel", PreciseManeuverConfig.HotkeyType.FOCVESL);
-    newKeyControl (window, "Show more trajectories", PreciseManeuverConfig.HotkeyType.PLUSORB);
-    newKeyControl (window, "Show fewer trajectories", PreciseManeuverConfig.HotkeyType.MINUORB);
-    newKeyControl (window, "Toggle x10 time", PreciseManeuverConfig.HotkeyType.PAGEX10);
-    newKeyControl (window, "Next maneuver", PreciseManeuverConfig.HotkeyType.NEXTMAN);
-    newKeyControl (window, "Prev maneuver", PreciseManeuverConfig.HotkeyType.PREVMAN);
-    newKeyControl (window, "Delete maneuver", PreciseManeuverConfig.HotkeyType.MNVRDEL);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_enable"), PreciseManeuverConfig.HotkeyType.HIDEWIN);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_proginc"), PreciseManeuverConfig.HotkeyType.PROGINC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_progdec"), PreciseManeuverConfig.HotkeyType.PROGDEC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_progzero"), PreciseManeuverConfig.HotkeyType.PROGZER);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_norminc"), PreciseManeuverConfig.HotkeyType.NORMINC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_normdec"), PreciseManeuverConfig.HotkeyType.NORMDEC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_normzero"), PreciseManeuverConfig.HotkeyType.NORMZER);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_radinc"), PreciseManeuverConfig.HotkeyType.RADIINC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_raddec"), PreciseManeuverConfig.HotkeyType.RADIDEC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_radzero"), PreciseManeuverConfig.HotkeyType.RADIZER);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_timeinc"), PreciseManeuverConfig.HotkeyType.TIMEINC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_timedex"), PreciseManeuverConfig.HotkeyType.TIMEDEC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_circularize"), PreciseManeuverConfig.HotkeyType.CIRCORB);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_turnup"), PreciseManeuverConfig.HotkeyType.TURNOUP);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_turndown"), PreciseManeuverConfig.HotkeyType.TURNODN);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_encfocus"), PreciseManeuverConfig.HotkeyType.FOCNENC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_patchesmore"), PreciseManeuverConfig.HotkeyType.PLUSORB);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_patchesless"), PreciseManeuverConfig.HotkeyType.MINUORB);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_timex10"), PreciseManeuverConfig.HotkeyType.PAGEX10);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_nextnode"), PreciseManeuverConfig.HotkeyType.NEXTMAN);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_prevnode"), PreciseManeuverConfig.HotkeyType.PREVMAN);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_delnode"), PreciseManeuverConfig.HotkeyType.MNVRDEL);
+    
+    GameObject label = new GameObject ("PreciseManeuverKeybindingsAltLabel");
+    var text = label.AddComponent<TMPro.TextMeshProUGUI> ();
+    text.text = Localizer.Format ("precisemaneuver_keybindings_alt");
+    text.font = UISkinManager.TMPFont;
+    text.fontSize = 14;
+    text.richText = false;
+    text.color = Color.white;
+
+    window.AddToContent (label);
+
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_pageinc"), PreciseManeuverConfig.HotkeyType.PAGEINC);
+    newKeyControl (window, Localizer.Format ("precisemaneuver_keybindings_pageconics"), PreciseManeuverConfig.HotkeyType.PAGECON);
   }
 
-  private void newKeyControl (DraggableWindow window, string title, PreciseManeuverConfig.HotkeyType type) {
-    GameObject keybindingsCtrlObject = UnityEngine.Object.Instantiate(m_KeybindingsCtrlPrefab);
+  private void newKeyControl (UI.DraggableWindow window, string title, PreciseManeuverConfig.HotkeyType type) {
+    GameObject keybindingsCtrlObject = Object.Instantiate (m_KeybindingsCtrlPrefab);
     if (keybindingsCtrlObject == null)
       return;
-    StyleManager.Process (keybindingsCtrlObject);
 
-    KeybindingControl keybindingCtrl = keybindingsCtrlObject.GetComponent<KeybindingControl>();
+    UI.KeybindingControl keybindingCtrl = keybindingsCtrlObject.GetComponent<UI.KeybindingControl> ();
     keybindingCtrl.setControl (new KeybindingControlInterface (this, type, title));
     window.AddToContent (keybindingsCtrlObject);
 
@@ -338,11 +352,6 @@ internal class PreciseManeuverHotkeys {
           MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.celestialBody != null) && (o.celestialBody == nextEnc));
           MapView.MapCamera.SetTarget (mapObject);
         }
-      }
-      // focus on vessel
-      if (Input.GetKeyDown (config.getHotkey (PreciseManeuverConfig.HotkeyType.FOCVESL))) {
-        MapObject mapObject = PlanetariumCamera.fetch.targets.Find (o => (o.vessel != null) && o.vessel.Equals (FlightGlobals.ActiveVessel));
-        MapView.MapCamera.SetTarget (mapObject);
       }
     }
     if (repeatButtonPressed) {

@@ -25,10 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System.Collections.Generic;
-using UnityEngine;
-using System;
-
 namespace KSPPreciseManeuver.UI {
 public interface IMenuControl {
   bool IsMainWindowVisible { get; set; }
@@ -38,16 +34,16 @@ public interface IMenuControl {
   bool IsOn { get; }
   float scaleGUIValue { get; set; }
 
-  void registerUpdateAction (Action action);
-  void deregisterUpdateAction (Action action);
+  void registerUpdateAction (UnityEngine.Events.UnityAction action);
+  void deregisterUpdateAction (UnityEngine.Events.UnityAction action);
 
-  void ClampToScreen(RectTransform rectTransform);
+  void ClampToScreen(UnityEngine.RectTransform rectTransform);
 
   void OnMenuPointerEnter ();
   void OnMenuPointerExit ();
 
-  Vector3 GetAnchor();
+  UnityEngine.Vector3 GetAnchor();
 
-  IList<ISectionControl> GetSections();
+  System.Collections.Generic.IList<ISectionControl> GetSections();
 }
 }

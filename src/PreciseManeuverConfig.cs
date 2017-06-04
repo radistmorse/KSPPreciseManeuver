@@ -29,7 +29,9 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using KSP.IO;
+using KSP.Localization;
 using System.Collections.Generic;
 
 namespace KSPPreciseManeuver {
@@ -144,8 +146,8 @@ internal class PreciseManeuverConfig {
   #region Increment
 
   private int _increment = 0;
-  internal double increment { get { return Math.Pow (10, _increment); } }
-  internal double incrementDeg { get { return Math.PI * Math.Pow (10, _increment) / 180; } }
+  internal double increment { get { return System.Math.Pow (10, _increment); } }
+  internal double incrementDeg { get { return System.Math.PI * System.Math.Pow (10, _increment) / 180; } }
   internal double incrementUt { get { return increment * (x10UTincrement ? 10 : 1); } }
   internal int incrementRaw {
     get { return _increment; }
@@ -186,6 +188,8 @@ internal class PreciseManeuverConfig {
   Dictionary<string, Vector3d> presets = new Dictionary<string, Vector3d> ();
 
   internal void addPreset (string name) {
+    if (presets.ContainsKey (name))
+      presets.Remove (name);
     presets.Add (name, NodeManager.Instance.currentNode.DeltaV);
   }
 
@@ -223,16 +227,16 @@ internal class PreciseManeuverConfig {
     PATCH
   };
 
-  private static readonly string[] moduleNames = {
-    "Maneuver Pager",
-    "Maneuver Presets",
-    "Precise Input",
-    "Orbit Tools",
-    "Maneuver Gizmo",
-    "Next Encounter",
-    "Ejection angles",
-    "Orbit Info",
-    "Patches Control",
+  private static readonly string[] moduleLabels = {
+    "precisemaneuver_module_pager",
+    "precisemaneuver_module_saver",
+    "precisemaneuver_module_precise_input",
+    "precisemaneuver_module_orbit_tools",
+    "precisemaneuver_module_gizmo",
+    "precisemaneuver_module_next_encounter",
+    "precisemaneuver_module_ejection",
+    "precisemaneuver_module_info",
+    "precisemaneuver_module_patches",
   };
 
   private bool[] moduleState = {
@@ -260,7 +264,7 @@ internal class PreciseManeuverConfig {
   }
 
   internal static string getModuleName (ModuleType type) {
-    return moduleNames[(int)type];
+    return Localizer.Format (moduleLabels[(int)type]);
   }
 
   internal bool getModuleState (ModuleType type) {
@@ -297,7 +301,6 @@ internal class PreciseManeuverConfig {
     PAGECON,
     HIDEWIN,
     FOCNENC,
-    FOCVESL,
     PLUSORB,
     MINUORB,
     PAGEX10,
@@ -325,7 +328,6 @@ internal class PreciseManeuverConfig {
     KeyCode.Keypad2,    //PAGECON
     KeyCode.P,          //HIDEWIN
     KeyCode.None,       //FOCNENC
-    KeyCode.None,       //FOCVESL
     KeyCode.None,       //PLUSORB
     KeyCode.None,       //MINUORB
     KeyCode.None,       //PAGEX10
@@ -354,43 +356,43 @@ internal class PreciseManeuverConfig {
     scale
   }
 
-  private Dictionary<changeType, List<Action>> _listeners;
+  private Dictionary<changeType, List<UnityAction>> _listeners;
 
-  private Dictionary<changeType, List<Action>> listeners {
+  private Dictionary<changeType, List<UnityAction>> listeners {
     get {
       if (_listeners == null) {
-        _listeners = new Dictionary<changeType, List<Action>> (3);
-        _listeners[changeType.x10] = new List<Action> ();
-        _listeners[changeType.increment] = new List<Action> ();
-        _listeners[changeType.visibility] = new List<Action> ();
-        _listeners[changeType.conicsmode] = new List<Action> ();
-        _listeners[changeType.scale] = new List<Action> ();
+        _listeners = new Dictionary<changeType, List<UnityAction>> (3);
+        _listeners[changeType.x10] = new List<UnityAction> ();
+        _listeners[changeType.increment] = new List<UnityAction> ();
+        _listeners[changeType.visibility] = new List<UnityAction> ();
+        _listeners[changeType.conicsmode] = new List<UnityAction> ();
+        _listeners[changeType.scale] = new List<UnityAction> ();
       }
       return _listeners;
     }
   }
 
-  public void listenTox10Change (Action listener) {
+  public void listenTox10Change (UnityAction listener) {
     listeners[changeType.x10].Add (listener);
   }
 
-  public void listenToIncrementChange (Action listener) {
+  public void listenToIncrementChange (UnityAction listener) {
     listeners[changeType.increment].Add (listener);
   }
 
-  public void listenToShowChange (Action listener) {
+  public void listenToShowChange (UnityAction listener) {
     listeners[changeType.visibility].Add (listener);
   }
 
-  public void listenToConicsModeChange (Action listener) {
+  public void listenToConicsModeChange (UnityAction listener) {
     listeners[changeType.conicsmode].Add (listener);
   }
 
-  public void listenToScaleChange (Action listener) {
+  public void listenToScaleChange (UnityAction listener) {
     listeners[changeType.scale].Add (listener);
   }
 
-  public void removeListener (Action listener) {
+  public void removeListener (UnityAction listener) {
     foreach (var list in listeners.Values)
       list.RemoveAll (a => (a == listener));
   }
@@ -472,7 +474,7 @@ internal class PreciseManeuverConfig {
       isInBackground = config.GetValue<bool> ("background", isInBackground);
       
       foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
-        hotkeys[(int)type] = (KeyCode)Enum.Parse (typeof (KeyCode), config.GetValue<String> (type.ToString (), hotkeys[(int)type].ToString ()));
+        hotkeys[(int)type] = (KeyCode)Enum.Parse (typeof (KeyCode), config.GetValue<string> (type.ToString (), hotkeys[(int)type].ToString ()));
 
       foreach (ModuleType type in Enum.GetValues (typeof (ModuleType)))
         moduleState[(int)type] = config.GetValue<bool> (type.ToString (), moduleState[(int)type]);

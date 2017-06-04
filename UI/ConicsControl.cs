@@ -27,6 +27,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
@@ -70,11 +71,11 @@ public class ConicsControl : MonoBehaviour {
   }
 
   public void updateControls () {
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
     m_Toggle1.isOn = m_Toggle2.isOn = m_Toggle3.isOn = m_Toggle4.isOn = m_Toggle5.isOn = false;
     switch (m_control.getPatchesMode) {
       case 0: m_Toggle1.isOn = true; break;
@@ -83,11 +84,11 @@ public class ConicsControl : MonoBehaviour {
       case 3: m_Toggle4.isOn = true; break;
       case 4: m_Toggle5.isOn = true; break;
     }
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
   }
 }
 }

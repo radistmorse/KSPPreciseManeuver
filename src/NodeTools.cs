@@ -28,6 +28,7 @@
 
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KSPPreciseManeuver {
 internal static class NodeTools {
@@ -216,7 +217,7 @@ internal static class NodeTools {
   /// </summary>
   /// <returns>The converted time.</returns>
   /// <param name="UT">Kerbal Space Program Universal Time.</param>
-  internal static string convertUTtoHumanTime (double UT) {
+  internal static string convertUTtoHumanTime (double UT, bool compact = false) {
     long secs;
     long mins;
     long hour;
@@ -237,7 +238,8 @@ internal static class NodeTools {
       year = (long)Math.Floor (UT / (365 * 24 * 60 * 60)) + 1; // Ensure we don't get a "Year 0" here.
     }
 
-    return "Year " + year + ", Day " + day + ", " + hour + ":" + (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+    string format = compact ? "precisemaneuver_date_format_compact" : "precisemaneuver_date_format";
+    return Localizer.Format (format, year, day, hour, mins.ToString("D2"), secs.ToString("D2"));
   }
   
   internal static void copyToClipboard (Orbit o, ManeuverNode node) {
@@ -290,15 +292,15 @@ internal static class NodeTools {
     string multiplier = " ";
     if ((Math.Abs (d) / 1000) >= 100) {
       d /= 1000;
-      multiplier = " k";
+      multiplier = " " + Localizer.Format ("precisemaneuver_prefix_kilo");
 
       if ((Math.Abs (d) / 1000) >= 100) {
         d /= 1000;
-        multiplier = " M";
+        multiplier = " " + Localizer.Format ("precisemaneuver_prefix_mega");
 
         if ((Math.Abs (d) / 1000) >= 100) {
           d /= 1000;
-          multiplier = " G";
+          multiplier = " " + Localizer.Format ("precisemaneuver_prefix_giga");
         }
       }
     }

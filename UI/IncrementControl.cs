@@ -27,6 +27,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
@@ -61,11 +62,11 @@ public class IncrementControl : MonoBehaviour {
   }
 
   public void updateIncrements () {
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
     m_Toggle1.isOn = m_Toggle2.isOn = m_Toggle3.isOn = m_Toggle4.isOn = m_Toggle5.isOn = false;
     switch (m_incrementControl.getRawIncrement) {
       case -2: m_Toggle1.isOn = true; break;
@@ -74,11 +75,11 @@ public class IncrementControl : MonoBehaviour {
       case  1: m_Toggle4.isOn = true; break;
       case  2: m_Toggle5.isOn = true; break;
     }
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
   }
 }
 }

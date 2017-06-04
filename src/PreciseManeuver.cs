@@ -28,6 +28,7 @@
  ******************************************************************************/
 
 using UnityEngine;
+using KSP.Localization;
 
 namespace KSPPreciseManeuver {
 using UI;
@@ -120,14 +121,9 @@ internal class PreciseManeuver : MonoBehaviour {
     if (m_MainWindowObject == null)
       return;
 
-    StyleManager.Process (m_MainWindowObject);
-
-    // set object as a child of the main canvas
-    m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
-
     m_MainWindow = m_MainWindowObject.GetComponent<DraggableWindow> ();
     if (m_MainWindow != null) {
-      m_MainWindow.SetTitle ("PRECISE MANEUVER");
+      m_MainWindow.SetTitle (Localizer.Format("precisemaneuver_caption"));
       m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
       mainWindow.clearMainWindow ();
       mainWindow.updateMainWindow (m_MainWindow);
@@ -137,6 +133,12 @@ internal class PreciseManeuver : MonoBehaviour {
     }
     scaleMainWindow ();
     config.listenToScaleChange (scaleMainWindow);
+
+    GUIComponentManager.processStyle (m_MainWindowObject);
+    GUIComponentManager.replaceLabelsWithTMPro (m_MainWindowObject);
+
+    // set object as a child of the main canvas
+    m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
   }
 
   private void scaleMainWindow () {
@@ -176,25 +178,29 @@ internal class PreciseManeuver : MonoBehaviour {
     if (m_WindowPrefab == null || m_KeybindingsWindowObject != null)
       return;
 
-    // create object
+    // create window object
     Vector3 pos = new Vector3(config.keymapperWindowPos.x, config.keymapperWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
     m_KeybindingsWindowObject = Instantiate(m_WindowPrefab, pos, Quaternion.identity) as GameObject;
     if (m_KeybindingsWindowObject == null)
       return;
 
-    StyleManager.Process(m_KeybindingsWindowObject);
-
-    // set object as a child of the main canvas
-    m_KeybindingsWindowObject.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
-
+    // populate window
     m_KeybindingsWindow = m_KeybindingsWindowObject.GetComponent<DraggableWindow>();
     if (m_KeybindingsWindow != null) {
-      m_KeybindingsWindow.SetTitle("PRECISE MANEUVER KEYBINDINGS");
+      m_KeybindingsWindow.SetTitle(Localizer.Format("precisemaneuver_keybindings_caption"));
       m_KeybindingsWindow.setMainCanvasTransform(MainCanvasUtil.MainCanvasRect);
       hotkeys.fillKeymapperWindow(m_KeybindingsWindow);
       m_KeybindingsWindow.OnWindowPointerEnter = setWindow2InputLock;
       m_KeybindingsWindow.OnWindowPointerExit = resetWindow2InputLock;
     }
+
+    GUIComponentManager.processStyle(m_KeybindingsWindowObject);
+    GUIComponentManager.processLocalization(m_KeybindingsWindowObject);
+    GUIComponentManager.replaceLabelsWithTMPro(m_KeybindingsWindowObject);
+
+    // set object as a child of the main canvas
+    m_KeybindingsWindowObject.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
+
   }
 
   private void closeKeybindingsWindow () {

@@ -25,16 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IOrbitInfoControl {
+public interface IOrbitInfoControl : IControl {
   string ApoapsisValue { get; }
   string PeriapsisValue { get; }
   string InclinationValue { get; }
   string EccentricityValue { get; }
-
-  void registerUpdateAction (Action updateControl);
-  void deregisterUpdateAction (Action updateControl);
 }
 }

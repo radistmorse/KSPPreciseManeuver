@@ -25,7 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using KSP.UI;
 using KSP.UI.Screens;
@@ -85,7 +84,7 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
 
   public IList<ISectionControl> GetSections () {
     var rez = new List<ISectionControl>();
-    foreach (PreciseManeuverConfig.ModuleType type in Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType)))
+    foreach (PreciseManeuverConfig.ModuleType type in System.Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType)))
       rez.Add (new SectionModule (type));
     return rez;
   }
@@ -261,14 +260,16 @@ class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
       if (!NodeTools.patchedConicsUnlocked)
         m_ToolbarMenu.DisableMainWindow ();
     }
-    StyleManager.Process (m_MenuObject);
+    GUIComponentManager.processStyle (m_MenuObject);
+    GUIComponentManager.processLocalization (m_MenuObject);
+    GUIComponentManager.replaceLabelsWithTMPro (m_MenuObject);
   }
 
-  public void registerUpdateAction (Action action) {
+  public void registerUpdateAction (UnityEngine.Events.UnityAction action) {
     PreciseManeuverConfig.Instance.listenToShowChange (action);
   }
 
-  public void deregisterUpdateAction (Action action) {
+  public void deregisterUpdateAction (UnityEngine.Events.UnityAction action) {
     PreciseManeuverConfig.Instance.removeListener (action);
   }
 }

@@ -27,6 +27,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
@@ -52,6 +53,7 @@ public class UTControl : MonoBehaviour {
 
   public void SetUTControl(IUTControl utControl) {
     m_UTControl = utControl;
+    utControl.replaceInputFieldWithTMPro (m_UTValue);
     updateControls ();
     m_UTControl.registerUpdateAction (updateControls);
   }
@@ -105,10 +107,10 @@ public class UTControl : MonoBehaviour {
   }
 
   public void updateControls () {
-    m_UTValue.text = m_UTControl.UTValue;
-    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_UTControl.TMProText = m_UTControl.UTValue;
+    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
     m_x10Toggle.isOn = m_UTControl.X10State;
-    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
 
     enableButton (m_APButton, m_UTControl.APAvailable);
     enableButton (m_PEButton, m_UTControl.PEAvailable);

@@ -1,3 +1,13 @@
+2.3.0, 2017-06-04
+- KSP 1.3.0
+- Localization support
+- Tooltips added
+- All text is replaced with TMPros
+- And all inputs are also replaced with TMPros
+- And even the text in dropdowns was replaced with TMPros
+- Seriously, I can't beleive how many hidden places there are with the fucking text components
+- Did I mention I replaced the text with TMPros? Because I did
+
 2.2.5, 2017-02-19
 - Fix dropdown blocker which caused the UI block in some cases
 

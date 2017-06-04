@@ -29,6 +29,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
+[RequireComponent (typeof (RectTransform))]
 public class StyleApplicator : MonoBehaviour {
   public enum ElementTypes {
     None,

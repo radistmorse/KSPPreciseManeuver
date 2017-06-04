@@ -27,7 +27,8 @@
 
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
+using UnityEngine.Events;
+using System.Collections.Generic;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
@@ -39,7 +40,8 @@ public class SaverControl : MonoBehaviour {
   [SerializeField]
   private Button m_ButtonOk = null;
   [SerializeField]
-  private Dropdown m_Chooser = null;
+  private PreciseManeuverDropdown m_Chooser = null;
+  private UnityAction<string> chooserText = null;
   [SerializeField]
   private InputField m_NameInput = null;
   [SerializeField]
@@ -48,14 +50,18 @@ public class SaverControl : MonoBehaviour {
   private GameObject m_SaverPanel = null;
 
   private int savedChooserValue = 0;
-
+  private List<string> presetCache = new List<string> ();
   private ISaverControl m_saverControl = null;
 
   public void SetControl (ISaverControl saverControl) {
     m_saverControl = saverControl;
-    updateControls ();
-    foreach (var fixer in GetComponentsInChildren<CanvasFixer> (true))
-      fixer.m_canvasLayer = saverControl.CanvasName;
+    m_Chooser.updateDropdownCaption = setChooserText;
+    m_Chooser.updateDropdownOption = setChooserOption;
+    m_Chooser.setRootCanvas (saverControl.Canvas);
+
+    chooserText = saverControl.replaceTextComponentWithTMPro (m_Chooser.captionArea.GetComponent<Text> ());
+    saverControl.replaceInputFieldWithTMPro (m_NameInput, inputFieldSubmit, inputFieldChange);
+    switchChooser ();
     repopulateChooser ();
   }
 
@@ -66,39 +72,33 @@ public class SaverControl : MonoBehaviour {
 
   public void SaveButtonAction () {
     if (m_Chooser.value != 0)
-      m_saverControl.AddPreset (m_Chooser.options[m_Chooser.value].text);
+      m_saverControl.AddPreset (presetCache[m_Chooser.value - 1]);
   }
 
   public void SaveAsButtonAction () {
     switchSaver ();
-    m_NameInput.text = m_saverControl.suggestPresetName ();
-    m_NameInput.Select ();
-    m_NameInput.ActivateInputField ();
-    if (m_NameInput.text.Length > 0) {
-      m_NameInput.caretPosition = m_NameInput.text.Length;
-      m_NameInput.selectionAnchorPosition = 0;
-      m_NameInput.selectionFocusPosition = m_NameInput.text.Length;
-    } else {
-      inputFieldChange ("");
-    }
+    var text = m_saverControl.suggestPresetName ();
+    m_saverControl.TMProText = text;
+    m_saverControl.TMProActivateInputField ();
+    m_saverControl.TMProSelectAllText ();
+    inputFieldChange (text);
   }
 
   public void DelButtonAction () {
     if (m_Chooser.value != 0)
-      m_saverControl.RemovePreset (m_Chooser.options[m_Chooser.value].text);
+      m_saverControl.RemovePreset (presetCache[m_Chooser.value - 1]);
     repopulateChooser ();
 
   }
 
   public void okButtonAction () {
-    if (m_NameInput.text.Length > 0) {
-      m_saverControl.AddPreset (m_NameInput.text);
+    var text = m_saverControl.TMProText;
+    if (text.Length > 0) {
+      m_saverControl.AddPreset (text);
       repopulateChooser ();
-      m_Chooser.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-      var items = m_Chooser.options.Where (a => ( a.text == m_NameInput.text ));
-      if (items.Count () == 1)
-        m_Chooser.value = m_Chooser.options.IndexOf (items.First ());
-      m_Chooser.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+      var items = presetCache.FindAll (a => (a == text));
+      if (items.Count == 1)
+        m_Chooser.setValueNoInvoke (presetCache.FindIndex (a => (a == text)) + 1);
       switchChooser ();
       updateControls ();
     }
@@ -119,7 +119,7 @@ public class SaverControl : MonoBehaviour {
     }
   }
 
-  public void inputFieldSubmit () {
+  public void inputFieldSubmit (string text) {
     if (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) {
       okButtonAction ();
     }
@@ -164,24 +164,33 @@ public class SaverControl : MonoBehaviour {
   }
 
   public void repopulateChooser () {
-    m_Chooser.options.Clear ();
-    m_Chooser.options.Add (new Dropdown.OptionData ("New preset..."));
-
-    foreach (var line in m_saverControl.presetNames) {
-      m_Chooser.options.Add (new Dropdown.OptionData (line));
-    }
-    m_Chooser.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_Chooser.captionText.text = "New preset...";
-    m_Chooser.value = 0;
-    m_Chooser.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    presetCache = m_saverControl.presetNames ();
+    m_Chooser.optionCount = 1 + presetCache.Count;
+    m_Chooser.setValueNoInvoke (0);
     updateControls ();
+  }
+
+  private void setChooserText (int index, GameObject caption) {
+    if (index < 0 || index > presetCache.Count)
+      return;
+    if (index == 0)
+      chooserText (m_saverControl.newPresetLocalized);
+    else
+      chooserText (presetCache[index - 1]);
+  }
+
+  private void setChooserOption (PreciseManeuverDropdownItem item) {
+    if (item.index == 0)
+      m_saverControl.replaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (m_saverControl.newPresetLocalized);
+    else
+      m_saverControl.replaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (presetCache[item.index - 1]);
   }
 
   public void chooserValueChange (int value) {
     if (value == 0) {
       SaveAsButtonAction ();
     } else {
-      m_saverControl.loadPreset (m_Chooser.options[value].text);
+      m_saverControl.loadPreset (presetCache[value - 1]);
     }
     updateControls ();
   }

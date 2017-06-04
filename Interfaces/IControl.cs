@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright (c) 2016, George Sedov
+﻿/*******************************************************************************
+ * Copyright (c) 2017, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,19 @@
  ******************************************************************************/
 
 namespace KSPPreciseManeuver.UI {
-public interface IOrbitToolsControl : IControl {
-  void OrbitUpButtonPressed ();
-  void OrbitDnButtonPressed ();
+public interface IControl {
+  void registerUpdateAction (UnityEngine.Events.UnityAction action);
+  void deregisterUpdateAction (UnityEngine.Events.UnityAction action);
 
-  void BeginAtomicChange ();
-  void EndAtomicChange ();
+  UnityEngine.Events.UnityAction<string> replaceTextComponentWithTMPro (UnityEngine.UI.Text text);
 
-  void CircularizeButtonPressed ();
+  void replaceInputFieldWithTMPro (UnityEngine.UI.InputField field,
+                                   UnityEngine.Events.UnityAction<string> onSubmit = null,
+                                   UnityEngine.Events.UnityAction<string> onChange = null);
 
-  void CopyButtonPressed ();
-  void PasteButtonPressed ();
+  string TMProText { get; set; }
+  bool TMProIsInteractable { get; set; }
+  void TMProActivateInputField ();
+  void TMProSelectAllText ();
 }
 }

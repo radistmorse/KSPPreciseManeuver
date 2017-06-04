@@ -27,20 +27,25 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class EjectionControl : MonoBehaviour {
   [SerializeField]
   private Text m_AngleValue = null;
+  private UnityAction<string> angleValueUpdate;
 
   [SerializeField]
   private Text m_InclinationValue = null;
+  private UnityAction<string> inclValueUpdate;
 
   private IEjectionControl m_control = null;
 
   public void SetControl(IEjectionControl control) {
     m_control = control;
+    angleValueUpdate = control.replaceTextComponentWithTMPro (m_AngleValue);
+    inclValueUpdate = control.replaceTextComponentWithTMPro (m_InclinationValue);
     updateControl ();
     m_control.registerUpdateAction (updateControl);
   }
@@ -52,8 +57,8 @@ public class EjectionControl : MonoBehaviour {
   }
 
   public void updateControl () {
-    m_AngleValue.text = m_control.AngleValue;
-    m_InclinationValue.text = m_control.InclinationValue;
+    angleValueUpdate?.Invoke (m_control.AngleValue);
+    inclValueUpdate?.Invoke (m_control.InclinationValue);
   }
 }
 }

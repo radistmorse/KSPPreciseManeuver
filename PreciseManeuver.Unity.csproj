@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IControl.cs" />
     <Compile Include="Interfaces\IUTControl.cs" />
     <Compile Include="Interfaces\IKeybindingsControl.cs" />
     <Compile Include="Interfaces\IAxisControl.cs" />
@@ -56,11 +57,13 @@
     <Compile Include="UI\PagerControl.cs" />
     <Compile Include="UI\UTControl.cs" />
     <Compile Include="UI\AxisControl.cs" />
+    <Compile Include="Utils\PreciseManeuverDropdown.cs" />
+    <Compile Include="Utils\TooltipComponent.cs" />
+    <Compile Include="Utils\LocalizationComponent.cs" />
     <Compile Include="Utils\RepeatButton.cs" />
     <Compile Include="UI\KeybindingControl.cs" />
     <Compile Include="Utils\ShrinkPanel.cs" />
     <Compile Include="Utils\GizmoElement.cs" />
-    <Compile Include="Utils\DropDownManeuverPager.cs" />
     <Compile Include="Utils\CanvasFixer.cs" />
     <Compile Include="Utils\CanvasGroupFader.cs" />
     <Compile Include="UI\ToolbarMenu.cs" />

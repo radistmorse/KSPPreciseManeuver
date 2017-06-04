@@ -27,27 +27,30 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class KeybindingControl : MonoBehaviour {
   [SerializeField]
   private Text m_KeybindingsText = null;
+  private UnityAction<string> textUpdate = null;
 
   [SerializeField]
   private Text m_KeybindingsKeycode = null;
+  private UnityAction<string> keycodeUpdate = null;
 
   [SerializeField]
   private Toggle m_KeybindingsSetButton = null;
 
-  private IKeybindingsControl m_Control;
+  private IKeybindingsControl m_Control = null;
 
   public void setControl (IKeybindingsControl control) {
     m_Control = control;
-    if (m_KeybindingsText != null)
-      m_KeybindingsText.text = control.keyName;
-    if (m_KeybindingsKeycode != null)
-      m_KeybindingsKeycode.text = control.code.ToString ();
+    textUpdate = control.replaceTextComponentWithTMPro (m_KeybindingsText);
+    keycodeUpdate = control.replaceTextComponentWithTMPro (m_KeybindingsKeycode);
+    textUpdate?.Invoke (control.keyName);
+    keycodeUpdate?.Invoke (control.code.ToString ());
   }
 
   public void setButtonPressed (bool value) {
@@ -60,18 +63,14 @@ public class KeybindingControl : MonoBehaviour {
 
   public void unsetButtonPressed () {
     m_Control.unsetKey ();
-    if (m_KeybindingsKeycode != null)
-      m_KeybindingsKeycode.text = KeyCode.None.ToString ();
+    keycodeUpdate?.Invoke (KeyCode.None.ToString ());
   }
 
   private void updateKeyCode (KeyCode code) {
-    if (m_KeybindingsKeycode != null)
-      m_KeybindingsKeycode.text = code.ToString ();
-    if (m_KeybindingsSetButton != null) {
-      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-      m_KeybindingsSetButton.isOn = false;
-      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    }
+    keycodeUpdate?.Invoke (code.ToString ());
+    m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_KeybindingsSetButton.isOn = false;
+    m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
   }
 }
 }

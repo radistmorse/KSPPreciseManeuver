@@ -25,16 +25,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IPagerControl {
+public interface IPagerControl : IControl {
   bool prevManeuverExists { get; }
   bool nextManeuverExists { get; }
   int maneuverCount { get; }
   int maneuverIdx { get; }
-  string CanvasName { get; }
+  UnityEngine.Canvas Canvas { get; }
 
+  string getManeuverNodeLocalized ();
   string getManeuverTime (int idx);
   string getManeuverDV (int idx);
 
@@ -44,8 +43,5 @@ public interface IPagerControl {
   void FocusButtonPressed ();
   void DelButtonPressed ();
   void NextButtonPressed ();
-
-  void registerUpdateAction (Action updatePagerValues);
-  void deregisterUpdateAction (Action updatePagerValues);
 }
 }

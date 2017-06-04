@@ -27,12 +27,15 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class TimeAlarmControl : MonoBehaviour {
   [SerializeField]
   private Text m_TimeValue = null;
+  UnityAction<string> timeValueUpdate;
+
   [SerializeField]
   private Toggle m_ToggleAlarm = null;
 
@@ -40,6 +43,7 @@ public class TimeAlarmControl : MonoBehaviour {
 
   public void SetTimeAlarmControl(ITimeAlarmControl timeAlarmControl) {
     m_timeAlarmControl = timeAlarmControl;
+    timeValueUpdate = timeAlarmControl.replaceTextComponentWithTMPro (m_TimeValue);
     updateTimeAlarm ();
     m_timeAlarmControl.registerUpdateAction (updateTimeAlarm);
   }
@@ -54,7 +58,7 @@ public class TimeAlarmControl : MonoBehaviour {
   }
 
   public void updateTimeAlarm () {
-    m_TimeValue.text = m_timeAlarmControl.TimeValue;
+    timeValueUpdate?.Invoke (m_timeAlarmControl.TimeValue);
     if (m_timeAlarmControl.AlarmAvailable) {
       m_ToggleAlarm.interactable = true;
       m_ToggleAlarm.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);

@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright (c) 2016, George Sedov
+﻿/*******************************************************************************
+ * Copyright (c) 2017, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,15 @@
  ******************************************************************************/
 
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
-public class DropDownManeuverPager : Dropdown {
-  private PagerControl m_control = null;
+public class TooltipComponent : MonoBehaviour {
+  [SerializeField]
+  private string m_Tooltip = "";
 
-  override protected void Awake() {
-    base.Awake ();
-    m_control = GetComponentInParent<PagerControl> ();
-  }
-
-  private int num = 0;
-  override protected GameObject CreateDropdownList (GameObject template) {
-    num = 0;
-    return base.CreateDropdownList (template);
-  }
-
-  override protected DropdownItem CreateItem (DropdownItem itemTemplate) {
-    Text nodetime = null;
-    Text nodedv = null;
-    foreach (var item in itemTemplate.GetComponentsInChildren<Text> ()) {
-      if (item.name == "NodeTime")
-        nodetime = item;
-      if (item.name == "NodeDV")
-        nodedv = item;
-    }
-
-    if (m_control != null && nodetime != null && nodedv != null) {
-      nodetime.text = m_control.GetTimeForNode (num);
-      nodedv.text = m_control.GetDVForNode (num);
-    }
-    num++;
-    return Instantiate (itemTemplate);
+  public string text {
+    get { return m_Tooltip; }
   }
 }
 }

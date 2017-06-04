@@ -25,10 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IGizmoControl {
+public interface IGizmoControl : IControl {
   bool undoAvailable { get; }
   bool redoAvailable { get; }
   bool APAvailable { get; }
@@ -50,8 +48,5 @@ public interface IGizmoControl {
   void endAtomicChange ();
 
   void updateNode (double ddx, double ddy, double ddz, double dut);
-
-  void registerUpdateAction (Action updateControl);
-  void deregisterUpdateAction (Action updateControl);
-  }
+}
 }

@@ -45,6 +45,8 @@ public class AxisControl : MonoBehaviour {
     m_AxisName.color = m_axisControl.AxisColor;
     m_AxisName.text = m_axisControl.AxisName;
     m_AxisValue.textComponent.color = m_axisControl.AxisColor;
+    m_axisControl.replaceTextComponentWithTMPro (m_AxisName);
+    m_axisControl.replaceInputFieldWithTMPro (m_AxisValue, InputFieldEndEdit);
     updateAxisValue ();
     m_axisControl.registerUpdateAction (updateAxisValue);
   }
@@ -74,10 +76,10 @@ public class AxisControl : MonoBehaviour {
       m_axisControl.ZeroButtonPressed ();
   }
   public void EditButtonAction () {
-    m_AxisValue.interactable = true;
+    m_axisControl.TMProIsInteractable = true;
     m_EditFieldButton.interactable = false;
     m_axisControl.lockKeyboard ();
-    m_AxisValue.ActivateInputField ();
+    m_axisControl.TMProActivateInputField ();
   }
 
   public void InputFieldEndEdit (string text) {
@@ -85,15 +87,15 @@ public class AxisControl : MonoBehaviour {
     if ((Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) && m_axisControl != null && double.TryParse(text, out value))
       m_axisControl.UpdateValueAbs (value);
 
-    m_AxisValue.interactable = false;
+    m_axisControl.TMProIsInteractable = false;
     m_EditFieldButton.interactable = true;
     m_axisControl.unlockKeyboard ();
     updateAxisValue ();
   }
 
   public void updateAxisValue () {
-    if (m_AxisValue.interactable == false && m_axisControl != null)
-      m_AxisValue.text = m_axisControl.AxisValue;
+    if (m_axisControl.TMProIsInteractable == false && m_axisControl != null)
+      m_axisControl.TMProText = m_axisControl.AxisValue;
   }
 }
 }

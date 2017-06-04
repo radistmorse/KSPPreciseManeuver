@@ -27,26 +27,35 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class OrbitInfoControl : MonoBehaviour {
   [SerializeField]
   private Text m_ApValue = null;
+  private UnityAction<string> apValueUpdate;
 
   [SerializeField]
   private Text m_PeValue = null;
+  private UnityAction<string> peValueUpdate;
 
   [SerializeField]
   private Text m_InclValue = null;
+  private UnityAction<string> inclValueUpdate;
 
   [SerializeField]
   private Text m_EccValue = null;
+  private UnityAction<string> eccValueUpdate;
 
   private IOrbitInfoControl m_control = null;
 
   public void SetControl(IOrbitInfoControl control) {
     m_control = control;
+    apValueUpdate = control.replaceTextComponentWithTMPro (m_ApValue);
+    peValueUpdate = control.replaceTextComponentWithTMPro (m_PeValue);
+    inclValueUpdate = control.replaceTextComponentWithTMPro (m_InclValue);
+    eccValueUpdate = control.replaceTextComponentWithTMPro (m_EccValue);
     updateControl ();
     m_control.registerUpdateAction (updateControl);
   }
@@ -57,10 +66,10 @@ public class OrbitInfoControl : MonoBehaviour {
   }
 
   public void updateControl () {
-    m_ApValue.text = m_control.ApoapsisValue;
-    m_PeValue.text = m_control.PeriapsisValue;
-    m_InclValue.text = m_control.InclinationValue;
-    m_EccValue.text = m_control.EccentricityValue;
+    apValueUpdate?.Invoke (m_control.ApoapsisValue);
+    peValueUpdate?.Invoke (m_control.PeriapsisValue);
+    inclValueUpdate?.Invoke (m_control.InclinationValue);
+    eccValueUpdate?.Invoke (m_control.EccentricityValue);
   }
 }
 }

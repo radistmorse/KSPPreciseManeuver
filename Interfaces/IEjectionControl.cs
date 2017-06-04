@@ -25,14 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IEjectionControl {
+public interface IEjectionControl : IControl {
   string AngleValue { get; }
   string InclinationValue { get; }
-
-  void registerUpdateAction (Action updateControl);
-  void deregisterUpdateAction (Action updateControl);
 }
 }

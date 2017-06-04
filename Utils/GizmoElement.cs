@@ -25,11 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using System;
-using System.Collections;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
@@ -97,7 +96,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
   }
 
   private readonly float m_duration = 0.4f;
-  private IEnumerator m_SelectCoroutine;
+  private System.Collections.IEnumerator m_SelectCoroutine;
 
   private Vector2 m_direction;
   private float m_startSize = 0;
@@ -200,7 +199,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     }
   }
 
-  private IEnumerator SelectCoroutine (float glowfrom, float glowto, float scalefrom, float scaleto, float duration) {
+  private System.Collections.IEnumerator SelectCoroutine (float glowfrom, float glowto, float scalefrom, float scaleto, float duration) {
     // wait for end of frame so that only the last call to fade that frame is honoured.
     yield return new WaitForEndOfFrame ();
 

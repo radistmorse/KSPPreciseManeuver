@@ -25,10 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IUTControl {
+public interface IUTControl : IControl {
   bool APAvailable { get; }
   bool PEAvailable { get; }
   bool ANAvailable { get; }
@@ -51,8 +49,5 @@ public interface IUTControl {
   void DNButtonPressed ();
   void POButtonPressed ();
   void MOButtonPressed ();
-
-  void registerUpdateAction (Action action);
-  void deregisterUpdateAction (Action action);
 }
 }

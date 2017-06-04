@@ -27,14 +27,19 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent (typeof (RectTransform))]
 public class EncounterControl : MonoBehaviour {
   [SerializeField]
   private Text m_Encounter = null;
+  private UnityAction<string> encValueUpdate;
+
   [SerializeField]
   private Text m_PE = null;
+  private UnityAction<string> peValueUpdate;
+
   [SerializeField]
   private Button m_Focus = null;
 
@@ -42,6 +47,8 @@ public class EncounterControl : MonoBehaviour {
 
   public void SetControl(IEncounterControl control) {
     m_Control = control;
+    encValueUpdate = control.replaceTextComponentWithTMPro (m_Encounter);
+    peValueUpdate = control.replaceTextComponentWithTMPro (m_PE);
     updateControl ();
     m_Control.registerUpdateAction (updateControl);
   }
@@ -56,9 +63,10 @@ public class EncounterControl : MonoBehaviour {
   }
 
   public void updateControl () {
-    m_Encounter.text = m_Control.Encounter;
-    m_PE.text = m_Control.PE;
-    if (m_Encounter.text != "N/A") {
+    bool isenc = m_Control.IsEncounter;
+    encValueUpdate?.Invoke (m_Control.Encounter);
+    peValueUpdate?.Invoke (m_Control.PE);
+    if (isenc) {
       m_Focus.interactable = true;
       m_Focus.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
     } else {

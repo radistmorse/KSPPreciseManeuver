@@ -25,15 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IIncrementControl {
+public interface IIncrementControl : IControl {
   void incrementChanged (int num);
 
   int getRawIncrement { get; }
-
-  void registerUpdateAction (Action updateIncrements);
-  void deregisterUpdateAction (Action updateIncrements);
 }
 }

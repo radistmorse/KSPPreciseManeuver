@@ -25,17 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IConicsControl {
+public interface IConicsControl : IControl {
   int getPatchesMode { get; }
 
   void conicsModeChanged (int num);
   void MoreConicPatches ();
   void LessConicPatches ();
-
-  void registerUpdateAction (Action updateControls);
-  void deregisterUpdateAction (Action updateControls);
 }
 }

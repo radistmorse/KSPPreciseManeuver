@@ -27,6 +27,7 @@
 
 using System;
 using System.Linq;
+using UnityEngine.Events;
 using System.Collections.Generic;
 
 namespace KSPPreciseManeuver {
@@ -247,12 +248,12 @@ internal class NodeManager {
       return;
 
     string newID = KACWrapper.KAC.CreateAlarm (KACWrapper.KACAPI.AlarmTypeEnum.Maneuver,
-                                             "Maneuver for " + FlightGlobals.ActiveVessel.GetName(),
-                                             currentNode.UT - 600.0);
+                                               KSP.Localization.Localizer.Format ("precisemaneuver_KAC_name", FlightGlobals.ActiveVessel.GetName()),
+                                               currentNode.UT - 600.0);
     currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
 
     currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
-    currentAlarm.Notes = "The maneuver is in 10 minutes.";
+    currentAlarm.Notes = KSP.Localization.Localizer.Format ("precisemaneuver_KAC_note");
   }
 
   internal void deleteAlarm () {
@@ -524,7 +525,11 @@ internal class NodeManager {
   private void updateCurrentNode () {
     bool idxboolcache1 = nextNodeAvailable;
     bool idxboolcache2 = previousNodeAvailable;
+    bool notifyIdxChange = false;
     var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
+
+    if (nodeCount != solver.maneuverNodes.Count)
+      notifyIdxChange = true;
     nodeCount = solver.maneuverNodes.Count;
 
     /* setting the current node */
@@ -535,7 +540,7 @@ internal class NodeManager {
     if (idx != -1) {
       if (currentNodeIdx != idx) {
         currentNodeIdx = idx;
-        notifyIndexChanged ();
+        notifyIdxChange = true;
       }
     } else {
       /* if no, let's see if our index is still good */
@@ -547,7 +552,7 @@ internal class NodeManager {
         if (nodeCount > 0) {
           _currentNode = solver.maneuverNodes[nodeCount - 1];
           currentNodeIdx = nodeCount - 1;
-          notifyIndexChanged ();
+          notifyIdxChange = true;
           notifyNodeChanged ();
         } else {
           _currentNode = null;
@@ -556,7 +561,7 @@ internal class NodeManager {
       }
     }
     /* the state of the prev/next maneuver buttons should change */
-    if (idxboolcache1 != nextNodeAvailable || idxboolcache2 != previousNodeAvailable)
+    if (idxboolcache1 != nextNodeAvailable || idxboolcache2 != previousNodeAvailable || notifyIdxChange)
       notifyIndexChanged ();
   }
 
@@ -604,35 +609,35 @@ internal class NodeManager {
     undo
   }
 
-  private Dictionary<changeType,List<Action>> _listeners;
+  private Dictionary<changeType,List<UnityAction>> _listeners;
 
-  private Dictionary<changeType, List<Action>> listeners {
+  private Dictionary<changeType, List<UnityAction>> listeners {
     get {
       if (_listeners == null) {
-        _listeners = new Dictionary<changeType, List<Action>> (3);
-        _listeners[changeType.dvut] = new List<Action> ();
-        _listeners[changeType.index] = new List<Action> ();
-        _listeners[changeType.target] = new List<Action> ();
-        _listeners[changeType.undo] = new List<Action> ();
+        _listeners = new Dictionary<changeType, List<UnityAction>> (3);
+        _listeners[changeType.dvut] = new List<UnityAction> ();
+        _listeners[changeType.index] = new List<UnityAction> ();
+        _listeners[changeType.target] = new List<UnityAction> ();
+        _listeners[changeType.undo] = new List<UnityAction> ();
       }
       return _listeners;
     }
   }
 
-  public void listenToIdxChange (Action listener) {
+  public void listenToIdxChange (UnityAction listener) {
     listeners[changeType.index].Add (listener);
   }
-  public void listenToValuesChange (Action listener) {
+  public void listenToValuesChange (UnityAction listener) {
     listeners[changeType.dvut].Add (listener);
   }
-  public void listenToTargetChange (Action listener) {
+  public void listenToTargetChange (UnityAction listener) {
     listeners[changeType.target].Add (listener);
   }
-  public void listenToUndoChange (Action listener) {
+  public void listenToUndoChange (UnityAction listener) {
     listeners[changeType.undo].Add (listener);
   }
 
-  public void removeListener (Action listener) {
+  public void removeListener (UnityAction listener) {
     foreach (var list in listeners.Values)
       list.RemoveAll (a => (a == listener));
   }

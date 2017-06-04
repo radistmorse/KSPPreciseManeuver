@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright (c) 2016, George Sedov
+﻿/*******************************************************************************
+ * Copyright (c) 2017, George Sedov
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,17 +25,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+using UnityEngine;
+using UnityEngine.UI;
+
 namespace KSPPreciseManeuver.UI {
-public interface IOrbitToolsControl : IControl {
-  void OrbitUpButtonPressed ();
-  void OrbitDnButtonPressed ();
+[RequireComponent (typeof (Text))]
+public class LocalizationComponent : MonoBehaviour {
+  [SerializeField]
+  private string m_LocalizationTemplate = "";
+  [SerializeField]
+  private string m_UntranslatablePrefix = "";
+  [SerializeField]
+  private string m_UntranslatablePostfix = "";
 
-  void BeginAtomicChange ();
-  void EndAtomicChange ();
+    public string getTemplate () {
+    return m_LocalizationTemplate;
+  }
 
-  void CircularizeButtonPressed ();
-
-  void CopyButtonPressed ();
-  void PasteButtonPressed ();
+  public void setLocalizedString (string localizedString) {
+    Text text = GetComponent<Text>();
+    text.text = m_UntranslatablePrefix + localizedString + m_UntranslatablePostfix;
+  }
 }
 }

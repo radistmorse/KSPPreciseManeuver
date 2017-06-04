@@ -25,11 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
 [RequireComponent(typeof(CanvasGroupFader))]
@@ -126,10 +124,10 @@ public class ToolbarMenu : MonoBehaviour {
   }
 
   public void updateControls() {
-    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
-    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.Off);
+    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
     m_ShowMainWindowToggle.isOn = m_MenuControl.IsMainWindowVisible;
     m_ShowKeybindingsToggle.isOn = m_MenuControl.IsKeybindingsVisible;
     m_ScaleGUISlider.value = m_MenuControl.scaleGUIValue;
@@ -142,10 +140,10 @@ public class ToolbarMenu : MonoBehaviour {
       m_BackgroundToggle.interactable = false;
       m_BackgroundToggle.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
     }
-    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
-    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEngine.Events.UnityEventCallState.RuntimeOnly);
+    m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
   }
 
   public void DisableMainWindow () {
@@ -171,7 +169,7 @@ public class ToolbarMenu : MonoBehaviour {
     }
   }
 
-  private void CreateMenuSections(IList<ISectionControl> sections) {
+  private void CreateMenuSections(System.Collections.Generic.IList<ISectionControl> sections) {
     if (sections == null || m_MenuSectionPrefab == null || m_SectionsTransform == null)
       return;
     for (int i = 0; i < sections.Count; i++) {

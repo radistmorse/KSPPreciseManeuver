@@ -30,6 +30,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Events;
+using KSP.Localization;
 
 namespace KSPPreciseManeuver {
 using UI;
@@ -71,6 +74,74 @@ internal class MainWindow {
         return true;
       }
       return false;
+    }
+  }
+
+    #endregion
+
+  #region GUIControl
+
+  private abstract class GUIControl : IControl {
+    public abstract void registerUpdateAction (UnityAction action);
+    public abstract void deregisterUpdateAction (UnityAction action);
+
+    public UnityAction<string> replaceTextComponentWithTMPro (Text text) {
+        var ugui = GUIComponentManager.replaceTextWithTMPro (text);
+        return ugui.SetText;
+    }
+
+    private TMPro.TMP_InputField inputField = null;
+
+    public void replaceInputFieldWithTMPro (InputField field, UnityAction<string> onSubmit = null, UnityAction<string> onChange = null) {
+      var text = GUIComponentManager.replaceTextWithTMPro (field.textComponent);
+      Graphic placeholder = field.placeholder;
+      if (placeholder is Text)
+        placeholder = GUIComponentManager.replaceTextWithTMPro (placeholder as Text);
+      var contentType = field.contentType;
+      var lineType = field.lineType;
+      var charLimit = field.characterLimit;
+      var interactable = field.interactable;
+
+      var go = field.gameObject;
+      UnityEngine.Object.DestroyImmediate (field);
+      inputField = go.AddOrGetComponent<TMPro.TMP_InputField> ();
+
+      inputField.textComponent = text;
+      inputField.textViewport = text.transform as RectTransform;
+      inputField.placeholder = placeholder;
+      if (onSubmit != null)
+        inputField.onEndEdit.AddListener (onSubmit);
+      if (onChange != null)
+        inputField.onValueChanged.AddListener (onChange);
+      inputField.contentType = (TMPro.TMP_InputField.ContentType)contentType;
+      inputField.lineType = (TMPro.TMP_InputField.LineType)lineType;
+      inputField.characterLimit = charLimit;
+      inputField.interactable = interactable;
+    }
+
+    public string TMProText {
+      get { if (inputField == null) return ""; else return inputField.text; }
+      set { if (inputField != null) inputField.text = value; }
+    }
+
+    public bool TMProIsInteractable {
+        get { if (inputField == null) return false; return inputField.interactable; }
+        set { if (inputField != null) inputField.interactable = value; }
+    }
+
+    public void TMProActivateInputField () {
+      if (inputField == null)
+        return;
+      inputField.ActivateInputField ();
+    }
+
+    public void TMProSelectAllText () {
+      inputField.Select();
+      if (inputField.text.Length > 0) {
+        inputField.caretPosition = inputField.text.Length;
+        inputField.selectionAnchorPosition = 0;
+        inputField.selectionFocusPosition = inputField.text.Length;
+      }
     }
   }
 
@@ -120,7 +191,7 @@ internal class MainWindow {
 
   GameObject PagerPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverPager");
 
-  private class PagerControlInterface : IPagerControl {
+  private class PagerControlInterface : GUIControl, IPagerControl {
 
     MainWindow _parent;
 
@@ -139,9 +210,9 @@ internal class MainWindow {
         return _parent.nodeManager.currentNodeIdx;
       }
     }
-    public string CanvasName {
+    public Canvas Canvas {
       get {
-        return MainCanvasUtil.MainCanvas.sortingLayerName;
+        return MainCanvasUtil.MainCanvas;
       }
     }
     public int maneuverCount {
@@ -152,10 +223,10 @@ internal class MainWindow {
     internal PagerControlInterface (MainWindow parent) {
       _parent = parent;
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToIdxChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
     public void PrevButtonPressed () {
@@ -170,9 +241,11 @@ internal class MainWindow {
     public void NextButtonPressed () {
       _parent.nodeManager.switchNextNode ();
     }
+    public string getManeuverNodeLocalized () {
+      return Localizer.Format("precisemaneuver_node");
+    }
     public string getManeuverTime (int idx) {
-      var time = NodeTools.convertUTtoHumanTime(FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT);
-      return time.Replace ("Year ", "Y").Replace ("Day ", "D").Replace (",", "");
+      return NodeTools.convertUTtoHumanTime(FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT, true);
     }
     public string getManeuverDV (int idx) {
       var dv = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].DeltaV.magnitude;
@@ -188,7 +261,10 @@ internal class MainWindow {
       return;
 
     var pagerObj = UnityEngine.Object.Instantiate (PagerPrefab) as GameObject;
-    StyleManager.Process (pagerObj);
+    GUIComponentManager.processStyle (pagerObj);
+    GUIComponentManager.processLocalization (pagerObj);
+    GUIComponentManager.processTooltips (pagerObj);
+    GUIComponentManager.replaceLabelsWithTMPro (pagerObj);
     PagerControl pagercontrol = pagerObj.GetComponent<PagerControl>();
     pagercontrol.SetPagerControl (new PagerControlInterface (this));
     pagerObj.transform.SetParent (panel.transform, false);
@@ -200,19 +276,17 @@ internal class MainWindow {
 
   GameObject SaverPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverSaver");
 
-  private class SaverControlInterface : ISaverControl {
+  private class SaverControlInterface : GUIControl, ISaverControl {
 
     MainWindow _parent;
 
-    public string CanvasName {
+    public Canvas Canvas {
       get {
-        return MainCanvasUtil.MainCanvas.sortingLayerName;
+        return MainCanvasUtil.MainCanvas;
       }
     }
-    public List<string> presetNames {
-      get {
+    public List<string> presetNames () {
         return _parent.config.getPresetNames ();
-      }
     }
     internal SaverControlInterface (MainWindow parent) {
       _parent = parent;
@@ -226,11 +300,12 @@ internal class MainWindow {
     public void loadPreset (string name) {
       _parent.nodeManager.loadPreset (name);
     }
+    public string newPresetLocalized { get { return Localizer.Format ("precisemaneuver_saver_new_preset"); } }
     public string suggestPresetName () {
       var current = _parent.nodeManager.currentNode.patch.referenceBody;
       var next = NodeTools.findNextEncounter();
       if (current != null && next != null && current != next)
-        return current.name + " → " + next.name;
+        return Localizer.Format("<<1>> - <<2>>", current.GetDisplayName (), next.GetDisplayName ());
       return "";
     }
     public void lockKeyboard () {
@@ -239,6 +314,10 @@ internal class MainWindow {
     public void unlockKeyboard () {
       _parent.config.resetKeyboardInputLock ();
     }
+    public override void registerUpdateAction (UnityAction action) {
+    }
+    public override void deregisterUpdateAction (UnityAction action) {
+    }
   }
 
   private void createSaverControls (GameObject panel) {
@@ -246,7 +325,10 @@ internal class MainWindow {
       return;
 
     var saverObj = UnityEngine.Object.Instantiate (SaverPrefab) as GameObject;
-    StyleManager.Process (saverObj);
+    GUIComponentManager.processStyle (saverObj);
+    GUIComponentManager.processLocalization (saverObj);
+    GUIComponentManager.processTooltips (saverObj);
+    GUIComponentManager.replaceLabelsWithTMPro (saverObj);
     SaverControl savercontrol = saverObj.GetComponent<SaverControl>();
     savercontrol.SetControl (new SaverControlInterface (this));
     saverObj.transform.SetParent (panel.transform, false);
@@ -259,7 +341,7 @@ internal class MainWindow {
   GameObject UTPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverUTControl");
   GameObject axisPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverAxisControl");
 
-  private class UTControlInterface : IUTControl {
+  private class UTControlInterface : GUIControl, IUTControl {
 
     MainWindow _parent;
     FastString _value = new FastString("{0:0.##}");
@@ -343,19 +425,19 @@ internal class MainWindow {
     public void EndAtomicChange () {
       _parent.nodeManager.endAtomicChange ();
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
       _parent.nodeManager.listenToTargetChange (action);
       _parent.config.listenTox10Change (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
       _parent.config.removeListener (action);
     }
   }
 
 
-  private class AxisControlInterface : IAxisControl {
+  private class AxisControlInterface : GUIControl, IAxisControl {
     internal enum Axis {
       prograde,
       normal,
@@ -386,11 +468,11 @@ internal class MainWindow {
       get {
         switch (_axis) {
           case Axis.prograde:
-            return "Prograde";
+            return Localizer.Format ("precisemaneuver_axis_prograde");
           case Axis.normal:
-            return "Normal";
+            return Localizer.Format ("precisemaneuver_axis_normal");
           case Axis.radial:
-            return "Radial";
+            return Localizer.Format ("precisemaneuver_axis_radial");
         }
         return "To outer space, apparently";
       }
@@ -448,10 +530,10 @@ internal class MainWindow {
       _parent.nodeManager.changeNodeDVAbs (dx, dy, dz);
     }
 
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
     public void lockKeyboard () {
@@ -468,25 +550,31 @@ internal class MainWindow {
       return;
 
     var utObj = UnityEngine.Object.Instantiate (UTPrefab) as GameObject;
-    StyleManager.Process (utObj);
+    GUIComponentManager.processStyle (utObj);
+    GUIComponentManager.processLocalization (utObj);
+    GUIComponentManager.processTooltips (utObj);
+    GUIComponentManager.replaceLabelsWithTMPro (utObj);
     UTControl utcontrol = utObj.GetComponent<UTControl>();
     utcontrol.SetUTControl (new UTControlInterface (this));
     utObj.transform.SetParent (panel.transform, false);
 
     var progradeObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
-    StyleManager.Process (progradeObj);
+    GUIComponentManager.processStyle (progradeObj);
+    GUIComponentManager.replaceLabelsWithTMPro (progradeObj);
     AxisControl progradeAxis = progradeObj.GetComponent<AxisControl>();
     progradeAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.prograde));
     progradeObj.transform.SetParent (panel.transform, false);
 
     var normalObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
-    StyleManager.Process (normalObj);
+    GUIComponentManager.processStyle (normalObj);
+    GUIComponentManager.replaceLabelsWithTMPro (normalObj);
     AxisControl normalAxis = normalObj.GetComponent<AxisControl>();
     normalAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.normal));
     normalObj.transform.SetParent (panel.transform, false);
 
     var radialObj = UnityEngine.Object.Instantiate (axisPrefab) as GameObject;
-    StyleManager.Process (radialObj);
+    GUIComponentManager.processStyle (radialObj);
+    GUIComponentManager.replaceLabelsWithTMPro (radialObj);
     AxisControl radialAxis = radialObj.GetComponent<AxisControl>();
     radialAxis.SetAxisControl (new AxisControlInterface (this, AxisControlInterface.Axis.radial));
     radialObj.transform.SetParent (panel.transform, false);
@@ -498,7 +586,7 @@ internal class MainWindow {
 
   GameObject TimeAlarmPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverTimeAlarm");
 
-  private class TimeAlarmControlInterface : ITimeAlarmControl {
+  private class TimeAlarmControlInterface : GUIControl, ITimeAlarmControl {
 
     MainWindow _parent;
     double _localUT = -1;
@@ -525,10 +613,10 @@ internal class MainWindow {
     internal TimeAlarmControlInterface (MainWindow parent) {
       _parent = parent;
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
     public void alarmToggle (bool state) {
@@ -544,9 +632,13 @@ internal class MainWindow {
       return;
 
     var timeAlarmObj = UnityEngine.Object.Instantiate (TimeAlarmPrefab) as GameObject;
-    StyleManager.Process (timeAlarmObj);
+    GUIComponentManager.processStyle (timeAlarmObj);
+    GUIComponentManager.processLocalization (timeAlarmObj);
+    GUIComponentManager.processTooltips (timeAlarmObj);
+    GUIComponentManager.replaceLabelsWithTMPro (timeAlarmObj);
     TimeAlarmControl timealarmcontrol = timeAlarmObj.GetComponent<TimeAlarmControl>();
     timealarmcontrol.SetTimeAlarmControl (new TimeAlarmControlInterface (this));
+    GUIComponentManager.replaceLabelsWithTMPro (timeAlarmObj);
     timeAlarmObj.transform.SetParent (panel.transform, false);
   }
 
@@ -556,7 +648,7 @@ internal class MainWindow {
 
   GameObject IncrementPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverIncrement");
 
-  private class IncrementControlInterface : IIncrementControl {
+  private class IncrementControlInterface : GUIControl, IIncrementControl {
 
     MainWindow _parent;
 
@@ -568,10 +660,10 @@ internal class MainWindow {
     internal IncrementControlInterface (MainWindow parent) {
       _parent = parent;
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.config.listenToIncrementChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.config.removeListener(action);
     }
     public void incrementChanged (int num) {
@@ -584,7 +676,10 @@ internal class MainWindow {
       return;
 
     var incrementObj = UnityEngine.Object.Instantiate (IncrementPrefab) as GameObject;
-    StyleManager.Process (incrementObj);
+    GUIComponentManager.processStyle (incrementObj);
+    GUIComponentManager.processLocalization (incrementObj);
+    GUIComponentManager.processTooltips (incrementObj);
+    GUIComponentManager.replaceLabelsWithTMPro (incrementObj);
     IncrementControl pagercontrol = incrementObj.GetComponent<IncrementControl>();
     pagercontrol.SetIncrementControl (new IncrementControlInterface (this));
     incrementObj.transform.SetParent (panel.transform, false);
@@ -596,16 +691,16 @@ internal class MainWindow {
 
   GameObject OrbitToolsPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverOrbitTools");
 
-  private class OrbitToolsControlInterface : IOrbitToolsControl {
+  private class OrbitToolsControlInterface : GUIControl, IOrbitToolsControl {
 
     MainWindow _parent;
 
     internal OrbitToolsControlInterface (MainWindow parent) {
         _parent = parent;
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
     }
     public void OrbitUpButtonPressed () {
       _parent.nodeManager.turnOrbitUp();
@@ -636,7 +731,10 @@ internal class MainWindow {
       return;
 
     var orbitToolsObj = UnityEngine.Object.Instantiate (OrbitToolsPrefab) as GameObject;
-    StyleManager.Process (orbitToolsObj);
+    GUIComponentManager.processStyle (orbitToolsObj);
+    GUIComponentManager.processLocalization (orbitToolsObj);
+    GUIComponentManager.processTooltips (orbitToolsObj);
+    GUIComponentManager.replaceLabelsWithTMPro (orbitToolsObj);
     OrbitToolsControl orbittoolscontrol = orbitToolsObj.GetComponent<OrbitToolsControl>();
     orbittoolscontrol.SetControl (new OrbitToolsControlInterface (this));
     orbitToolsObj.transform.SetParent (panel.transform, false);
@@ -648,10 +746,10 @@ internal class MainWindow {
 
   GameObject GizmoPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverGizmo");
 
-  private class GizmoControlInterface : IGizmoControl {
+  private class GizmoControlInterface : GUIControl, IGizmoControl {
 
     private MainWindow _parent;
-    private Action _controlUpdate = null;
+    private UnityAction _controlUpdate = null;
     private bool undoAvailableCache = false;
     private bool redoAvailableCache = false;
 
@@ -699,12 +797,12 @@ internal class MainWindow {
     public void updateNode (double ddx, double ddy, double ddz, double dut) {
       _parent.nodeManager.changeNodeDiff (ddx, ddy, ddz, dut);
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _controlUpdate = action;
       _parent.nodeManager.listenToUndoChange (undoRedoUpdate);
       _parent.nodeManager.listenToValuesChange (_controlUpdate);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (undoRedoUpdate);
       _parent.nodeManager.removeListener (_controlUpdate);
       _controlUpdate = null;
@@ -754,7 +852,10 @@ internal class MainWindow {
       return;
 
     var gizmoObj = UnityEngine.Object.Instantiate (GizmoPrefab) as GameObject;
-    StyleManager.Process (gizmoObj);
+    GUIComponentManager.processStyle (gizmoObj);
+    GUIComponentManager.processLocalization (gizmoObj);
+    GUIComponentManager.processTooltips (gizmoObj);
+    GUIComponentManager.replaceLabelsWithTMPro (gizmoObj);
     GizmoControl gizmocontrol = gizmoObj.GetComponent<GizmoControl>();
     gizmocontrol.SetControl (new GizmoControlInterface (this));
     gizmoObj.transform.SetParent (panel.transform, false);
@@ -766,44 +867,53 @@ internal class MainWindow {
 
   GameObject EncounterPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverEncounter");
 
-  private class EncounterControlInterface : IEncounterControl {
+  private class EncounterControlInterface : GUIControl, IEncounterControl {
 
-    MainWindow _parent;
-    FastString _periapsis = new FastString ("{0}m", true, true);
-    private bool nextenc = false;
+    private MainWindow _parent;
+
+    private FastString periapsis;
+    private bool isnextenc = false;
+    private CelestialBody nextenc = null;
 
     internal EncounterControlInterface (MainWindow parent) {
       _parent = parent;
+      periapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), true, true);
     }
-    public string Encounter {
+
+    public bool IsEncounter {
       get {
-        CelestialBody enc = null;
         var plan = FlightGlobals.ActiveVessel.patchedConicSolver.flightPlan.AsReadOnly();
         var curOrbit = FlightGlobals.ActiveVessel.orbit;
         foreach (var o in plan) {
           if (curOrbit.referenceBody.name != o.referenceBody.name && !o.referenceBody.isSun()) {
-            enc = o.referenceBody;
-            _periapsis.update (o.PeA);
+            nextenc = o.referenceBody;
+            periapsis.update (o.PeA);
             break;
           }
         }
-        nextenc = enc != null;
-        if (nextenc)
-          return enc.theName;
+        isnextenc = nextenc != null;
+        return isnextenc;
+      }
+    }
+    public string Encounter {
+      get {
+        if (isnextenc)
+          return Localizer.Format("<<1>>", nextenc.GetDisplayName ());
         return "N/A";
       }
     }
     public string PE {
       get {
-        if (nextenc)
-          return _periapsis.value;
+        if (isnextenc)
+          return periapsis.value;
         return "N/A";
       }
     }
-    public void registerUpdateAction (Action action) {
+
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
 
@@ -819,7 +929,10 @@ internal class MainWindow {
       return;
 
     var encounterObj = UnityEngine.Object.Instantiate (EncounterPrefab) as GameObject;
-    StyleManager.Process (encounterObj);
+    GUIComponentManager.processStyle (encounterObj);
+    GUIComponentManager.processLocalization (encounterObj);
+    GUIComponentManager.processTooltips (encounterObj);
+    GUIComponentManager.replaceLabelsWithTMPro (encounterObj);
     EncounterControl encountercontrol = encounterObj.GetComponent<EncounterControl>();
     encountercontrol.SetControl (new EncounterControlInterface (this));
     encounterObj.transform.SetParent (panel.transform, false);
@@ -831,14 +944,16 @@ internal class MainWindow {
 
   GameObject EjectionPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverEjection");
 
-  private class EjectionControlInterface : IEjectionControl {
+  private class EjectionControlInterface : GUIControl, IEjectionControl {
 
     MainWindow _parent;
-    FastString _angle = new FastString ("{0:0.00° from prograde;0.00° from retrograde}");
-    FastString _inclination = new FastString ("{0:0.00° north;0.00° south}");
+    FastString _angle;
+    FastString _inclination;
 
     internal EjectionControlInterface (MainWindow parent) {
       _parent = parent;
+      _angle = new FastString (Localizer.Format ("precisemaneuver_ejection_angle_format"));
+      _inclination = new FastString (Localizer.Format ("precisemaneuver_ejection_inclination_format"));
     }
     public string AngleValue {
       get {
@@ -852,10 +967,10 @@ internal class MainWindow {
         return _inclination.value;
       }
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
   }
@@ -865,7 +980,10 @@ internal class MainWindow {
       return;
 
     var ejectionObj = UnityEngine.Object.Instantiate (EjectionPrefab) as GameObject;
-    StyleManager.Process (ejectionObj);
+    GUIComponentManager.processStyle (ejectionObj);
+    GUIComponentManager.processLocalization (ejectionObj);
+    GUIComponentManager.processTooltips (ejectionObj);
+    GUIComponentManager.replaceLabelsWithTMPro (ejectionObj);
     EjectionControl ejectioncontrol = ejectionObj.GetComponent<EjectionControl>();
     ejectioncontrol.SetControl (new EjectionControlInterface (this));
     ejectionObj.transform.SetParent (panel.transform, false);
@@ -877,16 +995,18 @@ internal class MainWindow {
 
   GameObject OrbitInfoPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverOrbitInfo");
 
-  private class OrbitInfoControlInterface : IOrbitInfoControl {
+  private class OrbitInfoControlInterface : GUIControl, IOrbitInfoControl {
 
     MainWindow _parent;
-    FastString _apoapsis = new FastString ("{0}m", true, true);
-    FastString _periapsis = new FastString ("{0}m", true, true);
+    FastString _apoapsis;
+    FastString _periapsis;
     FastString _inclination = new FastString ("{0:0.##}°", true, false);
     FastString _eccentricity = new FastString ("{0:0.###}", true, false);
 
     internal OrbitInfoControlInterface (MainWindow parent) {
       _parent = parent;
+      _apoapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), true, true);
+      _periapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), true, true);
     }
     public string ApoapsisValue {
       get {
@@ -912,10 +1032,10 @@ internal class MainWindow {
         return _eccentricity.value;
       }
     }
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.nodeManager.listenToValuesChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.nodeManager.removeListener (action);
     }
   }
@@ -923,9 +1043,11 @@ internal class MainWindow {
   private void createOrbitInfoControls (GameObject panel) {
     if (OrbitInfoPrefab == null)
       return;
-
     var orbitinfoObj = UnityEngine.Object.Instantiate (OrbitInfoPrefab) as GameObject;
-    StyleManager.Process (orbitinfoObj);
+    GUIComponentManager.processStyle (orbitinfoObj);
+    GUIComponentManager.processLocalization (orbitinfoObj);
+    GUIComponentManager.processTooltips (orbitinfoObj);
+    GUIComponentManager.replaceLabelsWithTMPro (orbitinfoObj);
     OrbitInfoControl orbitinfocontrol = orbitinfoObj.GetComponent<OrbitInfoControl>();
     orbitinfocontrol.SetControl (new OrbitInfoControlInterface (this));
     orbitinfoObj.transform.SetParent (panel.transform, false);
@@ -937,7 +1059,7 @@ internal class MainWindow {
 
   GameObject ConicsPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverConicsControl");
 
-  private class ConicsControlInterface : IConicsControl {
+  private class ConicsControlInterface : GUIControl, IConicsControl {
 
     MainWindow _parent;
 
@@ -960,10 +1082,10 @@ internal class MainWindow {
       FlightGlobals.ActiveVessel.patchedConicSolver.DecreasePatchLimit ();
     }
 
-    public void registerUpdateAction (Action action) {
+    public override void registerUpdateAction (UnityAction action) {
       _parent.config.listenToConicsModeChange (action);
     }
-    public void deregisterUpdateAction (Action action) {
+    public override void deregisterUpdateAction (UnityAction action) {
       _parent.config.removeListener(action);
     }
   }
@@ -972,8 +1094,11 @@ internal class MainWindow {
     if (ConicsPrefab == null)
       return;
 
-    var conicsObj = UnityEngine.Object.Instantiate (ConicsPrefab) as GameObject;
-    StyleManager.Process (conicsObj);
+    var conicsObj = UnityEngine.Object.Instantiate (ConicsPrefab);
+    GUIComponentManager.processStyle (conicsObj);
+    GUIComponentManager.processLocalization (conicsObj);
+    GUIComponentManager.processTooltips (conicsObj);
+    GUIComponentManager.replaceLabelsWithTMPro (conicsObj);
     ConicsControl conicscontrol = conicsObj.GetComponent<ConicsControl>();
     conicscontrol.SetControl (new ConicsControlInterface (this));
     conicsObj.transform.SetParent (panel.transform, false);

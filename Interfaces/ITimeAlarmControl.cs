@@ -25,17 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface ITimeAlarmControl {
+public interface ITimeAlarmControl : IControl {
   string TimeValue { get; }
   bool AlarmAvailable { get; }
   bool AlarmEnabled { get; }
 
   void alarmToggle (bool state);
-
-  void registerUpdateAction (Action updateTimeAlarm);
-  void deregisterUpdateAction (Action updateTimeAlarm);
 }
 }

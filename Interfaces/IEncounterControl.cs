@@ -25,16 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IEncounterControl {
+public interface IEncounterControl : IControl {
+  bool IsEncounter { get; }
   string Encounter { get; }
   string PE { get; }
 
   void focus ();
-
-  void registerUpdateAction (Action updateControl);
-  void deregisterUpdateAction (Action updateControl);
 }
 }

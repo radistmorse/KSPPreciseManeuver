@@ -25,17 +25,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System.Collections.Generic;
-
 namespace KSPPreciseManeuver.UI {
-public interface ISaverControl {
-  string CanvasName { get; }
-  List<string> presetNames { get; }
+public interface ISaverControl : IControl {
+  UnityEngine.Canvas Canvas { get; }
+  string newPresetLocalized { get; }
 
+  System.Collections.Generic.List<string> presetNames ();
+  string suggestPresetName ();
   void AddPreset (string name);
   void RemovePreset (string name);
   void loadPreset (string name);
-  string suggestPresetName ();
+
   void lockKeyboard ();
   void unlockKeyboard ();
 }

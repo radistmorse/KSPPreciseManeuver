@@ -25,11 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
 public interface IKeybindingsControl {
-  void setKey (Action<UnityEngine.KeyCode> callback);
+  UnityEngine.Events.UnityAction<string> replaceTextComponentWithTMPro (UnityEngine.UI.Text text);
+
+  void setKey (UnityEngine.Events.UnityAction<UnityEngine.KeyCode> callback);
   void unsetKey ();
   void abortSetKey ();
   UnityEngine.KeyCode code { get; }

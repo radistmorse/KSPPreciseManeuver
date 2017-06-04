@@ -27,8 +27,24 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
+public class PreciseManeuverPagerItem : PreciseManeuverDropdownItem {
+  [SerializeField]
+  private RectTransform m_NodeIndex = null;
+  public RectTransform nodeidx { get { return m_NodeIndex; } }
+  [SerializeField]
+  private RectTransform m_NodeTime = null;
+  public RectTransform nodetime { get { return m_NodeTime; } }
+  [SerializeField]
+  private RectTransform m_NodeDV = null;
+  public RectTransform nodedv { get { return m_NodeDV; } }
+  [SerializeField]
+  private RectTransform m_Label = null;
+  public RectTransform dvlabel { get { return m_Label; } }
+}
+
 [RequireComponent (typeof (RectTransform))]
 public class PagerControl : MonoBehaviour {
   [SerializeField]
@@ -36,16 +52,20 @@ public class PagerControl : MonoBehaviour {
   [SerializeField]
   private Button m_ButtonNext = null;
   [SerializeField]
-  private Dropdown m_Chooser = null;
+  private PreciseManeuverDropdown m_Chooser = null;
+  private UnityAction<string> chooserText = null;
 
   private IPagerControl m_pagerControl = null;
 
   public void SetPagerControl(IPagerControl pagerControl) {
     m_pagerControl = pagerControl;
+
+    m_Chooser.updateDropdownCaption = setChooserText;
+    m_Chooser.updateDropdownOption = setChooserOption;
+    m_Chooser.setRootCanvas (pagerControl.Canvas);
+    chooserText = pagerControl.replaceTextComponentWithTMPro (m_Chooser.captionArea.GetComponent<Text> ());
     updatePagerValues ();
     m_pagerControl.registerUpdateAction (updatePagerValues);
-    foreach (var fixer in GetComponentsInChildren<CanvasFixer> (true))
-      fixer.m_canvasLayer = pagerControl.CanvasName;
   }
 
   public void OnDestroy () {
@@ -89,25 +109,23 @@ public class PagerControl : MonoBehaviour {
       m_ButtonNext.interactable = false;
       m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
     }
-    m_Chooser.captionText.text = "Node " + (m_pagerControl.maneuverIdx + 1).ToString ();
+    m_Chooser.optionCount = m_pagerControl.maneuverCount;
+    m_Chooser.setValueNoInvoke (m_pagerControl.maneuverIdx);
   }
-
-  internal string GetTimeForNode (int nodeidx) {
-    return m_pagerControl.getManeuverTime (nodeidx);
+  private void setChooserText (int index, GameObject caption) {
+    chooserText (m_pagerControl.getManeuverNodeLocalized () + " " + (index + 1).ToString ());
   }
-
-  internal string GetDVForNode (int nodeidx) {
-    return m_pagerControl.getManeuverDV (nodeidx);
-  }
-
-  public void repopulateChooser() {
-    int len = m_pagerControl.maneuverCount;
-    m_Chooser.options.Clear ();
-    if (len == 0)
-      return;
-    for (int i = 1; i <= len; i++)
-      m_Chooser.options.Add (new Dropdown.OptionData ("Node "+i.ToString()));
-    m_Chooser.value = m_pagerControl.maneuverIdx;
+  private void setChooserOption (PreciseManeuverDropdownItem item) {
+    if (!(item is PreciseManeuverPagerItem))
+        return;
+    var pageritem = item as PreciseManeuverPagerItem;
+    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodeidx.GetComponent<Text> ())?.
+        Invoke (m_pagerControl.getManeuverNodeLocalized () + "\n" + (pageritem.index + 1).ToString ());
+    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodetime.GetComponent<Text> ())?.
+        Invoke (m_pagerControl.getManeuverTime (pageritem.index));
+    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodedv.GetComponent<Text> ())?.
+        Invoke (m_pagerControl.getManeuverDV (pageritem.index));
+    m_pagerControl.replaceTextComponentWithTMPro (pageritem.dvlabel.GetComponent<Text> ());
   }
 
   public void chooserValueChange(int value) {

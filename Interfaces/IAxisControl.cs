@@ -25,10 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System;
-
 namespace KSPPreciseManeuver.UI {
-public interface IAxisControl {
+public interface IAxisControl : IControl {
   void PlusButtonPressed ();
   void MinusButtonPressed ();
 
@@ -44,7 +42,5 @@ public interface IAxisControl {
   UnityEngine.Color AxisColor { get; }
   void lockKeyboard ();
   void unlockKeyboard ();
-  void registerUpdateAction (Action action);
-  void deregisterUpdateAction (Action action);
 }
 }

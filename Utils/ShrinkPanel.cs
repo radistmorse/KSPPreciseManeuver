@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
 public class ShrinkPanel : HorizontalOrVerticalLayoutGroup {
