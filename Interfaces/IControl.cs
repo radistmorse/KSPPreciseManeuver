@@ -27,12 +27,12 @@
 
 namespace KSPPreciseManeuver.UI {
 public interface IControl {
-  void registerUpdateAction (UnityEngine.Events.UnityAction action);
-  void deregisterUpdateAction (UnityEngine.Events.UnityAction action);
+  void RegisterUpdateAction (UnityEngine.Events.UnityAction action);
+  void DeregisterUpdateAction (UnityEngine.Events.UnityAction action);
 
-  UnityEngine.Events.UnityAction<string> replaceTextComponentWithTMPro (UnityEngine.UI.Text text);
+  UnityEngine.Events.UnityAction<string> ReplaceTextComponentWithTMPro (UnityEngine.UI.Text text);
 
-  void replaceInputFieldWithTMPro (UnityEngine.UI.InputField field,
+  void ReplaceInputFieldWithTMPro (UnityEngine.UI.InputField field,
                                    UnityEngine.Events.UnityAction<string> onSubmit = null,
                                    UnityEngine.Events.UnityAction<string> onChange = null);
 

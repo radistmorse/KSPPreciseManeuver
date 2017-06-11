@@ -28,186 +28,185 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
-using System.Collections.Generic;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class SaverControl : MonoBehaviour {
-  [SerializeField]
-  private Button m_ButtonSave = null;
-  [SerializeField]
-  private Button m_ButtonDel = null;
-  [SerializeField]
-  private Button m_ButtonOk = null;
-  [SerializeField]
-  private PreciseManeuverDropdown m_Chooser = null;
-  private UnityAction<string> chooserText = null;
-  [SerializeField]
-  private InputField m_NameInput = null;
-  [SerializeField]
-  private GameObject m_ChooserPanel = null;
-  [SerializeField]
-  private GameObject m_SaverPanel = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class SaverControl : MonoBehaviour {
+    [SerializeField]
+    private Button m_ButtonSave = null;
+    [SerializeField]
+    private Button m_ButtonDel = null;
+    [SerializeField]
+    private Button m_ButtonOk = null;
+    [SerializeField]
+    private PreciseManeuverDropdown m_Chooser = null;
+    private UnityAction<string> chooserText = null;
+    [SerializeField]
+    private InputField m_NameInput = null;
+    [SerializeField]
+    private GameObject m_ChooserPanel = null;
+    [SerializeField]
+    private GameObject m_SaverPanel = null;
 
-  private int savedChooserValue = 0;
-  private List<string> presetCache = new List<string> ();
-  private ISaverControl m_saverControl = null;
+    private int savedChooserValue = 0;
+    private System.Collections.Generic.List<string> presetCache = new System.Collections.Generic.List<string> ();
+    private ISaverControl m_Control = null;
 
-  public void SetControl (ISaverControl saverControl) {
-    m_saverControl = saverControl;
-    m_Chooser.updateDropdownCaption = setChooserText;
-    m_Chooser.updateDropdownOption = setChooserOption;
-    m_Chooser.setRootCanvas (saverControl.Canvas);
+    public void SetControl (ISaverControl control) {
+      m_Control = control;
+      m_Chooser.UpdateDropdownCaption = SetChooserText;
+      m_Chooser.UpdateDropdownOption = SetChooserOption;
+      m_Chooser.SetRootCanvas (m_Control.Canvas);
 
-    chooserText = saverControl.replaceTextComponentWithTMPro (m_Chooser.captionArea.GetComponent<Text> ());
-    saverControl.replaceInputFieldWithTMPro (m_NameInput, inputFieldSubmit, inputFieldChange);
-    switchChooser ();
-    repopulateChooser ();
-  }
+      chooserText = m_Control.ReplaceTextComponentWithTMPro (m_Chooser.CaptionArea.GetComponent<Text> ());
+      m_Control.ReplaceInputFieldWithTMPro (m_NameInput, InputFieldSubmit, InputFieldChange);
+      SwitchChooser ();
+      RepopulateChooser ();
+    }
 
-  public void OnDestroy () {
-    m_Chooser.Hide ();
-    m_saverControl = null;
-  }
+    public void OnDestroy () {
+      m_Chooser.Hide ();
+      m_Control = null;
+    }
 
-  public void SaveButtonAction () {
-    if (m_Chooser.value != 0)
-      m_saverControl.AddPreset (presetCache[m_Chooser.value - 1]);
-  }
+    public void SaveButtonAction () {
+      if (m_Chooser.Value != 0)
+        m_Control.AddPreset (presetCache[m_Chooser.Value - 1]);
+    }
 
-  public void SaveAsButtonAction () {
-    switchSaver ();
-    var text = m_saverControl.suggestPresetName ();
-    m_saverControl.TMProText = text;
-    m_saverControl.TMProActivateInputField ();
-    m_saverControl.TMProSelectAllText ();
-    inputFieldChange (text);
-  }
+    public void SaveAsButtonAction () {
+      SwitchSaver ();
+      var text = m_Control.suggestPresetName ();
+      m_Control.TMProText = text;
+      m_Control.TMProActivateInputField ();
+      m_Control.TMProSelectAllText ();
+      InputFieldChange (text);
+    }
 
-  public void DelButtonAction () {
-    if (m_Chooser.value != 0)
-      m_saverControl.RemovePreset (presetCache[m_Chooser.value - 1]);
-    repopulateChooser ();
+    public void DelButtonAction () {
+      if (m_Chooser.Value != 0)
+        m_Control.RemovePreset (presetCache[m_Chooser.Value - 1]);
+      RepopulateChooser ();
 
-  }
+    }
 
-  public void okButtonAction () {
-    var text = m_saverControl.TMProText;
-    if (text.Length > 0) {
-      m_saverControl.AddPreset (text);
-      repopulateChooser ();
-      var items = presetCache.FindAll (a => (a == text));
-      if (items.Count == 1)
-        m_Chooser.setValueNoInvoke (presetCache.FindIndex (a => (a == text)) + 1);
-      switchChooser ();
-      updateControls ();
+    public void OKButtonAction () {
+      var text = m_Control.TMProText;
+      if (text.Length > 0) {
+        m_Control.AddPreset (text);
+        RepopulateChooser ();
+        var items = presetCache.FindAll (a => (a == text));
+        if (items.Count == 1)
+          m_Chooser.SetValueNoInvoke (presetCache.FindIndex (a => (a == text)) + 1);
+        SwitchChooser ();
+        UpdateControls ();
+      }
+    }
+
+    public void CancelButtonAction () {
+      SwitchChooser ();
+      UpdateControls ();
+    }
+
+    public void InputFieldChange (string text) {
+      if (text.Length > 0) {
+        m_ButtonOk.interactable = true;
+        m_ButtonOk.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        m_ButtonOk.interactable = false;
+        m_ButtonOk.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
+    }
+
+    public void InputFieldSubmit (string text) {
+      if (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) {
+        OKButtonAction ();
+      }
+    }
+
+    private void SwitchSaver () {
+      var canvasgroup = m_ChooserPanel.GetComponent<CanvasGroup> ();
+      canvasgroup.interactable = false;
+      canvasgroup.blocksRaycasts = false;
+      m_ChooserPanel.GetComponent<CanvasGroupFader> ().FadeOut ();
+
+      m_SaverPanel.GetComponent<CanvasGroupFader> ().FadeIn ();
+      canvasgroup = m_SaverPanel.GetComponent<CanvasGroup> ();
+      canvasgroup.interactable = true;
+      canvasgroup.blocksRaycasts = true;
+    }
+
+    private void SwitchChooser () {
+      var canvasgroup = m_SaverPanel.GetComponent<CanvasGroup> ();
+      canvasgroup.interactable = false;
+      canvasgroup.blocksRaycasts = false;
+      m_SaverPanel.GetComponent<CanvasGroupFader> ().FadeOut ();
+
+      m_ChooserPanel.GetComponent<CanvasGroupFader> ().FadeIn ();
+      canvasgroup = m_ChooserPanel.GetComponent<CanvasGroup> ();
+      canvasgroup.interactable = true;
+      canvasgroup.blocksRaycasts = true;
+    }
+
+    public void UpdateControls () {
+      if (m_Chooser.Value > 0) {
+        m_ButtonSave.interactable = true;
+        m_ButtonSave.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+        m_ButtonDel.interactable = true;
+        m_ButtonDel.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        m_ButtonSave.interactable = false;
+        m_ButtonSave.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+        m_ButtonDel.interactable = false;
+        m_ButtonDel.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
+    }
+
+    public void RepopulateChooser () {
+      presetCache = m_Control.presetNames ();
+      m_Chooser.OptionCount = 1 + presetCache.Count;
+      m_Chooser.SetValueNoInvoke (0);
+      UpdateControls ();
+    }
+
+    private void SetChooserText (int index, GameObject caption) {
+      if (index < 0 || index > presetCache.Count)
+        return;
+      if (index == 0)
+        chooserText (m_Control.newPresetLocalized);
+      else
+        chooserText (presetCache[index - 1]);
+    }
+
+    private void SetChooserOption (PreciseManeuverDropdownItem item) {
+      if (item.Index == 0)
+        m_Control.ReplaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (m_Control.newPresetLocalized);
+      else
+        m_Control.ReplaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (presetCache[item.Index - 1]);
+    }
+
+    public void ChooserValueChange (int value) {
+      if (value == 0) {
+        SaveAsButtonAction ();
+      } else {
+        m_Control.loadPreset (presetCache[value - 1]);
+      }
+      UpdateControls ();
+    }
+
+    public void ItemClicked () {
+      if (savedChooserValue != m_Chooser.Value) {
+        savedChooserValue = m_Chooser.Value;
+      } else {
+        ChooserValueChange (savedChooserValue);
+      }
+    }
+
+    public void InputFieldSelected () {
+      m_Control.lockKeyboard ();
+    }
+    public void InputFieldDeselected () {
+      m_Control.unlockKeyboard ();
     }
   }
-
-  public void cancelButtonAction () {
-    switchChooser ();
-    updateControls ();
-  }
-
-  public void inputFieldChange (string text) {
-    if (text.Length > 0) {
-      m_ButtonOk.interactable = true;
-      m_ButtonOk.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_ButtonOk.interactable = false;
-      m_ButtonOk.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-    }
-  }
-
-  public void inputFieldSubmit (string text) {
-    if (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) {
-      okButtonAction ();
-    }
-  }
-
-  private void switchSaver () {
-    var canvasgroup = m_ChooserPanel.GetComponent<CanvasGroup> ();
-    canvasgroup.interactable = false;
-    canvasgroup.blocksRaycasts = false;
-    m_ChooserPanel.GetComponent<CanvasGroupFader> ().fadeOut ();
-
-    m_SaverPanel.GetComponent<CanvasGroupFader> ().fadeIn ();
-    canvasgroup = m_SaverPanel.GetComponent<CanvasGroup> ();
-    canvasgroup.interactable = true;
-    canvasgroup.blocksRaycasts = true;
-  }
-
-  private void switchChooser () {
-    var canvasgroup = m_SaverPanel.GetComponent<CanvasGroup> ();
-    canvasgroup.interactable = false;
-    canvasgroup.blocksRaycasts = false;
-    m_SaverPanel.GetComponent<CanvasGroupFader> ().fadeOut ();
-
-    m_ChooserPanel.GetComponent<CanvasGroupFader> ().fadeIn ();
-    canvasgroup = m_ChooserPanel.GetComponent<CanvasGroup> ();
-    canvasgroup.interactable = true;
-    canvasgroup.blocksRaycasts = true;
-  }
-
-  public void updateControls () {
-    if (m_Chooser.value > 0) {
-      m_ButtonSave.interactable = true;
-      m_ButtonSave.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-      m_ButtonDel.interactable = true;
-      m_ButtonDel.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_ButtonSave.interactable = false;
-      m_ButtonSave.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-      m_ButtonDel.interactable = false;
-      m_ButtonDel.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-    }
-  }
-
-  public void repopulateChooser () {
-    presetCache = m_saverControl.presetNames ();
-    m_Chooser.optionCount = 1 + presetCache.Count;
-    m_Chooser.setValueNoInvoke (0);
-    updateControls ();
-  }
-
-  private void setChooserText (int index, GameObject caption) {
-    if (index < 0 || index > presetCache.Count)
-      return;
-    if (index == 0)
-      chooserText (m_saverControl.newPresetLocalized);
-    else
-      chooserText (presetCache[index - 1]);
-  }
-
-  private void setChooserOption (PreciseManeuverDropdownItem item) {
-    if (item.index == 0)
-      m_saverControl.replaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (m_saverControl.newPresetLocalized);
-    else
-      m_saverControl.replaceTextComponentWithTMPro (item.GetComponentInChildren<Text> ())?.Invoke (presetCache[item.index - 1]);
-  }
-
-  public void chooserValueChange (int value) {
-    if (value == 0) {
-      SaveAsButtonAction ();
-    } else {
-      m_saverControl.loadPreset (presetCache[value - 1]);
-    }
-    updateControls ();
-  }
-
-  public void itemClicked () {
-    if (savedChooserValue != m_Chooser.value) {
-      savedChooserValue = m_Chooser.value;
-    } else {
-      chooserValueChange (savedChooserValue);
-    }
-  }
-
-  public void inputFieldSelected () {
-    m_saverControl.lockKeyboard ();
-  }
-  public void inputFieldDeselected () {
-    m_saverControl.unlockKeyboard ();
-  }
-}
 }

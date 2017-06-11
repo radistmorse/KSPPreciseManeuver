@@ -64,7 +64,6 @@
     <Compile Include="UI\KeybindingControl.cs" />
     <Compile Include="Utils\ShrinkPanel.cs" />
     <Compile Include="Utils\GizmoElement.cs" />
-    <Compile Include="Utils\CanvasFixer.cs" />
     <Compile Include="Utils\CanvasGroupFader.cs" />
     <Compile Include="UI\ToolbarMenu.cs" />
     <Compile Include="UI\ToolbarMenuSection.cs" />

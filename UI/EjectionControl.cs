@@ -30,35 +30,34 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class EjectionControl : MonoBehaviour {
-  [SerializeField]
-  private Text m_AngleValue = null;
-  private UnityAction<string> angleValueUpdate;
+  [RequireComponent (typeof (RectTransform))]
+  public class EjectionControl : MonoBehaviour {
+    [SerializeField]
+    private Text m_AngleValue = null;
+    private UnityAction<string> angleValueUpdate;
 
-  [SerializeField]
-  private Text m_InclinationValue = null;
-  private UnityAction<string> inclValueUpdate;
+    [SerializeField]
+    private Text m_InclinationValue = null;
+    private UnityAction<string> inclValueUpdate;
 
-  private IEjectionControl m_control = null;
+    private IEjectionControl m_Control = null;
 
-  public void SetControl(IEjectionControl control) {
-    m_control = control;
-    angleValueUpdate = control.replaceTextComponentWithTMPro (m_AngleValue);
-    inclValueUpdate = control.replaceTextComponentWithTMPro (m_InclinationValue);
-    updateControl ();
-    m_control.registerUpdateAction (updateControl);
+    public void SetControl (IEjectionControl control) {
+      m_Control = control;
+      angleValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_AngleValue);
+      inclValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_InclinationValue);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
+
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
+
+    public void UpdateGUI () {
+      angleValueUpdate?.Invoke (m_Control.AngleValue);
+      inclValueUpdate?.Invoke (m_Control.InclinationValue);
+    }
   }
-
-  public void OnDestroy () {
-    if (m_control != null)
-      m_control.deregisterUpdateAction (updateControl);
-    m_control = null;
-  }
-
-  public void updateControl () {
-    angleValueUpdate?.Invoke (m_control.AngleValue);
-    inclValueUpdate?.Invoke (m_control.InclinationValue);
-  }
-}
 }

@@ -30,106 +30,102 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-public class PreciseManeuverPagerItem : PreciseManeuverDropdownItem {
-  [SerializeField]
-  private RectTransform m_NodeIndex = null;
-  public RectTransform nodeidx { get { return m_NodeIndex; } }
-  [SerializeField]
-  private RectTransform m_NodeTime = null;
-  public RectTransform nodetime { get { return m_NodeTime; } }
-  [SerializeField]
-  private RectTransform m_NodeDV = null;
-  public RectTransform nodedv { get { return m_NodeDV; } }
-  [SerializeField]
-  private RectTransform m_Label = null;
-  public RectTransform dvlabel { get { return m_Label; } }
-}
-
-[RequireComponent (typeof (RectTransform))]
-public class PagerControl : MonoBehaviour {
-  [SerializeField]
-  private Button m_ButtonPrev = null;
-  [SerializeField]
-  private Button m_ButtonNext = null;
-  [SerializeField]
-  private PreciseManeuverDropdown m_Chooser = null;
-  private UnityAction<string> chooserText = null;
-
-  private IPagerControl m_pagerControl = null;
-
-  public void SetPagerControl(IPagerControl pagerControl) {
-    m_pagerControl = pagerControl;
-
-    m_Chooser.updateDropdownCaption = setChooserText;
-    m_Chooser.updateDropdownOption = setChooserOption;
-    m_Chooser.setRootCanvas (pagerControl.Canvas);
-    chooserText = pagerControl.replaceTextComponentWithTMPro (m_Chooser.captionArea.GetComponent<Text> ());
-    updatePagerValues ();
-    m_pagerControl.registerUpdateAction (updatePagerValues);
+  public class PreciseManeuverPagerItem : PreciseManeuverDropdownItem {
+    [SerializeField]
+    private RectTransform m_NodeIndex = null;
+    public RectTransform NodeIdx { get { return m_NodeIndex; } }
+    [SerializeField]
+    private RectTransform m_NodeTime = null;
+    public RectTransform NodeTime { get { return m_NodeTime; } }
+    [SerializeField]
+    private RectTransform m_NodeDV = null;
+    public RectTransform NodedV { get { return m_NodeDV; } }
+    [SerializeField]
+    private RectTransform m_Label = null;
+    public RectTransform dVLabel { get { return m_Label; } }
   }
 
-  public void OnDestroy () {
-    m_Chooser.Hide ();
-    m_pagerControl.deregisterUpdateAction (updatePagerValues);
-    m_pagerControl = null;
-  }
+  [RequireComponent (typeof (RectTransform))]
+  public class PagerControl : MonoBehaviour {
+    [SerializeField]
+    private Button m_ButtonPrev = null;
+    [SerializeField]
+    private Button m_ButtonNext = null;
+    [SerializeField]
+    private PreciseManeuverDropdown m_Chooser = null;
+    private UnityAction<string> chooserText = null;
 
-  public void PrevButtonAction () {
-    if (m_pagerControl != null)
-      m_pagerControl.PrevButtonPressed ();
-  }
+    private IPagerControl m_Control = null;
 
-  public void FocusButtonAction () {
-    if (m_pagerControl != null)
-      m_pagerControl.FocusButtonPressed ();
-  }
+    public void SetControl (IPagerControl control) {
+      m_Control = control;
 
-  public void DelButtonAction () {
-    if (m_pagerControl != null)
-      m_pagerControl.DelButtonPressed ();
-  }
-
-  public void NextButtonAction () {
-    if (m_pagerControl != null)
-      m_pagerControl.NextButtonPressed ();
-  }
-
-  public void updatePagerValues () {
-    if (m_pagerControl.prevManeuverExists) {
-      m_ButtonPrev.interactable = true;
-      m_ButtonPrev.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_ButtonPrev.interactable = false;
-      m_ButtonPrev.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      m_Chooser.UpdateDropdownCaption = SetChooserText;
+      m_Chooser.UpdateDropdownOption = SetChooserOption;
+      m_Chooser.SetRootCanvas (m_Control.Canvas);
+      chooserText = m_Control.ReplaceTextComponentWithTMPro (m_Chooser.CaptionArea.GetComponent<Text> ());
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
     }
-    if (m_pagerControl.nextManeuverExists) {
-      m_ButtonNext.interactable = true;
-      m_ButtonNext.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_ButtonNext.interactable = false;
-      m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+
+    public void OnDestroy () {
+      m_Chooser.Hide ();
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
     }
-    m_Chooser.optionCount = m_pagerControl.maneuverCount;
-    m_Chooser.setValueNoInvoke (m_pagerControl.maneuverIdx);
-  }
-  private void setChooserText (int index, GameObject caption) {
-    chooserText (m_pagerControl.getManeuverNodeLocalized () + " " + (index + 1).ToString ());
-  }
-  private void setChooserOption (PreciseManeuverDropdownItem item) {
-    if (!(item is PreciseManeuverPagerItem))
+
+    public void PrevButtonAction () {
+      m_Control.PrevButtonPressed ();
+    }
+
+    public void FocusButtonAction () {
+      m_Control.FocusButtonPressed ();
+    }
+
+    public void DelButtonAction () {
+      m_Control.DelButtonPressed ();
+    }
+
+    public void NextButtonAction () {
+      m_Control.NextButtonPressed ();
+    }
+
+    public void UpdateGUI () {
+      if (m_Control.prevManeuverExists) {
+        m_ButtonPrev.interactable = true;
+        m_ButtonPrev.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        m_ButtonPrev.interactable = false;
+        m_ButtonPrev.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
+      if (m_Control.nextManeuverExists) {
+        m_ButtonNext.interactable = true;
+        m_ButtonNext.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        m_ButtonNext.interactable = false;
+        m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
+      m_Chooser.OptionCount = m_Control.maneuverCount;
+      m_Chooser.SetValueNoInvoke (m_Control.maneuverIdx);
+    }
+    private void SetChooserText (int index, GameObject caption) {
+      chooserText (m_Control.getManeuverNodeLocalized () + " " + (index + 1).ToString ());
+    }
+    private void SetChooserOption (PreciseManeuverDropdownItem item) {
+      if (!(item is PreciseManeuverPagerItem))
         return;
-    var pageritem = item as PreciseManeuverPagerItem;
-    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodeidx.GetComponent<Text> ())?.
-        Invoke (m_pagerControl.getManeuverNodeLocalized () + "\n" + (pageritem.index + 1).ToString ());
-    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodetime.GetComponent<Text> ())?.
-        Invoke (m_pagerControl.getManeuverTime (pageritem.index));
-    m_pagerControl.replaceTextComponentWithTMPro (pageritem.nodedv.GetComponent<Text> ())?.
-        Invoke (m_pagerControl.getManeuverDV (pageritem.index));
-    m_pagerControl.replaceTextComponentWithTMPro (pageritem.dvlabel.GetComponent<Text> ());
-  }
+      var pageritem = item as PreciseManeuverPagerItem;
+      m_Control.ReplaceTextComponentWithTMPro (pageritem.NodeIdx.GetComponent<Text> ())?.
+          Invoke (m_Control.getManeuverNodeLocalized () + "\n" + (pageritem.Index + 1).ToString ());
+      m_Control.ReplaceTextComponentWithTMPro (pageritem.NodeTime.GetComponent<Text> ())?.
+          Invoke (m_Control.getManeuverTime (pageritem.Index));
+      m_Control.ReplaceTextComponentWithTMPro (pageritem.NodedV.GetComponent<Text> ())?.
+          Invoke (m_Control.getManeuverDV (pageritem.Index));
+      m_Control.ReplaceTextComponentWithTMPro (pageritem.dVLabel.GetComponent<Text> ());
+    }
 
-  public void chooserValueChange(int value) {
-    m_pagerControl.SwitchNode (value);
+    public void ChooserValueChange (int value) {
+      m_Control.SwitchNode (value);
+    }
   }
-}
 }

@@ -40,7 +40,7 @@ public interface IAxisControl : IControl {
   string AxisName { get; }
   string AxisValue { get; }
   UnityEngine.Color AxisColor { get; }
-  void lockKeyboard ();
-  void unlockKeyboard ();
+  void LockKeyboard ();
+  void UnlockKeyboard ();
 }
 }

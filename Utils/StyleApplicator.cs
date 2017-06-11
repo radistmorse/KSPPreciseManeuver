@@ -29,92 +29,91 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class StyleApplicator : MonoBehaviour {
-  public enum ElementTypes {
-    None,
-    Window,
-    Input,
-    Button,
-    ButtonToggle,
-    Scrollbar,
-    Slider
-  }
-
-  [SerializeField]
-  private ElementTypes m_ElementType = ElementTypes.None;
-
-  public ElementTypes ElementType {
-    get { return m_ElementType; }
-  }
-
-  public void SetImage(Sprite sprite, Image.Type type) {
-    Image image = GetComponent<Image>();
-    if (image == null)
-      return;
-
-    image.sprite = sprite;
-    image.type = type;
-  }
-
-  public void SetSelectable(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
-    Selectable selectable = GetComponent<Selectable>();
-    if (selectable != null) {
-      selectable.image.sprite = normal;
-      selectable.image.type = Image.Type.Sliced;
-      selectable.transition = Selectable.Transition.SpriteSwap;
-      SpriteState spriteState = selectable.spriteState;
-      spriteState.highlightedSprite = highlight;
-      spriteState.pressedSprite = pressed;
-      spriteState.disabledSprite = disabled;
-      selectable.spriteState = spriteState;
+  [RequireComponent (typeof (RectTransform))]
+  public class StyleApplicator : MonoBehaviour {
+    public enum ElementTypes {
+      None,
+      Window,
+      Input,
+      Button,
+      ButtonToggle,
+      Scrollbar,
+      Slider
     }
-  }
 
-  public void SetToggle(Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
-    SetSelectable(normal, highlight, pressed, disabled);
+    [SerializeField]
+    private ElementTypes m_ElementType = ElementTypes.None;
 
-    Image toggleImage = GetComponent<Toggle>()?.graphic as Image;
-    if (toggleImage != null) {
-      toggleImage.sprite = pressed;
-      toggleImage.type = Image.Type.Sliced;
+    public ElementTypes ElementType {
+      get { return m_ElementType; }
     }
-  }
 
-  public void SetScrollbar (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
-    Scrollbar scrollbar = GetComponent<Scrollbar>();
-    if (scrollbar != null) {
-      scrollbar.image.sprite = normal;
-      scrollbar.image.type = Image.Type.Sliced;
-      scrollbar.transition = Selectable.Transition.SpriteSwap;
-      SpriteState spriteState = scrollbar.spriteState;
-      spriteState.highlightedSprite = highlight;
-      spriteState.pressedSprite = pressed;
-      spriteState.disabledSprite = disabled;
-      scrollbar.spriteState = spriteState;
+    public void SetImage (Sprite sprite, Image.Type type) {
+      Image image = GetComponent<Image>();
+      if (image == null)
+        return;
+
+      image.sprite = sprite;
+      image.type = type;
     }
-    SetImage (background, Image.Type.Sliced);
-  }
 
-  public void SetSlider (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
-    foreach (var image in GetComponentsInChildren<Image> ()) {
-      if (image.gameObject.name == "Background") {
-        image.sprite = background;
-        image.type = Image.Type.Sliced;
+    public void SetSelectable (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
+      Selectable selectable = GetComponent<Selectable>();
+      if (selectable != null) {
+        selectable.image.sprite = normal;
+        selectable.image.type = Image.Type.Sliced;
+        selectable.transition = Selectable.Transition.SpriteSwap;
+        SpriteState spriteState = selectable.spriteState;
+        spriteState.highlightedSprite = highlight;
+        spriteState.pressedSprite = pressed;
+        spriteState.disabledSprite = disabled;
+        selectable.spriteState = spriteState;
       }
     }
-    Slider slider = GetComponent<Slider>();
-    if (slider != null) {
-      slider.image.sprite = normal;
-      slider.image.type = Image.Type.Sliced;
-      slider.transition = Selectable.Transition.SpriteSwap;
-      SpriteState spriteState = slider.spriteState;
-      spriteState.highlightedSprite = highlight;
-      spriteState.pressedSprite = pressed;
-      spriteState.disabledSprite = disabled;
-      slider.spriteState = spriteState;
+
+    public void SetToggle (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled) {
+      SetSelectable (normal, highlight, pressed, disabled);
+
+      if (GetComponent<Toggle> ()?.graphic is Image toggleImage) {
+        toggleImage.sprite = pressed;
+        toggleImage.type = Image.Type.Sliced;
+      }
     }
-    SetImage (background, Image.Type.Sliced);
+
+    public void SetScrollbar (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
+      Scrollbar scrollbar = GetComponent<Scrollbar>();
+      if (scrollbar != null) {
+        scrollbar.image.sprite = normal;
+        scrollbar.image.type = Image.Type.Sliced;
+        scrollbar.transition = Selectable.Transition.SpriteSwap;
+        SpriteState spriteState = scrollbar.spriteState;
+        spriteState.highlightedSprite = highlight;
+        spriteState.pressedSprite = pressed;
+        spriteState.disabledSprite = disabled;
+        scrollbar.spriteState = spriteState;
+      }
+      SetImage (background, Image.Type.Sliced);
+    }
+
+    public void SetSlider (Sprite normal, Sprite highlight, Sprite pressed, Sprite disabled, Sprite background) {
+      foreach (var image in GetComponentsInChildren<Image> ()) {
+        if (image.gameObject.name == "Background") {
+          image.sprite = background;
+          image.type = Image.Type.Sliced;
+        }
+      }
+      Slider slider = GetComponent<Slider>();
+      if (slider != null) {
+        slider.image.sprite = normal;
+        slider.image.type = Image.Type.Sliced;
+        slider.transition = Selectable.Transition.SpriteSwap;
+        SpriteState spriteState = slider.spriteState;
+        spriteState.highlightedSprite = highlight;
+        spriteState.pressedSprite = pressed;
+        spriteState.disabledSprite = disabled;
+        slider.spriteState = spriteState;
+      }
+      SetImage (background, Image.Type.Sliced);
+    }
   }
-}
 }

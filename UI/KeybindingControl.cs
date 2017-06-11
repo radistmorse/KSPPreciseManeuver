@@ -30,47 +30,47 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class KeybindingControl : MonoBehaviour {
-  [SerializeField]
-  private Text m_KeybindingsText = null;
-  private UnityAction<string> textUpdate = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class KeybindingControl : MonoBehaviour {
+    [SerializeField]
+    private Text m_KeybindingsText = null;
+    private UnityAction<string> textUpdate = null;
 
-  [SerializeField]
-  private Text m_KeybindingsKeycode = null;
-  private UnityAction<string> keycodeUpdate = null;
+    [SerializeField]
+    private Text m_KeybindingsKeycode = null;
+    private UnityAction<string> keycodeUpdate = null;
 
-  [SerializeField]
-  private Toggle m_KeybindingsSetButton = null;
+    [SerializeField]
+    private Toggle m_KeybindingsSetButton = null;
 
-  private IKeybindingsControl m_Control = null;
+    private IKeybindingsControl m_Control = null;
 
-  public void setControl (IKeybindingsControl control) {
-    m_Control = control;
-    textUpdate = control.replaceTextComponentWithTMPro (m_KeybindingsText);
-    keycodeUpdate = control.replaceTextComponentWithTMPro (m_KeybindingsKeycode);
-    textUpdate?.Invoke (control.keyName);
-    keycodeUpdate?.Invoke (control.code.ToString ());
-  }
+    public void SetControl (IKeybindingsControl control) {
+      m_Control = control;
+      textUpdate = m_Control.replaceTextComponentWithTMPro (m_KeybindingsText);
+      keycodeUpdate = m_Control.replaceTextComponentWithTMPro (m_KeybindingsKeycode);
+      textUpdate?.Invoke (m_Control.keyName);
+      keycodeUpdate?.Invoke (m_Control.code.ToString ());
+    }
 
-  public void setButtonPressed (bool value) {
-    if (value == true) {
-      m_Control.setKey (updateKeyCode);
-    } else {
-      m_Control.abortSetKey ();
+    public void SetButtonPressed (bool value) {
+      if (value == true) {
+        m_Control.setKey (UpdateKeyCode);
+      } else {
+        m_Control.abortSetKey ();
+      }
+    }
+
+    public void UnsetButtonPressed () {
+      m_Control.unsetKey ();
+      keycodeUpdate?.Invoke (KeyCode.None.ToString ());
+    }
+
+    private void UpdateKeyCode (KeyCode code) {
+      keycodeUpdate?.Invoke (code.ToString ());
+      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_KeybindingsSetButton.isOn = false;
+      m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
     }
   }
-
-  public void unsetButtonPressed () {
-    m_Control.unsetKey ();
-    keycodeUpdate?.Invoke (KeyCode.None.ToString ());
-  }
-
-  private void updateKeyCode (KeyCode code) {
-    keycodeUpdate?.Invoke (code.ToString ());
-    m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_KeybindingsSetButton.isOn = false;
-    m_KeybindingsSetButton.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
-  }
-}
 }

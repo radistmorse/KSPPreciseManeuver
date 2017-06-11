@@ -30,104 +30,96 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class UTControl : MonoBehaviour {
-  [SerializeField]
-  private InputField m_UTValue = null;
-  [SerializeField]
-  private Toggle m_x10Toggle = null;
-  [SerializeField]
-  private Button m_APButton = null;
-  [SerializeField]
-  private Button m_PEButton = null;
-  [SerializeField]
-  private Button m_ANButton = null;
-  [SerializeField]
-  private Button m_DNButton = null;
-  [SerializeField]
-  private Button m_POButton = null;
-  [SerializeField]
-  private Button m_MOButton = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class UTControl : MonoBehaviour {
+    [SerializeField]
+    private InputField m_UTValue = null;
+    [SerializeField]
+    private Toggle m_x10Toggle = null;
+    [SerializeField]
+    private Button m_APButton = null;
+    [SerializeField]
+    private Button m_PEButton = null;
+    [SerializeField]
+    private Button m_ANButton = null;
+    [SerializeField]
+    private Button m_DNButton = null;
+    [SerializeField]
+    private Button m_POButton = null;
+    [SerializeField]
+    private Button m_MOButton = null;
 
-  private IUTControl m_UTControl = null;
+    private IUTControl m_Control = null;
 
-  public void SetUTControl(IUTControl utControl) {
-    m_UTControl = utControl;
-    utControl.replaceInputFieldWithTMPro (m_UTValue);
-    updateControls ();
-    m_UTControl.registerUpdateAction (updateControls);
-  }
+    public void SetControl (IUTControl control) {
+      m_Control = control;
+      m_Control.ReplaceInputFieldWithTMPro (m_UTValue);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
 
-  public void OnDestroy () {
-    m_UTControl.deregisterUpdateAction (updateControls);
-    m_UTControl = null;
-  }
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
 
-  public void x10ToggleAction (bool state) {
-    m_UTControl.X10State = state;
-  }
+    public void x10ToggleAction (bool state) {
+      m_Control.X10State = state;
+    }
 
-  public void PlusButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.PlusButtonPressed ();
-  }
-  public void MinusButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.MinusButtonPressed ();
-  }
-  public void RepeatButtonStart () {
-      m_UTControl.BeginAtomicChange ();
-  }
-  public void RepeatButtonStop () {
-      m_UTControl.EndAtomicChange ();
-  }
-  public void APButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.APButtonPressed ();
-  }
-  public void PEButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.PEButtonPressed ();
-  }
-  public void ANButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.ANButtonPressed ();
-  }
-  public void DNButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.DNButtonPressed ();
-  }
-  public void POButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.POButtonPressed ();
-  }
-  public void MOButtonAction () {
-    if (m_UTControl != null)
-      m_UTControl.MOButtonPressed ();
-  }
+    public void PlusButtonAction () {
+      m_Control.PlusButtonPressed ();
+    }
+    public void MinusButtonAction () {
+      m_Control.MinusButtonPressed ();
+    }
+    public void RepeatButtonStart () {
+      m_Control.BeginAtomicChange ();
+    }
+    public void RepeatButtonStop () {
+      m_Control.EndAtomicChange ();
+    }
+    public void APButtonAction () {
+      m_Control.APButtonPressed ();
+    }
+    public void PEButtonAction () {
+      m_Control.PEButtonPressed ();
+    }
+    public void ANButtonAction () {
+      m_Control.ANButtonPressed ();
+    }
+    public void DNButtonAction () {
+      m_Control.DNButtonPressed ();
+    }
+    public void POButtonAction () {
+      m_Control.POButtonPressed ();
+    }
+    public void MOButtonAction () {
+      m_Control.MOButtonPressed ();
+    }
 
-  public void updateControls () {
-    m_UTControl.TMProText = m_UTControl.UTValue;
-    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_x10Toggle.isOn = m_UTControl.X10State;
-    m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    public void UpdateGUI () {
+      m_Control.TMProText = m_Control.UTValue;
+      m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_x10Toggle.isOn = m_Control.X10State;
+      m_x10Toggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
 
-    enableButton (m_APButton, m_UTControl.APAvailable);
-    enableButton (m_PEButton, m_UTControl.PEAvailable);
-    enableButton (m_ANButton, m_UTControl.ANAvailable);
-    enableButton (m_DNButton, m_UTControl.DNAvailable);
-    enableButton (m_POButton, m_UTControl.POAvailable);
-    enableButton (m_MOButton, m_UTControl.MOAvailable);
-  }
+      EnableButton (m_APButton, m_Control.APAvailable);
+      EnableButton (m_PEButton, m_Control.PEAvailable);
+      EnableButton (m_ANButton, m_Control.ANAvailable);
+      EnableButton (m_DNButton, m_Control.DNAvailable);
+      EnableButton (m_POButton, m_Control.POAvailable);
+      EnableButton (m_MOButton, m_Control.MOAvailable);
+    }
 
-  private void enableButton (Button button, bool state) {
-    if (state) {
-      button.interactable = true;
-      button.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      button.interactable = false;
-      button.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    private void EnableButton (Button button, bool state) {
+      if (state) {
+        button.interactable = true;
+        button.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        button.interactable = false;
+        button.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
     }
   }
-}
 }

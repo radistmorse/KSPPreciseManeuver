@@ -29,73 +29,68 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class AxisControl : MonoBehaviour {
-  [SerializeField]
-  private InputField m_AxisValue = null;
-  [SerializeField]
-  private Text m_AxisName = null;
-  [SerializeField]
-  private Button m_EditFieldButton = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class AxisControl : MonoBehaviour {
+    [SerializeField]
+    private InputField m_AxisValue = null;
+    [SerializeField]
+    private Text m_AxisName = null;
+    [SerializeField]
+    private Button m_EditFieldButton = null;
 
-  private IAxisControl m_axisControl = null;
+    private IAxisControl m_Control = null;
 
-  public void SetAxisControl(IAxisControl axisControl) {
-    m_axisControl = axisControl;
-    m_AxisName.color = m_axisControl.AxisColor;
-    m_AxisName.text = m_axisControl.AxisName;
-    m_AxisValue.textComponent.color = m_axisControl.AxisColor;
-    m_axisControl.replaceTextComponentWithTMPro (m_AxisName);
-    m_axisControl.replaceInputFieldWithTMPro (m_AxisValue, InputFieldEndEdit);
-    updateAxisValue ();
-    m_axisControl.registerUpdateAction (updateAxisValue);
-  }
+    public void SetControl (IAxisControl control) {
+      m_Control = control;
+      m_AxisName.color = m_Control.AxisColor;
+      m_AxisName.text = m_Control.AxisName;
+      m_AxisValue.textComponent.color = m_Control.AxisColor;
+      m_Control.ReplaceTextComponentWithTMPro (m_AxisName);
+      m_Control.ReplaceInputFieldWithTMPro (m_AxisValue, InputFieldEndEdit);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
 
-  public void OnDestroy () {
-    if (m_axisControl != null)
-      m_axisControl.deregisterUpdateAction (updateAxisValue);
-    m_axisControl = null;
-  }
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
 
-  public void PlusButtonAction () {
-    if (m_axisControl != null)
-      m_axisControl.PlusButtonPressed ();
-  }
-  public void MinusButtonAction () {
-    if (m_axisControl != null)
-      m_axisControl.MinusButtonPressed ();
-  }
-  public void RepeatButtonStart () {
-      m_axisControl.BeginAtomicChange ();
-  }
-  public void RepeatButtonStop () {
-      m_axisControl.EndAtomicChange ();
-  }
-  public void ZeroButtonAction () {
-    if (m_axisControl != null)
-      m_axisControl.ZeroButtonPressed ();
-  }
-  public void EditButtonAction () {
-    m_axisControl.TMProIsInteractable = true;
-    m_EditFieldButton.interactable = false;
-    m_axisControl.lockKeyboard ();
-    m_axisControl.TMProActivateInputField ();
-  }
+    public void PlusButtonAction () {
+      m_Control.PlusButtonPressed ();
+    }
+    public void MinusButtonAction () {
+      m_Control.MinusButtonPressed ();
+    }
+    public void RepeatButtonStart () {
+      m_Control.BeginAtomicChange ();
+    }
+    public void RepeatButtonStop () {
+      m_Control.EndAtomicChange ();
+    }
+    public void ZeroButtonAction () {
+      m_Control.ZeroButtonPressed ();
+    }
+    public void EditButtonAction () {
+      m_Control.TMProIsInteractable = true;
+      m_EditFieldButton.interactable = false;
+      m_Control.LockKeyboard ();
+      m_Control.TMProActivateInputField ();
+    }
 
-  public void InputFieldEndEdit (string text) {
-    double value;
-    if ((Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) && m_axisControl != null && double.TryParse(text, out value))
-      m_axisControl.UpdateValueAbs (value);
+    public void InputFieldEndEdit (string text) {
+      if ((Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter)) && m_Control != null && double.TryParse (text, out double value))
+        m_Control.UpdateValueAbs (value);
 
-    m_axisControl.TMProIsInteractable = false;
-    m_EditFieldButton.interactable = true;
-    m_axisControl.unlockKeyboard ();
-    updateAxisValue ();
-  }
+      m_Control.TMProIsInteractable = false;
+      m_EditFieldButton.interactable = true;
+      m_Control.UnlockKeyboard ();
+      UpdateGUI ();
+    }
 
-  public void updateAxisValue () {
-    if (m_axisControl.TMProIsInteractable == false && m_axisControl != null)
-      m_axisControl.TMProText = m_axisControl.AxisValue;
+    public void UpdateGUI () {
+      if (m_Control.TMProIsInteractable == false)
+        m_Control.TMProText = m_Control.AxisValue;
+    }
   }
-}
 }

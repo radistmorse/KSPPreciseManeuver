@@ -30,49 +30,49 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class EncounterControl : MonoBehaviour {
-  [SerializeField]
-  private Text m_Encounter = null;
-  private UnityAction<string> encValueUpdate;
+  [RequireComponent (typeof (RectTransform))]
+  public class EncounterControl : MonoBehaviour {
+    [SerializeField]
+    private Text m_Encounter = null;
+    private UnityAction<string> encValueUpdate;
 
-  [SerializeField]
-  private Text m_PE = null;
-  private UnityAction<string> peValueUpdate;
+    [SerializeField]
+    private Text m_PE = null;
+    private UnityAction<string> peValueUpdate;
 
-  [SerializeField]
-  private Button m_Focus = null;
+    [SerializeField]
+    private Button m_Focus = null;
 
-  private IEncounterControl m_Control = null;
+    private IEncounterControl m_Control = null;
 
-  public void SetControl(IEncounterControl control) {
-    m_Control = control;
-    encValueUpdate = control.replaceTextComponentWithTMPro (m_Encounter);
-    peValueUpdate = control.replaceTextComponentWithTMPro (m_PE);
-    updateControl ();
-    m_Control.registerUpdateAction (updateControl);
-  }
+    public void SetControl (IEncounterControl control) {
+      m_Control = control;
+      encValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_Encounter);
+      peValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_PE);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
 
-  public void OnDestroy () {
-    m_Control.deregisterUpdateAction (updateControl);
-    m_Control = null;
-  }
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
 
-  public void FocusButtonAction () {
-    m_Control.focus ();
-  }
+    public void FocusButtonAction () {
+      m_Control.focus ();
+    }
 
-  public void updateControl () {
-    bool isenc = m_Control.IsEncounter;
-    encValueUpdate?.Invoke (m_Control.Encounter);
-    peValueUpdate?.Invoke (m_Control.PE);
-    if (isenc) {
-      m_Focus.interactable = true;
-      m_Focus.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      m_Focus.interactable = false;
-      m_Focus.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+    public void UpdateGUI () {
+      bool isenc = m_Control.IsEncounter;
+      encValueUpdate?.Invoke (m_Control.Encounter);
+      peValueUpdate?.Invoke (m_Control.PE);
+      if (isenc) {
+        m_Focus.interactable = true;
+        m_Focus.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+      } else {
+        m_Focus.interactable = false;
+        m_Focus.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+      }
     }
   }
-}
 }

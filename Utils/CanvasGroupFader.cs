@@ -36,98 +36,98 @@ public class CanvasGroupFader : MonoBehaviour {
 
   internal bool collapseOnFade = false;
 
-  private CanvasGroup _canvasGroup = null;
-  private CanvasGroup canvasGroup {
+  private CanvasGroup canvasGroup = null;
+  private CanvasGroup CanvasGroup {
     get {
-      if (_canvasGroup == null)
-        _canvasGroup = GetComponent<CanvasGroup> ();
-      return _canvasGroup;
+      if (canvasGroup == null)
+        canvasGroup = GetComponent<CanvasGroup> ();
+      return canvasGroup;
     }
   }
-  private RectTransform _rectTransform = null;
-  private RectTransform rectTransform {
+  private RectTransform rectTransform = null;
+  private RectTransform RectTransform {
     get {
-      if (_rectTransform == null)
-        _rectTransform = GetComponent<RectTransform> ();
-      return _rectTransform;
+      if (rectTransform == null)
+        rectTransform = GetComponent<RectTransform> ();
+      return rectTransform;
     }
   }
-  private IEnumerator m_FadeCoroutine;
+  private IEnumerator fadeCoroutine;
 
-  private float m_FastFadeDuration = 0.2f;
-  private float m_SlowFadeDuration = 1.0f;
+  private float fastFadeDuration = 0.2f;
+  private float slowFadeDuration = 1.0f;
 
-  private bool m_IsFadingIn;
+  private bool isFadingIn;
 
   public bool IsFadingIn {
-    get { return m_FadeCoroutine != null && m_IsFadingIn; }
+    get { return fadeCoroutine != null && isFadingIn; }
   }
 
   public bool IsFadingOut {
-    get { return m_FadeCoroutine != null && !m_IsFadingIn; }
+    get { return fadeCoroutine != null && !isFadingIn; }
   }
 
-  public void setTransparent () {
-    setState (0.0f);
+  public void SetTransparent () {
+    SetState (0.0f);
     gameObject.SetActive (false);
   }
 
-  public void fadeIn () {
-    m_IsFadingIn = true;
+  public void FadeIn () {
+    isFadingIn = true;
     gameObject.SetActive (true);
-    FadeTo (1.0f, m_FastFadeDuration);
+    FadeTo (1.0f, fastFadeDuration);
   }
 
-  public void fadeClose () {
-    m_IsFadingIn = false;
-    FadeTo (0.0f, m_FastFadeDuration, Destroy);
+  public void FadeClose () {
+    isFadingIn = false;
+    FadeTo (0.0f, fastFadeDuration, Destroy);
   }
 
-  public void fadeOut () {
-    m_IsFadingIn = false;
-    FadeTo (0.0f, m_FastFadeDuration, setInactive);
+  public void FadeOut () {
+    isFadingIn = false;
+    FadeTo (0.0f, fastFadeDuration, SetInactive);
   }
 
-  private void setInactive () {
+  private void SetInactive () {
     gameObject.SetActive (false);
   }
 
-  public void fadeCloseSlow () {
-    m_IsFadingIn = false;
-    FadeTo (0.0f, m_SlowFadeDuration, Destroy);
+  public void FadeCloseSlow () {
+    isFadingIn = false;
+    FadeTo (0.0f, slowFadeDuration, Destroy);
   }
 
   private void FadeTo (float alpha, float duration, Action callback = null) {
-    if (canvasGroup == null)
+    if (CanvasGroup == null)
       return;
 
-    Fade (canvasGroup.alpha, alpha, duration, callback);
+    Fade (CanvasGroup.alpha, alpha, duration, callback);
   }
 
-  private void setState (float state) {
+  private void SetState (float state) {
     state = Mathf.Clamp01 (state);
-    canvasGroup.alpha = state;
+    CanvasGroup.alpha = state;
     if (collapseOnFade) {
       var scale = Vector3.one;
       scale.y = state;
-      rectTransform.localScale = scale;
-      if (rectTransform.parent.parent is RectTransform)
-        LayoutRebuilder.MarkLayoutForRebuild (rectTransform.parent.parent as RectTransform);
+      RectTransform.localScale = scale;
+      if (RectTransform.parent.parent is RectTransform)
+        LayoutRebuilder.MarkLayoutForRebuild (RectTransform.parent.parent as RectTransform);
     }
   }
 
   private void Fade (float from, float to, float duration, Action callback) {
-    if (m_FadeCoroutine != null)
-      StopCoroutine (m_FadeCoroutine);
+    if (fadeCoroutine != null)
+      StopCoroutine (fadeCoroutine);
 
     if (from == to)
       return;
 
     if (Math.Abs (from - to) < 0.1) {
-      setState (to);
+      SetState (to);
     } else {
-      m_FadeCoroutine = FadeCoroutine (from, to, duration, callback);
-      StartCoroutine (m_FadeCoroutine);
+      fadeCoroutine = FadeCoroutine (from, to, duration, callback);
+      StartCoroutine (fadeCoroutine);
     }
   }
 
@@ -139,13 +139,13 @@ public class CanvasGroupFader : MonoBehaviour {
 
     while (progress <= 1.0f) {
       progress += Time.deltaTime / duration;
-      setState (Mathf.Lerp (from, to, progress));
+      SetState (Mathf.Lerp (from, to, progress));
       yield return null;
     }
 
     callback?.Invoke ();
 
-    m_FadeCoroutine = null;
+    fadeCoroutine = null;
   }
 
   protected virtual void Destroy () {

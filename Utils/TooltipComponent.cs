@@ -28,13 +28,13 @@
 using UnityEngine;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class TooltipComponent : MonoBehaviour {
-  [SerializeField]
-  private string m_Tooltip = "";
+  [RequireComponent (typeof (RectTransform))]
+  public class TooltipComponent : MonoBehaviour {
+    [SerializeField]
+    private string m_Tooltip = "";
 
-  public string text {
-    get { return m_Tooltip; }
+    public string Text {
+      get { return m_Tooltip; }
+    }
   }
-}
 }

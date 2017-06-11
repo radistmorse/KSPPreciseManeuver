@@ -1850,7 +1850,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11463834}
-        m_MethodName: chooserValueChange
+        m_MethodName: ChooserValueChange
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -31,655 +31,492 @@ using UnityEngine.Events;
 using System.Collections.Generic;
 
 namespace KSPPreciseManeuver {
-internal class NodeManager {
+  internal partial class NodeManager {
 
-  #region Singleton
+    #region Singleton
 
-  private NodeManager () {}
+    private NodeManager () { }
 
-  static private NodeManager _instance;
-  static internal NodeManager Instance {
-    get {
-      if (_instance == null)
-        _instance = new NodeManager ();
-      return _instance;
-    }
-  }
-
-  #endregion
-
-  #region SavedNode internal class
-
-  private class SavedNode {
-
-    private struct Vector4d {
-      internal double x;
-      internal double y;
-      internal double z;
-      internal double t;
+    static private NodeManager instance;
+    static internal NodeManager Instance {
+      get {
+        if (instance == null)
+          instance = new NodeManager ();
+        return instance;
+      }
     }
 
-    private class StateChain {
-      internal StateChain prev = null;
-      internal Vector4d cur;
-      internal StateChain next = null;
-      internal bool notLast = false;
-      private int index;
+    #endregion
 
-      private static StateChain first = null;
-
-      private static readonly int maxLen = 30;
-
-      private StateChain () {}
-
-      internal static StateChain addToChain (StateChain prev) {
-        StateChain newNode = new StateChain ();
-        newNode.cur = prev.cur;
-        newNode.prev = prev;
-        newNode.index = prev.index + 1;
-        prev.next = newNode;
-        prev.notLast = true;
-
-        if (newNode.index - first.index > maxLen) {
-          // remove the first item in the chain
-          first = first.next;
-          first.prev = null;
+    /* Node we're currently working with */
+    private ManeuverNode currentNode = null;
+    internal ManeuverNode CurrentNode {
+      get {
+        if (currentNode == null) {
+          UpdateCurrentNode ();
         }
-
-        return newNode;
-      }
-
-      internal static StateChain newChain (Vector4d state) {
-        StateChain newNode = new StateChain ();
-        newNode.cur = state;
-        newNode.index = 1;
-        first = newNode;
-        return newNode;
+        return currentNode;
       }
     }
-
-    private Vector4d orig_state = new Vector4d ();
-
-    private StateChain chain = null;
-
-    private const double epsilon = 1E-5;
-
-    private bool atomicChange = false;
-
-    private void addToChain () {
-      if (atomicChange)
-        return;
-      chain = StateChain.addToChain (chain);
-      NodeManager.Instance.notifyUndoChanged ();
-    }
-
-    internal Vector3d dv { get { return new Vector3d (chain.cur.x, chain.cur.y, chain.cur.z); } }
-    internal double ut { get { return chain.cur.t; } }
-    internal bool changed { get; private set; } = false;
-
-    internal SavedNode (ManeuverNode node) {
-      resetSavedNode (node);
-    }
-
-    internal void updateDiff (double ddvx, double ddvy, double ddvz, double ddut) {
-      addToChain ();
-      chain.cur.x += ddvx;
-      chain.cur.y += ddvy;
-      chain.cur.z += ddvz;
-      chain.cur.t += ddut;
-      changed = true;
-    }
-    internal void updateMult (double mdvx, double mdvy, double mdvz) {
-      addToChain ();
-      chain.cur.x *= mdvx;
-      chain.cur.y *= mdvy;
-      chain.cur.z *= mdvz;
-      changed = true;
-    }
-    internal void updateDvAbs (double dvx, double dvy, double dvz) {
-      if (Double.IsNaN (dvx) || Double.IsNaN (dvy) || Double.IsNaN (dvz))
-        return;
-      addToChain ();
-      chain.cur.x = dvx;
-      chain.cur.y = dvy;
-      chain.cur.z = dvz;
-      changed = true;
-    }
-    internal void updateUtAbs (double ut) {
-      if (Double.IsNaN (ut) || ut <= 0.0)
-        return;
-      addToChain ();
-      chain.cur.t = ut;
-      changed = true;
-    }
-    internal void beginAtomicChange () {
-      addToChain ();
-      atomicChange = true;
-    }
-    internal void endAtomicChange () {
-      atomicChange = false;
-    }
-
-    internal bool undoAvailable {
-      get { return chain.prev != null; }
-    }
-
-    internal void undo () {
-      if (atomicChange || chain.prev == null)
-        return;
-      chain = chain.prev;
-      changed = true;
-      NodeManager.Instance.notifyUndoChanged ();
-    }
-
-    internal bool redoAvailable {
-      get { return chain.notLast; }
-    }
-
-    internal void redo () {
-      if (atomicChange || !chain.notLast)
-        return;
-      chain = chain.next;
-      changed = true;
-      NodeManager.Instance.notifyUndoChanged ();
-    }
-
-    internal void resetSavedNode (ManeuverNode node) {
-      orig_state.x = node.DeltaV.x;
-      orig_state.y = node.DeltaV.y;
-      orig_state.z = node.DeltaV.z;
-      orig_state.t = node.UT;
-      chain = StateChain.newChain (orig_state);
-      changed = false;
-      atomicChange = false;
-      NodeManager.Instance.notifyUndoChanged ();
-    }
-
-    internal void updateOrig () {
-      orig_state = chain.cur;
-      changed = false;
-    }
-
-    internal bool origSame (ManeuverNode node) {
-      return (Math.Abs (orig_state.x - node.DeltaV.x) < epsilon &&
-              Math.Abs (orig_state.y - node.DeltaV.y) < epsilon &&
-              Math.Abs (orig_state.z - node.DeltaV.z) < epsilon &&
-              Math.Abs (orig_state.t - node.UT) < epsilon);
-    }
-  }
-
-  #endregion
-
-  /* Node we're currently working with */
-  private ManeuverNode _currentNode = null;
-  internal ManeuverNode currentNode {
-    get {
-      if (_currentNode == null) {
-        updateCurrentNode ();
+    internal int CurrentNodeIdx { get; private set; } = -1;
+    private int nodeCount = 0;
+    /* list that helps find the newly selected nodes */
+    private List<ManeuverNode> prevGizmos = null;
+    /* Internal copy of the node */
+    private SavedNode currentSavedNode = null;
+    private SavedNode CurrentSavedNode {
+      get {
+        if (currentSavedNode == null)
+          UpdateCurrentNode ();
+        return currentSavedNode;
       }
-      return _currentNode;
     }
-  }
-  internal int currentNodeIdx { get; private set; } = -1;
-  private int nodeCount = 0;
-  /* list that helps find the newly selected nodes */
-  private List<ManeuverNode> prevGizmos = null;
-  /* Internal copy of the node */
-  private SavedNode _currentSavedNode = null;
-  private SavedNode currentSavedNode {
-    get {
-      if (_currentSavedNode == null)
-        updateCurrentNode ();
-      return _currentSavedNode;
-    }
-  }
 
-  private Orbit target = null;
+    private Orbit target = null;
 
-  #region KAC integration
+    #region KAC integration
 
-  private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
+    private KACWrapper.KACAPI.KACAlarm currentAlarm = null;
 
-  internal void createAlarm () {
-    if (!KACWrapper.APIReady)
-      return;
+    internal void CreateAlarm () {
+      if (!KACWrapper.APIReady)
+        return;
 
-    if (currentAlarm != null)
-      return;
+      if (currentAlarm != null)
+        return;
 
-    string newID = KACWrapper.KAC.CreateAlarm (KACWrapper.KACAPI.AlarmTypeEnum.Maneuver,
+      string newID = KACWrapper.KAC.CreateAlarm (KACWrapper.KACAPI.AlarmTypeEnum.Maneuver,
                                                KSP.Localization.Localizer.Format ("precisemaneuver_KAC_name", FlightGlobals.ActiveVessel.GetName()),
-                                               currentNode.UT - 600.0);
-    currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
+                                               CurrentNode.UT - 600.0);
+      currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
 
-    currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
-    currentAlarm.Notes = KSP.Localization.Localizer.Format ("precisemaneuver_KAC_note");
-  }
-
-  internal void deleteAlarm () {
-    if (currentAlarm != null) {
-      KACWrapper.KAC.DeleteAlarm (currentAlarm.ID);
-      currentAlarm = null;
+      currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
+      currentAlarm.Notes = KSP.Localization.Localizer.Format ("precisemaneuver_KAC_note");
     }
-  }
 
-  internal bool alarmCreated () {
-    return currentAlarm != null;
-  }
+    internal void DeleteAlarm () {
+      if (currentAlarm != null) {
+        KACWrapper.KAC.DeleteAlarm (currentAlarm.ID);
+        currentAlarm = null;
+      }
+    }
 
-  #endregion
+    internal bool AlarmCreated () {
+      return currentAlarm != null;
+    }
 
-  #region Update API
+    #endregion
 
-  internal void changeNodeDiff (double ddvx, double ddvy, double ddvz, double dut) {
-    currentSavedNode.updateDiff (ddvx, ddvy, ddvz, dut);
-  }
+    #region Update API
 
-  internal void changeNodeDVMult (double mdvx, double mdvy, double mdvz) {
-    currentSavedNode.updateMult (mdvx, mdvy, mdvz);
-  }
+    internal void ChangeNodeDiff (double ddvx, double ddvy, double ddvz, double dut) {
+      CurrentSavedNode.UpdateDiff (ddvx, ddvy, ddvz, dut);
+    }
 
-  internal void changeNodeDVAbs (double dvx, double dvy, double dvz) {
-    currentSavedNode.updateDvAbs (dvx, dvy, dvz);
-  }
+    internal void ChangeNodeDVMult (double mdvx, double mdvy, double mdvz) {
+      CurrentSavedNode.UpdateMult (mdvx, mdvy, mdvz);
+    }
 
-  internal void changeNodeUTtoAP () {
-    // a deliberate error that may fix some crashes
-    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToAp + 1E-3);
-  }
-  internal void changeNodeUTtoPE () {
-    // a deliberate error that may fix some crashes
-    currentSavedNode.updateUtAbs (currentNode.patch.StartUT + currentNode.patch.timeToPe + 1E-3);
-  }
-  internal void changeNodeUTtoAN () {
-    currentSavedNode.updateUtAbs (currentNode.patch.getTargetANUT (target));
-  }
-  internal void changeNodeUTtoDN () {
-    currentSavedNode.updateUtAbs (currentNode.patch.getTargetDNUT (target));
-  }
-  internal void changeNodeUTPlusOrbit () {
-    if (currentNode.patch.isClosed ())
-      currentSavedNode.updateDiff (0.0, 0.0, 0.0, currentNode.patch.period);
-  }
-  internal void changeNodeUTMinusOrbit () {
-    if (currentNode.patch.isClosed () && (currentNode.UT - currentNode.patch.period - Planetarium.GetUniversalTime()) > 0.0)
-      currentSavedNode.updateDiff (0.0, 0.0, 0.0, -currentNode.patch.period);
-  }
-  internal void changeNodeFromString (string str) {
-    var reader = new System.IO.StringReader (str);
-    string line;
-    double nx = currentNode.DeltaV.x;
-    double ny = currentNode.DeltaV.y;
-    double nz = currentNode.DeltaV.z;
-    double nut = currentNode.UT;
-    bool nextlineut = false;
-    while ((line = reader.ReadLine ()) != null) {
-      var splitline = line.Split(' ');
-      if (line.Contains ("Depart at")) {
-        nextlineut = true;
+    internal void ChangeNodeDVAbs (double dvx, double dvy, double dvz) {
+      CurrentSavedNode.UpdateDvAbs (dvx, dvy, dvz);
+    }
+
+    internal void ChangeNodeUTtoAP () {
+      // a deliberate error that may fix some crashes
+      CurrentSavedNode.UpdateUtAbs (CurrentNode.patch.StartUT + CurrentNode.patch.timeToAp + 1E-3);
+    }
+    internal void ChangeNodeUTtoPE () {
+      // a deliberate error that may fix some crashes
+      CurrentSavedNode.UpdateUtAbs (CurrentNode.patch.StartUT + CurrentNode.patch.timeToPe + 1E-3);
+    }
+    internal void ChangeNodeUTtoAN () {
+      CurrentSavedNode.UpdateUtAbs (CurrentNode.patch.GetTargetANUT (target));
+    }
+    internal void ChangeNodeUTtoDN () {
+      CurrentSavedNode.UpdateUtAbs (CurrentNode.patch.GetTargetDNUT (target));
+    }
+    internal void ChangeNodeUTPlusOrbit () {
+      if (CurrentNode.patch.IsClosed ())
+        CurrentSavedNode.UpdateDiff (0.0, 0.0, 0.0, CurrentNode.patch.period);
+    }
+    internal void ChangeNodeUTMinusOrbit () {
+      if (CurrentNode.patch.IsClosed () && (CurrentNode.UT - CurrentNode.patch.period - Planetarium.GetUniversalTime ()) > 0.0)
+        CurrentSavedNode.UpdateDiff (0.0, 0.0, 0.0, -CurrentNode.patch.period);
+    }
+    internal void ChangeNodeFromString (string str) {
+      var reader = new System.IO.StringReader (str);
+      string line;
+      double nx = CurrentNode.DeltaV.x;
+      double ny = CurrentNode.DeltaV.y;
+      double nz = CurrentNode.DeltaV.z;
+      double nut = CurrentNode.UT;
+      bool nextlineut = false;
+      while ((line = reader.ReadLine ()) != null) {
+        var splitline = line.Split(' ');
+        if (line.Contains ("Depart at")) {
+          nextlineut = true;
+        } else {
+          if (line.Contains ("UT") && nextlineut) {
+            if (!double.TryParse (splitline[splitline.Length - 1], out nut))
+              nut = CurrentNode.UT;
+          } else if (line.Contains ("Prograde Δv")) {
+            if (!double.TryParse (splitline[splitline.Length - 2], out nz))
+              nz = CurrentNode.DeltaV.z;
+          } else if (line.Contains ("Normal Δv")) {
+            if (!double.TryParse (splitline[splitline.Length - 2], out ny))
+              ny = CurrentNode.DeltaV.y;
+          } else if (line.Contains ("Radial Δv")) {
+            if (!double.TryParse (splitline[splitline.Length - 2], out nx))
+              nx = CurrentNode.DeltaV.x;
+          } else if (line.Contains ("Ejection Angle")) {
+            if (splitline.Length > 3
+                && double.TryParse (splitline[splitline.Length - 3].Replace ("°", ""), out double target_eangle)
+                && splitline[splitline.Length - 2] == "to"
+                && (splitline[splitline.Length - 1] == "prograde" || splitline[splitline.Length - 1] == "retrograde")
+                && CurrentNode.patch.IsClosed ()) {
+              if (splitline[splitline.Length - 1] == "retrograde")
+                target_eangle += 180;
+              target_eangle *= Orbit.Deg2Rad;
+              Vector3d prograde = CurrentNode.patch.referenceBody.orbit.getOrbitalVelocityAtUT (nut);
+              Vector3d position = CurrentNode.patch.getRelativePositionAtUT (nut);
+              double eangle = Math.Atan2 (prograde.y, prograde.x) - Math.Atan2 (position.y, position.x);
+              if (eangle < 0)
+                eangle += Math.PI * 2;
+
+              nut += NodeTools.GetUTdiffForAngle (CurrentNode.patch, nut, eangle - target_eangle);
+
+              while (nut < Planetarium.GetUniversalTime ())
+                nut += CurrentNode.patch.period;
+            }
+          }
+          nextlineut = false;
+        }
+      }
+      if (nx != CurrentNode.DeltaV.x || ny != CurrentNode.DeltaV.y || nz != CurrentNode.DeltaV.z || nut != CurrentNode.UT) {
+        CurrentSavedNode.BeginAtomicChange ();
+        CurrentSavedNode.UpdateDvAbs (nx, ny, nz);
+        CurrentSavedNode.UpdateUtAbs (nut);
+        CurrentSavedNode.EndAtomicChange ();
+      }
+    }
+
+    internal bool NextNodeAvailable { get { return CurrentNodeIdx < nodeCount - 1; } }
+    internal bool PreviousNodeAvailable { get { return CurrentNodeIdx > 0; } }
+
+    internal bool UndoAvailable { get { return CurrentSavedNode.UndoAvailable; } }
+
+    internal void Undo () {
+      CurrentSavedNode.Undo ();
+    }
+
+    internal bool RedoAvailable { get { return CurrentSavedNode.RedoAvailable; } }
+
+    internal void Redo () {
+      CurrentSavedNode.Redo ();
+    }
+
+    internal void BeginAtomicChange () {
+      CurrentSavedNode.BeginAtomicChange ();
+    }
+
+    internal void EndAtomicChange () {
+      CurrentSavedNode.EndAtomicChange ();
+    }
+
+    internal void SwitchNextNode () {
+      if (NextNodeAvailable) {
+        currentNode = null;
+        CurrentNodeIdx += 1;
+        UpdateCurrentNode ();
+        NotifyIndexChanged ();
+      }
+    }
+
+    internal void SwitchPreviousNode () {
+      if (PreviousNodeAvailable) {
+        currentNode = null;
+        CurrentNodeIdx -= 1;
+        UpdateCurrentNode ();
+        NotifyIndexChanged ();
+      }
+    }
+
+    internal void SwitchNode (int idx) {
+      if (idx < FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count &&
+          idx != CurrentNodeIdx) {
+        currentNode = null;
+        CurrentNodeIdx = idx;
+        UpdateCurrentNode ();
+        NotifyIndexChanged ();
+      }
+    }
+
+    internal void DeleteNode () {
+      if (currentNode != null) {
+        currentNode.RemoveSelf ();
+        currentNode = null;
+        UpdateCurrentNode ();
+      }
+    }
+
+    internal void LoadPreset (string name) {
+      var dv = PreciseManeuverConfig.Instance.GetPreset (name);
+      CurrentSavedNode.UpdateDvAbs (dv.x, dv.y, dv.z);
+    }
+
+    internal void TurnOrbitUp () {
+      TurnOrbit (-PreciseManeuverConfig.Instance.IncrementDeg);
+    }
+    internal void TurnOrbitDown () {
+      TurnOrbit (PreciseManeuverConfig.Instance.IncrementDeg);
+    }
+
+    private void TurnOrbit (double theta) {
+      var maneuverPos = CurrentNode.patch.getRelativePositionAtUT (CurrentNode.UT).xzy;
+      var maneuverVel = CurrentNode.patch.getOrbitalVelocityAtUT (CurrentNode.UT).xzy;
+
+      if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+        var nprog = maneuverVel.normalized;
+        var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+        var nrad = Vector3d.Cross (nnorm, nprog);
+
+        if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero ()) {
+          var dv = CurrentNode.DeltaV;
+          var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
+          NodeTools.TurnVector (ref calcVel, maneuverPos, theta);
+          var newDV = calcVel - maneuverVel;
+
+          CurrentSavedNode.UpdateDvAbs (Vector3d.Dot (newDV, nrad),
+                                        Vector3d.Dot (newDV, nnorm),
+                                        Vector3d.Dot (newDV, nprog));
+          return;
+        }
+      }
+      // position and velocity are perfectly parallel (less probable)
+      // or
+      // KSP API returned NaN or some other weird shit (much more probable)
+      ScreenMessages.PostScreenMessage (KSP.Localization.Localizer.Format ("precisemaneuver_erroneous_orbit"), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+    }
+
+    internal void CircularizeOrbit () {
+      var maneuverPos = CurrentNode.patch.getRelativePositionAtUT (CurrentNode.UT).xzy;
+      var maneuverVel = CurrentNode.patch.getOrbitalVelocityAtUT (CurrentNode.UT).xzy;
+
+      if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
+        var nprog = maneuverVel.normalized;
+        var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
+        var nrad = Vector3d.Cross (nnorm, nprog);
+        var curVel = CurrentNode.nextPatch.getOrbitalVelocityAtUT (CurrentNode.UT).xzy;
+        if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero () && curVel.NotNAN ()) {
+          double rezSpeed = Math.Sqrt (CurrentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
+
+          var normVel = Vector3d.Cross (maneuverPos, curVel);
+          var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
+          var newDV = newVel - maneuverVel;
+
+          CurrentSavedNode.UpdateDvAbs (Vector3d.Dot (newDV, nrad),
+                                        Vector3d.Dot (newDV, nnorm),
+                                        Vector3d.Dot (newDV, nprog));
+          return;
+        }
+      }
+      // position and velocity are perfectly parallel (less probable)
+      // or
+      // KSP API returned NaN or some other weird shit (much more probable)
+      ScreenMessages.PostScreenMessage (KSP.Localization.Localizer.Format ("precisemaneuver_erroneous_orbit"), 2.0f, ScreenMessageStyle.UPPER_CENTER);
+    }
+
+    #endregion
+
+    #region Updaters
+
+    internal void SearchNewGizmo () {
+      var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
+      var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null);
+      var tmp = curList.ToList ();
+      /* let's see if user is hovering a mouse *
+       * over any gizmo. That would be a hint. */
+      if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
+        var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
+        if (node != currentNode) {
+          currentNode = node;
+          NotifyNodeChanged ();
+        }
       } else {
-        if (line.Contains ("UT") && nextlineut) {
-          if (!double.TryParse (splitline[splitline.Length - 1], out nut))
-            nut = currentNode.UT;
-        } else if (line.Contains ("Prograde Δv")) {
-          if (!double.TryParse (splitline[splitline.Length - 2], out nz))
-            nz = currentNode.DeltaV.z;
-        } else if (line.Contains ("Normal Δv")) {
-          if (!double.TryParse (splitline[splitline.Length - 2], out ny))
-            ny = currentNode.DeltaV.y;
-        } else if (line.Contains ("Radial Δv")) {
-          if (!double.TryParse (splitline[splitline.Length - 2], out nx))
-            nx = currentNode.DeltaV.x;
-        } else if (line.Contains ("Ejection Angle")) {
-          double target_eangle;
-          if (splitline.Length > 3
-           && double.TryParse (splitline[splitline.Length - 3].Replace("°", ""), out target_eangle)
-           && splitline[splitline.Length - 2] == "to"
-           && (splitline[splitline.Length - 1] == "prograde"
-            || splitline[splitline.Length - 1] == "retrograde")
-           && currentNode.patch.isClosed ()) {
-            if (splitline[splitline.Length - 1] == "retrograde")
-              target_eangle += 180;
-            target_eangle *= Orbit.Deg2Rad;
-            Vector3d prograde = currentNode.patch.referenceBody.orbit.getOrbitalVelocityAtUT (nut);
-            Vector3d position = currentNode.patch.getRelativePositionAtUT (nut);
-            double eangle = Math.Atan2 (prograde.y, prograde.x) - Math.Atan2 (position.y, position.x);
-            if (eangle < 0)
-              eangle += Math.PI * 2;
-
-            nut += NodeTools.getUTdiffForAngle (currentNode.patch, nut, eangle - target_eangle);
-            
-            while (nut < Planetarium.GetUniversalTime ())
-              nut += currentNode.patch.period;
+        /* then, let's see if we can find any     *
+         * new gizmos that were created recently. */
+        if (prevGizmos != null)
+          curList = curList.Except (prevGizmos);
+        if (curList.Count () == 1) {
+          var node = curList.First ();
+          if (node != currentNode) {
+            currentNode = node;
+            NotifyNodeChanged ();
           }
         }
-        nextlineut = false;
       }
+      prevGizmos = tmp;
     }
-    if (nx != currentNode.DeltaV.x || ny != currentNode.DeltaV.y || nz != currentNode.DeltaV.z || nut != currentNode.UT) {
-      currentSavedNode.beginAtomicChange ();
-      currentSavedNode.updateDvAbs (nx, ny, nz);
-      currentSavedNode.updateUtAbs (nut);
-      currentSavedNode.endAtomicChange ();
-    }
-  }
 
-  internal bool nextNodeAvailable { get { return currentNodeIdx < nodeCount - 1; } }
-  internal bool previousNodeAvailable { get { return currentNodeIdx > 0; } }
+    private void UpdateCurrentNode () {
+      bool idxboolcache1 = NextNodeAvailable;
+      bool idxboolcache2 = PreviousNodeAvailable;
+      bool notifyIdxChange = false;
+      var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
 
-  internal bool undoAvailable { get { return currentSavedNode.undoAvailable; } }
-
-  internal void undo () {
-    currentSavedNode.undo ();
-  }
-
-  internal bool redoAvailable { get { return currentSavedNode.redoAvailable; } }
-
-  internal void redo () {
-    currentSavedNode.redo ();
-  }
-
-  internal void beginAtomicChange () {
-    currentSavedNode.beginAtomicChange ();
-  }
-
-  internal void endAtomicChange () {
-    currentSavedNode.endAtomicChange ();
-  }
-
-  internal void switchNextNode () {
-    if (nextNodeAvailable) {
-      _currentNode = null;
-      currentNodeIdx += 1;
-      updateCurrentNode ();
-      notifyIndexChanged ();
-    }
-  }
-
-  internal void switchPreviousNode () {
-    if (previousNodeAvailable) {
-      _currentNode = null;
-      currentNodeIdx -= 1;
-      updateCurrentNode ();
-      notifyIndexChanged ();
-    }
-  }
-
-  internal void switchNode (int idx) {
-    if (idx < FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count &&
-        idx != currentNodeIdx) {
-      _currentNode = null;
-      currentNodeIdx = idx;
-      updateCurrentNode ();
-      notifyIndexChanged ();
-    }
-  }
-
-  internal void deleteNode () {
-    if (_currentNode != null) {
-      _currentNode.RemoveSelf ();
-      _currentNode = null;
-      updateCurrentNode ();
-    }
-  }
-
-  internal void loadPreset (string name) {
-    var dv = PreciseManeuverConfig.Instance.getPreset (name);
-    currentSavedNode.updateDvAbs (dv.x, dv.y, dv.z);
-  }
-
-  internal void turnOrbitUp () {
-    turnOrbit (-PreciseManeuverConfig.Instance.incrementDeg);
-  }
-  internal void turnOrbitDown () {
-    turnOrbit (PreciseManeuverConfig.Instance.incrementDeg);
-  }
-
-  private void turnOrbit (double theta) {
-    var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
-    var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-
-    if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
-      var nprog = maneuverVel.normalized;
-      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
-      var nrad = Vector3d.Cross (nnorm, nprog);
-
-      if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero ()) {
-        var dv = currentNode.DeltaV;
-        var calcVel = maneuverVel + nrad * dv.x + nnorm * dv.y + nprog * dv.z;
-        NodeTools.turnVector (ref calcVel, maneuverPos, theta);
-        var newDV = calcVel - maneuverVel;
-
-        currentSavedNode.updateDvAbs (Vector3d.Dot (newDV, nrad),
-                                      Vector3d.Dot (newDV, nnorm),
-                                      Vector3d.Dot (newDV, nprog));
-        return;
-      }
-    }
-    // position and velocity are perfectly parallel (less probable)
-    // or
-    // KSP API returned NaN or some other weird shit (much more probable)
-    ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
-  }
-
-  internal void circularizeOrbit () {
-    var maneuverPos = currentNode.patch.getRelativePositionAtUT (currentNode.UT).xzy;
-    var maneuverVel = currentNode.patch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-
-    if (maneuverPos.NotNAN () && !maneuverPos.IsZero () && maneuverVel.NotNAN ()) {
-      var nprog = maneuverVel.normalized;
-      var nnorm = Vector3d.Cross (maneuverVel, maneuverPos).normalized;
-      var nrad = Vector3d.Cross (nnorm, nprog);
-      var curVel = currentNode.nextPatch.getOrbitalVelocityAtUT (currentNode.UT).xzy;
-      if (!nprog.IsZero () && !nnorm.IsZero () && !nrad.IsZero () && curVel.NotNAN ()) {
-        double rezSpeed = Math.Sqrt (currentNode.patch.referenceBody.gravParameter / maneuverPos.magnitude);
-
-        var normVel = Vector3d.Cross (maneuverPos, curVel);
-        var newVel = Vector3d.Cross (normVel, maneuverPos).normalized * rezSpeed;
-        var newDV = newVel - maneuverVel;
-
-        currentSavedNode.updateDvAbs (Vector3d.Dot (newDV, nrad),
-                                      Vector3d.Dot (newDV, nnorm),
-                                      Vector3d.Dot (newDV, nprog));
-        return;
-      }
-    }
-    // position and velocity are perfectly parallel (less probable)
-    // or
-    // KSP API returned NaN or some other weird shit (much more probable)
-    ScreenMessages.PostScreenMessage ("Can't change the orbit, parameters are invalid", 2.0f, ScreenMessageStyle.UPPER_CENTER);
-  }
-
-  #endregion
-
-  #region Updaters
-
-  internal void searchNewGizmo () {
-    var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
-    var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null);
-    var tmp = curList.ToList ();
-    /* let's see if user is hovering a mouse *
-     * over any gizmo. That would be a hint. */
-    if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
-      var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
-      if (node != _currentNode) {
-        _currentNode = node;
-        notifyNodeChanged ();
-      }
-    } else {
-      /* then, let's see if we can find any     *
-       * new gizmos that were created recently. */
-      if (prevGizmos != null)
-        curList = curList.Except (prevGizmos);
-      if (curList.Count () == 1) {
-        var node = curList.First ();
-        if (node != _currentNode) {
-          _currentNode = node;
-          notifyNodeChanged ();
-        }
-      }
-    }
-    prevGizmos = tmp;
-  }
-
-  private void updateCurrentNode () {
-    bool idxboolcache1 = nextNodeAvailable;
-    bool idxboolcache2 = previousNodeAvailable;
-    bool notifyIdxChange = false;
-    var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
-
-    if (nodeCount != solver.maneuverNodes.Count)
-      notifyIdxChange = true;
-    nodeCount = solver.maneuverNodes.Count;
-
-    /* setting the current node */
-    int idx = -1;
-    /* first, let's see if we already have a valid node */
-    if (_currentNode != null)
-      idx = solver.maneuverNodes.IndexOf (_currentNode);
-    if (idx != -1) {
-      if (currentNodeIdx != idx) {
-        currentNodeIdx = idx;
+      if (nodeCount != solver.maneuverNodes.Count)
         notifyIdxChange = true;
-      }
-    } else {
-      /* if no, let's see if our index is still good */
-      if (currentNodeIdx != -1 && currentNodeIdx < solver.maneuverNodes.Count) {
-        _currentNode = solver.maneuverNodes[currentNodeIdx];
-        notifyNodeChanged ();
-      } else {
-        /* if no, pick the last node */
-        if (nodeCount > 0) {
-          _currentNode = solver.maneuverNodes[nodeCount - 1];
-          currentNodeIdx = nodeCount - 1;
+      nodeCount = solver.maneuverNodes.Count;
+
+      /* setting the current node */
+      int idx = -1;
+      /* first, let's see if we already have a valid node */
+      if (currentNode != null)
+        idx = solver.maneuverNodes.IndexOf (currentNode);
+      if (idx != -1) {
+        if (CurrentNodeIdx != idx) {
+          CurrentNodeIdx = idx;
           notifyIdxChange = true;
-          notifyNodeChanged ();
+        }
+      } else {
+        /* if no, let's see if our index is still good */
+        if (CurrentNodeIdx != -1 && CurrentNodeIdx < solver.maneuverNodes.Count) {
+          currentNode = solver.maneuverNodes[CurrentNodeIdx];
+          NotifyNodeChanged ();
         } else {
-          _currentNode = null;
-          currentNodeIdx = -1;
+          /* if no, pick the last node */
+          if (nodeCount > 0) {
+            currentNode = solver.maneuverNodes[nodeCount - 1];
+            CurrentNodeIdx = nodeCount - 1;
+            notifyIdxChange = true;
+            NotifyNodeChanged ();
+          } else {
+            currentNode = null;
+            CurrentNodeIdx = -1;
+          }
         }
       }
-    }
-    /* the state of the prev/next maneuver buttons should change */
-    if (idxboolcache1 != nextNodeAvailable || idxboolcache2 != previousNodeAvailable || notifyIdxChange)
-      notifyIndexChanged ();
-  }
-
-  internal void updateNodes () {
-    var newtarget = NodeTools.getTargetOrbit(currentNode.patch.referenceBody);
-
-    if (newtarget != target) {
-      target = newtarget;
-      notifyTargetChanged ();
+      /* the state of the prev/next maneuver buttons should change */
+      if (idxboolcache1 != NextNodeAvailable || idxboolcache2 != PreviousNodeAvailable || notifyIdxChange)
+        NotifyIndexChanged ();
     }
 
-    updateCurrentNode ();
-    bool origSame = currentSavedNode.origSame (currentNode);
-    bool changed = currentSavedNode.changed;
-    if (changed) {
-      if (origSame) {
-        Vector3d newdv = currentSavedNode.dv;
-        if (currentNode.attachedGizmo != null) {
-          currentNode.attachedGizmo.DeltaV = newdv;
-          currentNode.attachedGizmo.UT = currentSavedNode.ut;
+    internal void UpdateNodes () {
+      var newtarget = NodeTools.GetTargetOrbit(CurrentNode.patch.referenceBody);
+
+      if (newtarget != target) {
+        target = newtarget;
+        NotifyTargetChanged ();
+      }
+
+      UpdateCurrentNode ();
+      bool origSame = CurrentSavedNode.OrigSame (CurrentNode);
+      bool changed = CurrentSavedNode.Changed;
+      if (changed) {
+        if (origSame) {
+          Vector3d newdv = CurrentSavedNode.dV;
+          if (CurrentNode.attachedGizmo != null) {
+            CurrentNode.attachedGizmo.DeltaV = newdv;
+            CurrentNode.attachedGizmo.UT = CurrentSavedNode.UT;
+          }
+          CurrentNode.OnGizmoUpdated (newdv, CurrentSavedNode.UT);
+          CurrentSavedNode.UpdateOrig ();
         }
-        currentNode.OnGizmoUpdated (newdv, currentSavedNode.ut);
-        currentSavedNode.updateOrig ();
+      }
+      if (!origSame)
+        CurrentSavedNode.ResetSavedNode (CurrentNode);
+      if (changed || !origSame)
+        NotifyDvUTChanged ();
+    }
+
+    internal void Clear () {
+      currentNode = null;
+      CurrentNodeIdx = -1;
+    }
+
+    #endregion
+
+    #region EventListeners
+
+    private enum ChangeType {
+      dvut,
+      index,
+      target,
+      undo
+    }
+
+    private Dictionary<ChangeType,List<UnityAction>> listeners;
+
+    private Dictionary<ChangeType, List<UnityAction>> Listeners {
+      get {
+        if (listeners == null) {
+          listeners = new Dictionary<ChangeType, List<UnityAction>> (3) {
+            [ChangeType.dvut] = new List<UnityAction> (),
+            [ChangeType.index] = new List<UnityAction> (),
+            [ChangeType.target] = new List<UnityAction> (),
+            [ChangeType.undo] = new List<UnityAction> ()
+          };
+        }
+        return listeners;
       }
     }
-    if (!origSame)
-      currentSavedNode.resetSavedNode (currentNode);
-    if (changed || !origSame)
-      notifyDvUTChanged ();
-  }
 
-  internal void clear () {
-    _currentNode = null;
-    currentNodeIdx = -1;
-  }
-
-  #endregion
-
-  #region EventListeners
-
-  private enum changeType {
-    dvut,
-    index,
-    target,
-    undo
-  }
-
-  private Dictionary<changeType,List<UnityAction>> _listeners;
-
-  private Dictionary<changeType, List<UnityAction>> listeners {
-    get {
-      if (_listeners == null) {
-        _listeners = new Dictionary<changeType, List<UnityAction>> (3);
-        _listeners[changeType.dvut] = new List<UnityAction> ();
-        _listeners[changeType.index] = new List<UnityAction> ();
-        _listeners[changeType.target] = new List<UnityAction> ();
-        _listeners[changeType.undo] = new List<UnityAction> ();
-      }
-      return _listeners;
+    public void ListenToIdxChange (UnityAction listener) {
+      Listeners[ChangeType.index].Add (listener);
     }
-  }
+    public void ListenToValuesChange (UnityAction listener) {
+      Listeners[ChangeType.dvut].Add (listener);
+    }
+    public void ListenToTargetChange (UnityAction listener) {
+      Listeners[ChangeType.target].Add (listener);
+    }
+    public void ListenToUndoChange (UnityAction listener) {
+      Listeners[ChangeType.undo].Add (listener);
+    }
 
-  public void listenToIdxChange (UnityAction listener) {
-    listeners[changeType.index].Add (listener);
-  }
-  public void listenToValuesChange (UnityAction listener) {
-    listeners[changeType.dvut].Add (listener);
-  }
-  public void listenToTargetChange (UnityAction listener) {
-    listeners[changeType.target].Add (listener);
-  }
-  public void listenToUndoChange (UnityAction listener) {
-    listeners[changeType.undo].Add (listener);
-  }
+    public void RemoveListener (UnityAction listener) {
+      foreach (var list in Listeners.Values)
+        list.RemoveAll (a => (a == listener));
+    }
 
-  public void removeListener (UnityAction listener) {
-    foreach (var list in listeners.Values)
-      list.RemoveAll (a => (a == listener));
+    private void NotifyNodeChanged () {
+      /* update savednode */
+      if (currentSavedNode != null)
+        currentSavedNode.ResetSavedNode (CurrentNode);
+      else
+        currentSavedNode = new SavedNode (CurrentNode);
+      /* update KAC alarm */
+      if (KACWrapper.APIReady)
+        currentAlarm = KACWrapper.KAC.Alarms.FirstOrDefault
+                                    (a => ((Math.Abs (a.AlarmTime + 600.0 - CurrentNode.UT) < 1E-05) &&
+                                           (a.VesselID == FlightGlobals.ActiveVessel.id.ToString ()) &&
+                                           (a.AlarmType == KACWrapper.KACAPI.AlarmTypeEnum.Maneuver)));
+
+      /* if the node changed, its values changed too */
+      NotifyDvUTChanged ();
+    }
+
+    private void NotifyDvUTChanged () {
+      foreach (var act in Listeners[ChangeType.dvut])
+        act ();
+    }
+
+    private void NotifyIndexChanged () {
+      foreach (var act in Listeners[ChangeType.index])
+        act ();
+    }
+
+    private void NotifyTargetChanged () {
+      foreach (var act in Listeners[ChangeType.target])
+        act ();
+    }
+
+    private void NotifyUndoChanged () {
+      foreach (var act in Listeners[ChangeType.undo])
+        act ();
+    }
+
+    #endregion
+
   }
-
-  private void notifyNodeChanged () {
-    /* update savednode */
-    if (_currentSavedNode != null)
-      _currentSavedNode.resetSavedNode (currentNode);
-    else
-      _currentSavedNode = new SavedNode (currentNode);
-    /* update KAC alarm */
-    if (KACWrapper.APIReady)
-      currentAlarm = KACWrapper.KAC.Alarms.FirstOrDefault
-                                  (a => ((Math.Abs (a.AlarmTime + 600.0 - currentNode.UT) < 1E-05) &&
-                                         (a.VesselID == FlightGlobals.ActiveVessel.id.ToString ()) &&
-                                         (a.AlarmType == KACWrapper.KACAPI.AlarmTypeEnum.Maneuver)));
-
-    /* if the node changed, its values changed too */
-    notifyDvUTChanged ();
-  }
-
-  private void notifyDvUTChanged () {
-    foreach (var act in listeners[changeType.dvut])
-      act ();
-  }
-
-  private void notifyIndexChanged () {
-    foreach (var act in listeners[changeType.index])
-      act ();
-  }
-
-  private void notifyTargetChanged () {
-    foreach (var act in listeners[changeType.target])
-      act ();
-  }
-
-  private void notifyUndoChanged () {
-    foreach (var act in listeners[changeType.undo])
-      act ();
-  }
-
-  #endregion
-
-}
 }

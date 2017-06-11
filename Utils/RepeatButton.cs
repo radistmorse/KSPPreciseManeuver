@@ -31,38 +31,38 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (Button))]
-class RepeatButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
+  [RequireComponent (typeof (Button))]
+  class RepeatButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
-  [SerializeField]
-  private UnityEvent OnRepeatedClick = null;
-  [SerializeField]
-  private UnityEvent OnRepeatClickStart = null;
-  [SerializeField]
-  private UnityEvent OnRepeatClickEnd = null;
+    [SerializeField]
+    private UnityEvent OnRepeatedClick = null;
+    [SerializeField]
+    private UnityEvent OnRepeatClickStart = null;
+    [SerializeField]
+    private UnityEvent OnRepeatClickEnd = null;
 
-  private bool pressed = false;
-  private int buttonPressedInterval = 0;
+    private bool pressed = false;
+    private int buttonPressedInterval = 0;
 
-  internal void FixedUpdate () {
-    if (pressed == true) {
-      if (buttonPressedInterval > 20 || buttonPressedInterval == 0) {
-        OnRepeatedClick.Invoke ();
+    internal void FixedUpdate () {
+      if (pressed == true) {
+        if (buttonPressedInterval > 20 || buttonPressedInterval == 0) {
+          OnRepeatedClick.Invoke ();
+        }
+        buttonPressedInterval++;
+      } else {
+        buttonPressedInterval = 0;
       }
-      buttonPressedInterval++;
-    } else {
-      buttonPressedInterval = 0;
+    }
+
+    public void OnPointerDown (PointerEventData eventData) {
+      pressed = true;
+      OnRepeatClickStart?.Invoke ();
+    }
+
+    public void OnPointerUp (PointerEventData eventData) {
+      pressed = false;
+      OnRepeatClickEnd?.Invoke ();
     }
   }
-
-  public void OnPointerDown (PointerEventData eventData) {
-    pressed = true;
-    OnRepeatClickStart?.Invoke ();
-  }
-
-  public void OnPointerUp (PointerEventData eventData) {
-    pressed = false;
-    OnRepeatClickEnd?.Invoke ();
-  }
-}
 }

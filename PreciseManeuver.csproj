@@ -52,6 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\GUIComponentManager.cs" />
+    <Compile Include="src\GUIControl.cs" />
+    <Compile Include="src\NodeManager.SavedNode.cs" />
     <Compile Include="src\PreciseManeuverToolbar.cs" />
     <Compile Include="src\KACWrapper.cs" />
     <Compile Include="src\PreciseManeuverHotkeys.cs" />

@@ -29,31 +29,28 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class ToolbarMenuSection : MonoBehaviour {
-  [SerializeField]
-  private Toggle m_DisplayToggle = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class ToolbarMenuSection : MonoBehaviour {
+    [SerializeField]
+    private Toggle m_DisplayToggle = null;
 
-  [SerializeField]
-  private Text m_DisplayText = null;
+    [SerializeField]
+    private Text m_DisplayText = null;
 
-  private ISectionControl m_Section;
+    private ISectionControl m_Control;
 
-  public void SetSectionControl(ISectionControl section) {
-    if (section == null)
-      return;
-    m_Section = section;
-    m_DisplayToggle.isOn = m_Section.IsVisible;
-    m_DisplayText.text = m_Section.Name;
+    public void SetControl (ISectionControl control) {
+      m_Control = control;
+      m_DisplayToggle.isOn = m_Control.IsVisible;
+      m_DisplayText.text = m_Control.Name;
+    }
+
+    public void OnDestroy () {
+      m_Control = null;
+    }
+
+    public void ToggleEnable (bool visible) {
+      m_Control.IsVisible = visible;
+    }
   }
-
-  public void OnDestroy () {
-    m_Section = null;
-  }
-
-  public void ToggleEnable(bool visible) {
-    if (m_Section != null)
-      m_Section.IsVisible = visible;
-  }
-}
 }

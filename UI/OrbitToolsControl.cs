@@ -28,48 +28,43 @@
 using UnityEngine;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class OrbitToolsControl : MonoBehaviour {
-  private IOrbitToolsControl m_control = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class OrbitToolsControl : MonoBehaviour {
+    private IOrbitToolsControl m_Control = null;
 
-  public void SetControl(IOrbitToolsControl control) {
-    m_control = control;
-    m_control.registerUpdateAction (updateControls);
-  }
+    public void SetControl (IOrbitToolsControl control) {
+      m_Control = control;
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
 
-  public void OnDestroy () {
-    m_control.deregisterUpdateAction (updateControls);
-    m_control = null;
-  }
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
 
-  public void OrbitUpButtonAction () {
-    if (m_control != null)
-      m_control.OrbitUpButtonPressed ();
-  }
-  public void OrbitDnButtonAction () {
-    if (m_control != null)
-      m_control.OrbitDnButtonPressed ();
-  }
-  public void RepeatButtonStart () {
-      m_control.BeginAtomicChange ();
-  }
-  public void RepeatButtonStop () {
-      m_control.EndAtomicChange ();
-  }
-  public void CircularizeButtonAction () {
-    if (m_control != null)
-      m_control.CircularizeButtonPressed ();
-  }
-  public void CopyButtonAction () {
-    if (m_control != null)
-      m_control.CopyButtonPressed ();
-  }
-  public void PasteButtonAction () {
-    if (m_control != null)
-      m_control.PasteButtonPressed ();
-  }
+    public void OrbitUpButtonAction () {
+      m_Control.OrbitUpButtonPressed ();
+    }
+    public void OrbitDnButtonAction () {
+      m_Control.OrbitDnButtonPressed ();
+    }
+    public void RepeatButtonStart () {
+      m_Control.BeginAtomicChange ();
+    }
+    public void RepeatButtonStop () {
+      m_Control.EndAtomicChange ();
+    }
+    public void CircularizeButtonAction () {
+      m_Control.CircularizeButtonPressed ();
+    }
+    public void CopyButtonAction () {
+      m_Control.CopyButtonPressed ();
+    }
+    public void PasteButtonAction () {
+      m_Control.PasteButtonPressed ();
+    }
 
-  public void updateControls () {
+    public void UpdateGUI () {
+    }
   }
-}
 }

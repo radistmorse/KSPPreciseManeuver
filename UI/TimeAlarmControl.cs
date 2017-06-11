@@ -30,44 +30,44 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class TimeAlarmControl : MonoBehaviour {
-  [SerializeField]
-  private Text m_TimeValue = null;
-  UnityAction<string> timeValueUpdate;
+  [RequireComponent (typeof (RectTransform))]
+  public class TimeAlarmControl : MonoBehaviour {
+    [SerializeField]
+    private Text m_TimeValue = null;
+    UnityAction<string> timeValueUpdate;
 
-  [SerializeField]
-  private Toggle m_ToggleAlarm = null;
+    [SerializeField]
+    private Toggle m_ToggleAlarm = null;
 
-  private ITimeAlarmControl m_timeAlarmControl = null;
+    private ITimeAlarmControl m_Control = null;
 
-  public void SetTimeAlarmControl(ITimeAlarmControl timeAlarmControl) {
-    m_timeAlarmControl = timeAlarmControl;
-    timeValueUpdate = timeAlarmControl.replaceTextComponentWithTMPro (m_TimeValue);
-    updateTimeAlarm ();
-    m_timeAlarmControl.registerUpdateAction (updateTimeAlarm);
-  }
+    public void SetControl (ITimeAlarmControl control) {
+      m_Control = control;
+      timeValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_TimeValue);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
 
-  public void OnDestroy () {
-    m_timeAlarmControl.deregisterUpdateAction (updateTimeAlarm);
-    m_timeAlarmControl = null;
-  }
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
 
-  public void ToggleAlarmAction (bool state) {
-    m_timeAlarmControl.alarmToggle (state);
-  }
+    public void ToggleAlarmAction (bool state) {
+      m_Control.alarmToggle (state);
+    }
 
-  public void updateTimeAlarm () {
-    timeValueUpdate?.Invoke (m_timeAlarmControl.TimeValue);
-    if (m_timeAlarmControl.AlarmAvailable) {
-      m_ToggleAlarm.interactable = true;
-      m_ToggleAlarm.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
-      m_ToggleAlarm.isOn = m_timeAlarmControl.AlarmEnabled;
-    } else {
-      m_ToggleAlarm.interactable = false;
-      m_ToggleAlarm.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
-      m_ToggleAlarm.isOn = false;
+    public void UpdateGUI () {
+      timeValueUpdate?.Invoke (m_Control.TimeValue);
+      if (m_Control.AlarmAvailable) {
+        m_ToggleAlarm.interactable = true;
+        m_ToggleAlarm.GetComponent<Image> ().color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
+        m_ToggleAlarm.isOn = m_Control.AlarmEnabled;
+      } else {
+        m_ToggleAlarm.interactable = false;
+        m_ToggleAlarm.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
+        m_ToggleAlarm.isOn = false;
+      }
     }
   }
-}
 }

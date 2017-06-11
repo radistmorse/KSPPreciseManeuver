@@ -25,252 +25,251 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-using System.Collections.Generic;
+//using System.Collections.Generic;
 using KSP.UI;
 using KSP.UI.Screens;
 using UnityEngine;
 
 namespace KSPPreciseManeuver {
-using UI;
-[KSPAddon (KSPAddon.Startup.MainMenu, true)]
-class PreciseManeuverToolbar : MonoBehaviour, IMenuControl {
+  [KSPAddon (KSPAddon.Startup.MainMenu, true)]
+  class PreciseManeuverToolbar : MonoBehaviour, UI.IMenuControl {
 
-  private ApplicationLauncherButton appButton = null;
-  private Texture appButtonTexture;
+    private ApplicationLauncherButton appButton = null;
+    private Texture appButtonTexture;
 
-  private ToolbarMenu m_ToolbarMenu;
-  private GameObject m_MenuObject;
-  private GameObject m_MenuPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject>("PreciseManeuverMenu");
+    private UI.ToolbarMenu m_ToolbarMenu;
+    private GameObject m_MenuObject;
+    private GameObject m_MenuPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject>("PreciseManeuverMenu");
 
-  private bool m_MenuPointerIn = false;
+    private bool m_MenuPointerIn = false;
 
-  public bool IsMainWindowVisible {
-    get { return PreciseManeuverConfig.Instance.showMainWindow && NodeTools.patchedConicsUnlocked; }
+    public bool IsMainWindowVisible {
+      get { return PreciseManeuverConfig.Instance.ShowMainWindow && NodeTools.PatchedConicsUnlocked; }
 
-    set { PreciseManeuverConfig.Instance.showMainWindow = value; }
-  }
-
-  public bool IsKeybindingsVisible {
-    get { return PreciseManeuverConfig.Instance.showKeymapperWindow; }
-
-    set { PreciseManeuverConfig.Instance.showKeymapperWindow = value; }
-  }
-
-  public bool IsInBackground {
-    get { return PreciseManeuverConfig.Instance.isInBackground; }
-    set { PreciseManeuverConfig.Instance.isInBackground = value; }
-  }
-
-  public void ClampToScreen (RectTransform rectTransform) {
-    UIMasterController.ClampToScreen (rectTransform, Vector2.zero);
-  }
-
-  private class SectionModule : ISectionControl {
-    PreciseManeuverConfig.ModuleType _type;
-
-    internal SectionModule (PreciseManeuverConfig.ModuleType type) {
-      _type = type;
-    }
-    public bool IsVisible {
-      get { return PreciseManeuverConfig.Instance.getModuleState (_type); }
-
-      set { PreciseManeuverConfig.Instance.setModuleState (_type, value); }
+      set { PreciseManeuverConfig.Instance.ShowMainWindow = value; }
     }
 
-    public string Name {
-      get { return PreciseManeuverConfig.getModuleName (_type); }
-    }
-  }
+    public bool IsKeybindingsVisible {
+      get { return PreciseManeuverConfig.Instance.ShowKeymapperWindow; }
 
-  public IList<ISectionControl> GetSections () {
-    var rez = new List<ISectionControl>();
-    foreach (PreciseManeuverConfig.ModuleType type in System.Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType)))
-      rez.Add (new SectionModule (type));
-    return rez;
-  }
-
-  public bool IsOn {
-    get {
-      return appButton != null &&
-             appButton.toggleButton.Interactable &&
-             appButton.toggleButton.CurrentState == UIRadioButton.State.True;
+      set { PreciseManeuverConfig.Instance.ShowKeymapperWindow = value; }
     }
-    set {
+
+    public bool IsInBackground {
+      get { return PreciseManeuverConfig.Instance.IsInBackground; }
+      set { PreciseManeuverConfig.Instance.IsInBackground = value; }
+    }
+
+    public void ClampToScreen (RectTransform rectTransform) {
+      UIMasterController.ClampToScreen (rectTransform, Vector2.zero);
+    }
+
+    private class SectionModule : UI.ISectionControl {
+      PreciseManeuverConfig.ModuleType _type;
+
+      internal SectionModule (PreciseManeuverConfig.ModuleType type) {
+        _type = type;
+      }
+      public bool IsVisible {
+        get { return PreciseManeuverConfig.Instance.GetModuleState (_type); }
+
+        set { PreciseManeuverConfig.Instance.SetModuleState (_type, value); }
+      }
+
+      public string Name {
+        get { return PreciseManeuverConfig.GetModuleName (_type); }
+      }
+    }
+
+    public System.Collections.Generic.IList<UI.ISectionControl> GetSections () {
+      var rez = new System.Collections.Generic.List<UI.ISectionControl>();
+      foreach (PreciseManeuverConfig.ModuleType type in System.Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType)))
+        rez.Add (new SectionModule (type));
+      return rez;
+    }
+
+    public bool IsOn {
+      get {
+        return appButton != null &&
+               appButton.toggleButton.Interactable &&
+               appButton.toggleButton.CurrentState == UIRadioButton.State.True;
+      }
+      set {
+        if (appButton == null)
+          return;
+
+        if (value)
+          SetOn ();
+        else
+          SetOff ();
+      }
+    }
+
+    public float scaleGUIValue {
+      get {
+        return PreciseManeuverConfig.Instance.GUIScale;
+      }
+      set {
+        PreciseManeuverConfig.Instance.GUIScale = value;
+      }
+    }
+
+    public void Disable () {
+      if (appButton != null && appButton.toggleButton.Interactable)
+        appButton.Disable ();
+    }
+
+    public void Enable () {
+      if (appButton != null && appButton.toggleButton.Interactable == false)
+        appButton.Enable ();
+    }
+
+    public Vector3 GetAnchor () {
       if (appButton == null)
-        return;
+        return Vector3.zero;
 
-      if (value)
-        SetOn();
-      else
-        SetOff();
+      Vector3 anchor = appButton.GetAnchor();
+
+      anchor.x -= 3.0f;
+
+      return anchor;
     }
-  }
 
-  public float scaleGUIValue {
-    get {
-      return PreciseManeuverConfig.Instance.guiScale;
+    public void SetOff () {
+      Enable ();
+      if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.False)
+        appButton.SetFalse ();
     }
-    set {
-      PreciseManeuverConfig.Instance.guiScale = value;
+
+    public void SetOn () {
+      Enable ();
+      if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.True)
+        appButton.SetTrue ();
     }
-  }
 
-  public void Disable () {
-    if (appButton != null && appButton.toggleButton.Interactable)
-      appButton.Disable ();
-  }
-
-  public void Enable () {
-    if (appButton != null && appButton.toggleButton.Interactable == false)
-      appButton.Enable ();
-  }
-
-  public Vector3 GetAnchor () {
-    if (appButton == null)
-      return Vector3.zero;
-
-    Vector3 anchor = appButton.GetAnchor();
-
-    anchor.x -= 3.0f;
-
-    return anchor;
-  }
-
-  public void SetOff () {
-    Enable ();
-    if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.False)
-      appButton.SetFalse ();
-  }
-
-  public void SetOn () {
-    Enable ();
-    if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.True)
-      appButton.SetTrue ();
-  }
-
-  public void OnMenuPointerEnter () {
+    public void OnMenuPointerEnter () {
       m_MenuPointerIn = true;
       InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverMenuControlLock");
-  }
+    }
 
-  public void OnMenuPointerExit () {
+    public void OnMenuPointerExit () {
       m_MenuPointerIn = false;
       InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
-  }
-
-  internal void Awake () {
-    DontDestroyOnLoad (this);
-
-    // Precise Maneuver Icon
-    if (appButtonTexture == null)
-      appButtonTexture = PreciseManeuverConfig.Instance.prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
-
-    // subscribe event listeners
-    GameEvents.onGUIApplicationLauncherReady.Add (OnGUIApplicationLauncherReady);
-    GameEvents.onGUIApplicationLauncherUnreadifying.Add (OnGUIApplicationLauncherUnreadifying);
-    GameEvents.onHideUI.Add (OnHideUI);
-    GameEvents.onShowUI.Add (OnShowUI);
-    GameEvents.OnMapEntered.Add (ShowMenuIfEnabled);
-    GameEvents.OnMapExited.Add (HideMenu);
-  }
-
-  protected virtual void OnDestroy () {
-    // unsubscribe event listeners
-    GameEvents.onGUIApplicationLauncherReady.Remove (OnGUIApplicationLauncherReady);
-    GameEvents.onGUIApplicationLauncherUnreadifying.Remove (OnGUIApplicationLauncherUnreadifying);
-    GameEvents.onHideUI.Remove (OnHideUI);
-    GameEvents.onShowUI.Remove (OnShowUI);
-    GameEvents.OnMapEntered.Remove (ShowMenuIfEnabled);
-    GameEvents.OnMapExited.Remove (HideMenu);
-  }
-
-  private void OnGUIApplicationLauncherReady () {
-    // create button
-    if (ApplicationLauncher.Ready && appButton == null)
-      appButton = ApplicationLauncher.Instance.AddModApplication (ShowMenu, HideMenu, ShowMenu, HideMenuIfDisabled, Enable, Disable,
-                                                                  ApplicationLauncher.AppScenes.MAPVIEW, appButtonTexture);
-  }
-
-  private void OnGUIApplicationLauncherUnreadifying (GameScenes scene) {
-    // remove button
-    if (appButton != null) {
-      Close ();
-      ApplicationLauncher.Instance.RemoveModApplication (appButton);
-      appButton = null;
     }
-  }
 
-  private void OnHideUI () {
-    PreciseManeuverConfig.Instance.uiActive = false;
-    HideMenu ();
-  }
+    internal void Awake () {
+      DontDestroyOnLoad (this);
 
-  private void OnShowUI () {
-    PreciseManeuverConfig.Instance.uiActive = true;
-    ShowMenuIfEnabled ();
-  }
+      // Precise Maneuver Icon
+      if (appButtonTexture == null)
+        appButtonTexture = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
 
-  protected void ShowMenu () {
-    Open ();
-  }
+      // subscribe event listeners
+      GameEvents.onGUIApplicationLauncherReady.Add (OnGUIApplicationLauncherReady);
+      GameEvents.onGUIApplicationLauncherUnreadifying.Add (OnGUIApplicationLauncherUnreadifying);
+      GameEvents.onHideUI.Add (OnHideUI);
+      GameEvents.onShowUI.Add (OnShowUI);
+      GameEvents.OnMapEntered.Add (ShowMenuIfEnabled);
+      GameEvents.OnMapExited.Add (HideMenu);
+    }
 
-  private void ShowMenuIfEnabled () {
-    if (IsOn)
+    protected virtual void OnDestroy () {
+      // unsubscribe event listeners
+      GameEvents.onGUIApplicationLauncherReady.Remove (OnGUIApplicationLauncherReady);
+      GameEvents.onGUIApplicationLauncherUnreadifying.Remove (OnGUIApplicationLauncherUnreadifying);
+      GameEvents.onHideUI.Remove (OnHideUI);
+      GameEvents.onShowUI.Remove (OnShowUI);
+      GameEvents.OnMapEntered.Remove (ShowMenuIfEnabled);
+      GameEvents.OnMapExited.Remove (HideMenu);
+    }
+
+    private void OnGUIApplicationLauncherReady () {
+      // create button
+      if (ApplicationLauncher.Ready && appButton == null)
+        appButton = ApplicationLauncher.Instance.AddModApplication (ShowMenu, HideMenu, ShowMenu, HideMenuIfDisabled, Enable, Disable,
+                                                                    ApplicationLauncher.AppScenes.MAPVIEW, appButtonTexture);
+    }
+
+    private void OnGUIApplicationLauncherUnreadifying (GameScenes scene) {
+      // remove button
+      if (appButton != null) {
+        Close ();
+        ApplicationLauncher.Instance.RemoveModApplication (appButton);
+        appButton = null;
+      }
+    }
+
+    private void OnHideUI () {
+      PreciseManeuverConfig.Instance.UiActive = false;
+      HideMenu ();
+    }
+
+    private void OnShowUI () {
+      PreciseManeuverConfig.Instance.UiActive = true;
+      ShowMenuIfEnabled ();
+    }
+
+    protected void ShowMenu () {
       Open ();
-  }
+    }
 
-  private void HideMenu () {
-    Close ();
-  }
+    private void ShowMenuIfEnabled () {
+      if (IsOn)
+        Open ();
+    }
 
-  protected void HideMenuIfDisabled () {
-    if (!IsOn && !m_MenuPointerIn)
+    private void HideMenu () {
       Close ();
-  }
-
-  private void Close () {
-    if (m_ToolbarMenu != null) {
-      if (!m_ToolbarMenu.IsFadingOut)
-        m_ToolbarMenu.fadeClose ();
-      InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
-    } else if (m_MenuObject != null) {
-      Destroy (m_MenuObject);
-      InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
-    }
-  }
-
-  private void Open () {
-    // fade menu in if already open
-    if (m_ToolbarMenu != null && m_ToolbarMenu.IsFadingOut) {
-      m_ToolbarMenu.fadeIn ();
-      return;
     }
 
-    if (m_MenuPrefab == null || m_MenuObject != null)
-      return;
-
-    m_MenuObject = Instantiate (m_MenuPrefab, GetAnchor (), Quaternion.identity) as GameObject;
-    if (m_MenuObject == null)
-      return;
-
-    m_MenuObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
-    m_ToolbarMenu = m_MenuObject.GetComponent<ToolbarMenu> ();
-    if (m_ToolbarMenu != null) {
-      m_ToolbarMenu.SetMenuControl (this);
-      if (!NodeTools.patchedConicsUnlocked)
-        m_ToolbarMenu.DisableMainWindow ();
+    protected void HideMenuIfDisabled () {
+      if (!IsOn && !m_MenuPointerIn)
+        Close ();
     }
-    GUIComponentManager.processStyle (m_MenuObject);
-    GUIComponentManager.processLocalization (m_MenuObject);
-    GUIComponentManager.replaceLabelsWithTMPro (m_MenuObject);
-  }
 
-  public void registerUpdateAction (UnityEngine.Events.UnityAction action) {
-    PreciseManeuverConfig.Instance.listenToShowChange (action);
-  }
+    private void Close () {
+      if (m_ToolbarMenu != null) {
+        if (!m_ToolbarMenu.IsFadingOut)
+          m_ToolbarMenu.FadeClose ();
+        InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
+      } else if (m_MenuObject != null) {
+        Destroy (m_MenuObject);
+        InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
+      }
+    }
 
-  public void deregisterUpdateAction (UnityEngine.Events.UnityAction action) {
-    PreciseManeuverConfig.Instance.removeListener (action);
+    private void Open () {
+      // fade menu in if already open
+      if (m_ToolbarMenu != null && m_ToolbarMenu.IsFadingOut) {
+        m_ToolbarMenu.FadeIn ();
+        return;
+      }
+
+      if (m_MenuPrefab == null || m_MenuObject != null)
+        return;
+
+      m_MenuObject = Instantiate (m_MenuPrefab, GetAnchor (), Quaternion.identity) as GameObject;
+      if (m_MenuObject == null)
+        return;
+
+      m_MenuObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+      m_ToolbarMenu = m_MenuObject.GetComponent<UI.ToolbarMenu> ();
+      if (m_ToolbarMenu != null) {
+        m_ToolbarMenu.SetControl (this);
+        if (!NodeTools.PatchedConicsUnlocked)
+          m_ToolbarMenu.DisableMainWindow ();
+      }
+      GUIComponentManager.ProcessStyle (m_MenuObject);
+      GUIComponentManager.ProcessLocalization (m_MenuObject);
+      GUIComponentManager.ReplaceLabelsWithTMPro (m_MenuObject);
+    }
+
+    public void registerUpdateAction (UnityEngine.Events.UnityAction action) {
+      PreciseManeuverConfig.Instance.ListenToShowChange (action);
+    }
+
+    public void deregisterUpdateAction (UnityEngine.Events.UnityAction action) {
+      PreciseManeuverConfig.Instance.RemoveListener (action);
+    }
   }
-}
 }

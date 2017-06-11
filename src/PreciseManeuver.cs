@@ -31,215 +31,213 @@ using UnityEngine;
 using KSP.Localization;
 
 namespace KSPPreciseManeuver {
-using UI;
-[KSPAddon(KSPAddon.Startup.Flight, false)]
-internal class PreciseManeuver : MonoBehaviour {
+  [KSPAddon (KSPAddon.Startup.Flight, false)]
+  internal class PreciseManeuver : MonoBehaviour {
+    private MainWindow mainWindow = new MainWindow();
+    private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys();
 
-  private MainWindow mainWindow = new MainWindow();
-  private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys();
+    private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
+    private NodeManager manager = NodeManager.Instance;
 
-  private PreciseManeuverConfig config = PreciseManeuverConfig.Instance;
-  private NodeManager manager = NodeManager.Instance;
+    private UI.DraggableWindow m_KeybindingsWindow = null;
+    private GameObject         m_KeybindingsWindowObject = null;
 
-  private DraggableWindow m_KeybindingsWindow = null;
-  private GameObject      m_KeybindingsWindowObject = null;
+    private UI.DraggableWindow m_MainWindow = null;
+    private GameObject         m_MainWindowObject = null;
 
-  private DraggableWindow m_MainWindow = null;
-  private GameObject      m_MainWindowObject = null;
+    private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
 
-  private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
+    private int waitForGizmo = 0;
 
-  private int waitForGizmo = 0;
+    internal void Start () {
+      KACWrapper.InitKACWrapper ();
+    }
 
-  internal void Start () {
-    KACWrapper.InitKACWrapper ();
-  }
+    internal void OnDisable () {
+      CloseKeybindingsWindow ();
+      CloseMainWindow ();
+      config.SaveConfig ();
+    }
 
-  internal void OnDisable() {
-    closeKeybindingsWindow();
-    closeMainWindow ();
-    config.saveConfig ();
-  }
+    internal void Update () {
+      if (!NodeTools.PatchedConicsUnlocked)
+        return;
 
-  internal void Update() {
-    if (!NodeTools.patchedConicsUnlocked)
-      return;
+      if (config.ShowKeymapperWindow && config.UiActive)
+        OpenKeybindingsWindow ();
+      else
+        CloseKeybindingsWindow ();
 
-    if (config.showKeymapperWindow && config.uiActive)
-      openKeybindingsWindow ();
-    else
-      closeKeybindingsWindow ();
+      if (config.ShowMainWindow && config.UiActive && CanShowNodeEditor)
+        OpenMainWindow ();
+      else
+        CloseMainWindow ();
 
-    if (config.showMainWindow && config.uiActive && canShowNodeEditor)
-      openMainWindow ();
-    else
-      closeMainWindow ();
+      if (m_KeybindingsWindowObject != null)
+        hotkeys.ProcessHotkeySet ();
 
-    if (m_KeybindingsWindowObject != null)
-      hotkeys.processHotkeySet ();
+      if (!FlightDriver.Pause && CanShowNodeEditor) {
+        hotkeys.ProcessGlobalHotkeys ();
+        if (m_MainWindowObject != null) {
+          hotkeys.ProcessRegularHotkeys ();
 
-    if (!FlightDriver.Pause && canShowNodeEditor) {
-      hotkeys.processGlobalHotkeys();
-      if (m_MainWindowObject != null) {
-        hotkeys.processRegularHotkeys();
-
-        if (Input.GetMouseButtonUp (0))
-          waitForGizmo = 3;
-        if (waitForGizmo > 0) {
-          if (waitForGizmo == 1)
-            manager.searchNewGizmo ();
-          waitForGizmo--;
+          if (Input.GetMouseButtonUp (0))
+            waitForGizmo = 3;
+          if (waitForGizmo > 0) {
+            if (waitForGizmo == 1)
+              manager.SearchNewGizmo ();
+            waitForGizmo--;
+          }
+          manager.UpdateNodes ();
         }
-        manager.updateNodes ();
+      }
+
+      if (m_MainWindowObject == null) {
+        manager.Clear ();
       }
     }
 
-    if (m_MainWindowObject == null) {
-      manager.clear ();
-    }
-  }
+    #region MainWindow
 
-  #region MainWindow
-
-  private void openMainWindow () {
-    // fade in if already open
-    if (m_MainWindow != null) {
-      m_MainWindow.MoveToBackground (config.isInBackground);
-      if (m_MainWindow.IsFadingOut)
-        m_MainWindow.fadeIn ();
-      if (config.modulesChanged)
-        mainWindow.updateMainWindow (m_MainWindow);
-      return;
-    }
-
-    if (m_WindowPrefab == null || m_MainWindowObject != null)
-      return;
-
-    // create object
-    Vector3 pos = new Vector3(config.mainWindowPos.x, config.mainWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
-    m_MainWindowObject = Instantiate (m_WindowPrefab, pos, Quaternion.identity) as GameObject;
-    if (m_MainWindowObject == null)
-      return;
-
-    m_MainWindow = m_MainWindowObject.GetComponent<DraggableWindow> ();
-    if (m_MainWindow != null) {
-      m_MainWindow.SetTitle (Localizer.Format("precisemaneuver_caption"));
-      m_MainWindow.setMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
-      mainWindow.clearMainWindow ();
-      mainWindow.updateMainWindow (m_MainWindow);
-      m_MainWindow.MoveToBackground (config.isInBackground);
-      m_MainWindow.OnWindowPointerEnter = setWindow1InputLock;
-      m_MainWindow.OnWindowPointerExit = resetWindow1InputLock;
-    }
-
-    GUIComponentManager.processStyle (m_MainWindowObject);
-    GUIComponentManager.replaceLabelsWithTMPro (m_MainWindowObject);
-
-    // set object as a child of the main canvas
-    m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
-
-    // do the scaling after the parent has been set
-    scaleMainWindow ();
-    config.listenToScaleChange (scaleMainWindow);
-  }
-
-  private void scaleMainWindow () {
-    if (m_MainWindowObject == null)
-      return;
-    m_MainWindowObject.GetComponent<RectTransform> ().localScale = Vector3.one * config.guiScale;
-  }
-
-  private void closeMainWindow () {
-    if (m_MainWindow != null) {
-      if (!m_MainWindow.IsFadingOut) {
-        config.mainWindowPos = m_MainWindow.RectTransform.position;
-        m_MainWindow.fadeClose ();
-        config.removeListener (scaleMainWindow);
-        resetWindow1InputLock ();
+    private void OpenMainWindow () {
+      // fade in if already open
+      if (m_MainWindow != null) {
+        m_MainWindow.MoveToBackground (config.IsInBackground);
+        if (m_MainWindow.IsFadingOut)
+          m_MainWindow.FadeIn ();
+        if (config.ModulesChanged)
+          mainWindow.UpdateMainWindow (m_MainWindow);
+        return;
       }
-    } else if (m_MainWindowObject != null) {
-      Destroy (m_MainWindowObject);
-      mainWindow.clearMainWindow ();
-      config.removeListener (scaleMainWindow);
-      resetWindow1InputLock ();
-    }
-  }
 
-  #endregion
+      if (m_WindowPrefab == null || m_MainWindowObject != null)
+        return;
 
-  #region KeybindingsWindow
+      // create object
+      Vector3 pos = new Vector3(config.MainWindowPos.x, config.MainWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
+      m_MainWindowObject = Instantiate (m_WindowPrefab);
+      if (m_MainWindowObject == null)
+        return;
 
-  private void openKeybindingsWindow() {
-    // fade in if already open
-    if (m_KeybindingsWindow != null) {
-      if (m_KeybindingsWindow.IsFadingOut)
-        m_KeybindingsWindow.fadeIn();
-      return;
-    }
-
-    if (m_WindowPrefab == null || m_KeybindingsWindowObject != null)
-      return;
-
-    // create window object
-    Vector3 pos = new Vector3(config.keymapperWindowPos.x, config.keymapperWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
-    m_KeybindingsWindowObject = Instantiate(m_WindowPrefab, pos, Quaternion.identity) as GameObject;
-    if (m_KeybindingsWindowObject == null)
-      return;
-
-    // populate window
-    m_KeybindingsWindow = m_KeybindingsWindowObject.GetComponent<DraggableWindow>();
-    if (m_KeybindingsWindow != null) {
-      m_KeybindingsWindow.SetTitle(Localizer.Format("precisemaneuver_keybindings_caption"));
-      m_KeybindingsWindow.setMainCanvasTransform(MainCanvasUtil.MainCanvasRect);
-      hotkeys.fillKeymapperWindow(m_KeybindingsWindow);
-      m_KeybindingsWindow.OnWindowPointerEnter = setWindow2InputLock;
-      m_KeybindingsWindow.OnWindowPointerExit = resetWindow2InputLock;
-    }
-
-    GUIComponentManager.processStyle(m_KeybindingsWindowObject);
-    GUIComponentManager.processLocalization(m_KeybindingsWindowObject);
-    GUIComponentManager.replaceLabelsWithTMPro(m_KeybindingsWindowObject);
-
-    // set object as a child of the main canvas
-    m_KeybindingsWindowObject.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
-
-  }
-
-  private void closeKeybindingsWindow () {
-    if (m_KeybindingsWindow != null) {
-      if (!m_KeybindingsWindow.IsFadingOut) {
-        config.keymapperWindowPos = m_KeybindingsWindow.RectTransform.position;
-        m_KeybindingsWindow.fadeClose ();
-        resetWindow2InputLock ();
+      m_MainWindow = m_MainWindowObject.GetComponent<UI.DraggableWindow> ();
+      if (m_MainWindow != null) {
+        m_MainWindow.SetTitle (Localizer.Format ("precisemaneuver_caption"));
+        m_MainWindow.SetMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
+        mainWindow.ClearMainWindow ();
+        mainWindow.UpdateMainWindow (m_MainWindow);
+        m_MainWindow.MoveToBackground (config.IsInBackground);
+        m_MainWindow.setWindowInputLock = SetWindow1InputLock;
+        m_MainWindow.resetWindowInputLock = ResetWindow1InputLock;
       }
-    } else if (m_KeybindingsWindowObject != null) {
-      Destroy (m_KeybindingsWindowObject);
-      resetWindow2InputLock ();
+
+      GUIComponentManager.ProcessStyle (m_MainWindowObject);
+      GUIComponentManager.ReplaceLabelsWithTMPro (m_MainWindowObject);
+
+      // set object as a child of the main canvas
+      m_MainWindowObject.transform.position = pos;
+      m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+
+      // do the scaling after the parent has been set
+      ScaleMainWindow ();
+      config.ListenToScaleChange (ScaleMainWindow);
+    }
+
+    private void ScaleMainWindow () {
+      if (m_MainWindowObject == null)
+        return;
+      m_MainWindowObject.GetComponent<RectTransform> ().localScale = Vector3.one * config.GUIScale;
+    }
+
+    private void CloseMainWindow () {
+      if (m_MainWindow != null) {
+        if (!m_MainWindow.IsFadingOut) {
+          config.MainWindowPos = m_MainWindow.WindowPosition;
+          m_MainWindow.FadeClose ();
+          config.RemoveListener (ScaleMainWindow);
+          ResetWindow1InputLock ();
+        }
+      } else if (m_MainWindowObject != null) {
+        Destroy (m_MainWindowObject);
+        mainWindow.ClearMainWindow ();
+        config.RemoveListener (ScaleMainWindow);
+        ResetWindow1InputLock ();
+      }
+    }
+
+    #endregion
+
+    #region KeybindingsWindow
+
+    private void OpenKeybindingsWindow () {
+      // fade in if already open
+      if (m_KeybindingsWindow != null) {
+        if (m_KeybindingsWindow.IsFadingOut)
+          m_KeybindingsWindow.FadeIn ();
+        return;
+      }
+
+      if (m_WindowPrefab == null || m_KeybindingsWindowObject != null)
+        return;
+
+      // create window object
+      Vector3 pos = new Vector3(config.KeymapperWindowPos.x, config.KeymapperWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
+      m_KeybindingsWindowObject = Instantiate (m_WindowPrefab, pos, Quaternion.identity) as GameObject;
+      if (m_KeybindingsWindowObject == null)
+        return;
+
+      // populate window
+      m_KeybindingsWindow = m_KeybindingsWindowObject.GetComponent<UI.DraggableWindow> ();
+      if (m_KeybindingsWindow != null) {
+        m_KeybindingsWindow.SetTitle (Localizer.Format ("precisemaneuver_keybindings_caption"));
+        m_KeybindingsWindow.SetMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
+        hotkeys.FillKeymapperWindow (m_KeybindingsWindow);
+        m_KeybindingsWindow.setWindowInputLock = SetWindow2InputLock;
+        m_KeybindingsWindow.resetWindowInputLock = ResetWindow2InputLock;
+      }
+
+      GUIComponentManager.ProcessStyle (m_KeybindingsWindowObject);
+      GUIComponentManager.ProcessLocalization (m_KeybindingsWindowObject);
+      GUIComponentManager.ReplaceLabelsWithTMPro (m_KeybindingsWindowObject);
+
+      // set object as a child of the main canvas
+      m_KeybindingsWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+    }
+
+    private void CloseKeybindingsWindow () {
+      if (m_KeybindingsWindow != null) {
+        if (!m_KeybindingsWindow.IsFadingOut) {
+          config.KeymapperWindowPos = m_KeybindingsWindow.WindowPosition;
+          m_KeybindingsWindow.FadeClose ();
+          ResetWindow2InputLock ();
+        }
+      } else if (m_KeybindingsWindowObject != null) {
+        Destroy (m_KeybindingsWindowObject);
+        ResetWindow2InputLock ();
+      }
+    }
+
+    #endregion
+
+    private void SetWindow1InputLock () {
+      InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow1ControlLock");
+    }
+    private void ResetWindow1InputLock () {
+      InputLockManager.RemoveControlLock ("PreciseManeuverWindow1ControlLock");
+    }
+    private void SetWindow2InputLock () {
+      InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow2ControlLock");
+    }
+    private void ResetWindow2InputLock () {
+      InputLockManager.RemoveControlLock ("PreciseManeuverWindow2ControlLock");
+    }
+
+    private bool CanShowNodeEditor {
+      get {
+        if (!NodeTools.PatchedConicsUnlocked)
+          return false;
+        PatchedConicSolver solver = FlightGlobals.ActiveVessel.patchedConicSolver;
+        return (FlightGlobals.ActiveVessel != null) && MapView.MapIsEnabled && (solver != null) && (solver.maneuverNodes.Count > 0);
+      }
     }
   }
-
-  #endregion
-
-  private void setWindow1InputLock () {
-    InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow1ControlLock");
-  }
-  private void resetWindow1InputLock () {
-    InputLockManager.RemoveControlLock ("PreciseManeuverWindow1ControlLock");
-  }
-  private void setWindow2InputLock () {
-    InputLockManager.SetControlLock (ControlTypes.MAP_UI, "PreciseManeuverWindow2ControlLock");
-  }
-  private void resetWindow2InputLock () {
-    InputLockManager.RemoveControlLock ("PreciseManeuverWindow2ControlLock");
-  }
-
-  private bool canShowNodeEditor {
-    get {
-      if (!NodeTools.patchedConicsUnlocked)
-        return false;
-      PatchedConicSolver solver = FlightGlobals.ActiveVessel.patchedConicSolver;
-      return (FlightGlobals.ActiveVessel != null) && MapView.MapIsEnabled && (solver != null) && (solver.maneuverNodes.Count > 0);
-    }
-  }
-}
 }

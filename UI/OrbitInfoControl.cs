@@ -30,46 +30,46 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class OrbitInfoControl : MonoBehaviour {
-  [SerializeField]
-  private Text m_ApValue = null;
-  private UnityAction<string> apValueUpdate;
+  [RequireComponent (typeof (RectTransform))]
+  public class OrbitInfoControl : MonoBehaviour {
+    [SerializeField]
+    private Text m_ApValue = null;
+    private UnityAction<string> apValueUpdate;
 
-  [SerializeField]
-  private Text m_PeValue = null;
-  private UnityAction<string> peValueUpdate;
+    [SerializeField]
+    private Text m_PeValue = null;
+    private UnityAction<string> peValueUpdate;
 
-  [SerializeField]
-  private Text m_InclValue = null;
-  private UnityAction<string> inclValueUpdate;
+    [SerializeField]
+    private Text m_InclValue = null;
+    private UnityAction<string> inclValueUpdate;
 
-  [SerializeField]
-  private Text m_EccValue = null;
-  private UnityAction<string> eccValueUpdate;
+    [SerializeField]
+    private Text m_EccValue = null;
+    private UnityAction<string> eccValueUpdate;
 
-  private IOrbitInfoControl m_control = null;
+    private IOrbitInfoControl m_Control = null;
 
-  public void SetControl(IOrbitInfoControl control) {
-    m_control = control;
-    apValueUpdate = control.replaceTextComponentWithTMPro (m_ApValue);
-    peValueUpdate = control.replaceTextComponentWithTMPro (m_PeValue);
-    inclValueUpdate = control.replaceTextComponentWithTMPro (m_InclValue);
-    eccValueUpdate = control.replaceTextComponentWithTMPro (m_EccValue);
-    updateControl ();
-    m_control.registerUpdateAction (updateControl);
+    public void SetControl (IOrbitInfoControl control) {
+      m_Control = control;
+      apValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_ApValue);
+      peValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_PeValue);
+      inclValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_InclValue);
+      eccValueUpdate = m_Control.ReplaceTextComponentWithTMPro (m_EccValue);
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
+    }
+
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
+
+    public void UpdateGUI () {
+      apValueUpdate?.Invoke (m_Control.ApoapsisValue);
+      peValueUpdate?.Invoke (m_Control.PeriapsisValue);
+      inclValueUpdate?.Invoke (m_Control.InclinationValue);
+      eccValueUpdate?.Invoke (m_Control.EccentricityValue);
+    }
   }
-
-  public void OnDestroy () {
-    m_control.deregisterUpdateAction (updateControl);
-    m_control = null;
-  }
-
-  public void updateControl () {
-    apValueUpdate?.Invoke (m_control.ApoapsisValue);
-    peValueUpdate?.Invoke (m_control.PeriapsisValue);
-    inclValueUpdate?.Invoke (m_control.InclinationValue);
-    eccValueUpdate?.Invoke (m_control.EccentricityValue);
-  }
-}
 }

@@ -486,7 +486,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 11423478}
-          m_MethodName: inputFieldSelected
+          m_MethodName: InputFieldSelected
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -503,7 +503,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 11423478}
-          m_MethodName: inputFieldDeselected
+          m_MethodName: InputFieldDeselected
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -594,7 +594,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11423478}
-        m_MethodName: cancelButtonAction
+        m_MethodName: CancelButtonAction
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1021,8 +1021,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11423478}
-        m_MethodName: inputFieldSubmit
-        m_Mode: 1
+        m_MethodName: InputFieldSubmit
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1037,7 +1037,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11423478}
-        m_MethodName: inputFieldChange
+        m_MethodName: InputFieldChange
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1330,7 +1330,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11423478}
-        m_MethodName: okButtonAction
+        m_MethodName: OKButtonAction
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2312,7 +2312,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 11423478}
-        m_MethodName: chooserValueChange
+        m_MethodName: ChooserValueChange
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

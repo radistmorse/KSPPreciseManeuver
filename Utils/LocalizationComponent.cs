@@ -29,22 +29,22 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (Text))]
-public class LocalizationComponent : MonoBehaviour {
-  [SerializeField]
-  private string m_LocalizationTemplate = "";
-  [SerializeField]
-  private string m_UntranslatablePrefix = "";
-  [SerializeField]
-  private string m_UntranslatablePostfix = "";
+  [RequireComponent (typeof (Text))]
+  public class LocalizationComponent : MonoBehaviour {
+    [SerializeField]
+    private string m_LocalizationTemplate = "";
+    [SerializeField]
+    private string m_UntranslatablePrefix = "";
+    [SerializeField]
+    private string m_UntranslatablePostfix = "";
 
-    public string getTemplate () {
-    return m_LocalizationTemplate;
-  }
+    public string GetTemplate () {
+      return m_LocalizationTemplate;
+    }
 
-  public void setLocalizedString (string localizedString) {
-    Text text = GetComponent<Text>();
-    text.text = m_UntranslatablePrefix + localizedString + m_UntranslatablePostfix;
+    public void SetLocalizedString (string localizedString) {
+      Text text = GetComponent<Text>();
+      text.text = m_UntranslatablePrefix + localizedString + m_UntranslatablePostfix;
+    }
   }
-}
 }

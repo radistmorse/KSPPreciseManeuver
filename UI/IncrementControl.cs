@@ -30,56 +30,55 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 namespace KSPPreciseManeuver.UI {
-[RequireComponent (typeof (RectTransform))]
-public class IncrementControl : MonoBehaviour {
-  [SerializeField]
-  private Toggle m_Toggle1 = null;
-  [SerializeField]
-  private Toggle m_Toggle2 = null;
-  [SerializeField]
-  private Toggle m_Toggle3 = null;
-  [SerializeField]
-  private Toggle m_Toggle4 = null;
-  [SerializeField]
-  private Toggle m_Toggle5 = null;
+  [RequireComponent (typeof (RectTransform))]
+  public class IncrementControl : MonoBehaviour {
+    [SerializeField]
+    private Toggle m_Toggle1 = null;
+    [SerializeField]
+    private Toggle m_Toggle2 = null;
+    [SerializeField]
+    private Toggle m_Toggle3 = null;
+    [SerializeField]
+    private Toggle m_Toggle4 = null;
+    [SerializeField]
+    private Toggle m_Toggle5 = null;
 
-  private IIncrementControl m_incrementControl = null;
+    private IIncrementControl m_Control = null;
 
-  public void SetIncrementControl(IIncrementControl incrementControl) {
-    m_incrementControl = incrementControl;
-    updateIncrements ();
-    m_incrementControl.registerUpdateAction (updateIncrements);
-  }
-
-  public void OnDestroy () {
-    m_incrementControl.deregisterUpdateAction (updateIncrements);
-    m_incrementControl = null;
-  }
-
-  public void IncrementAction (int num) {
-    if (m_incrementControl != null)
-      m_incrementControl.incrementChanged (num);
-  }
-
-  public void updateIncrements () {
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
-    m_Toggle1.isOn = m_Toggle2.isOn = m_Toggle3.isOn = m_Toggle4.isOn = m_Toggle5.isOn = false;
-    switch (m_incrementControl.getRawIncrement) {
-      case -2: m_Toggle1.isOn = true; break;
-      case -1: m_Toggle2.isOn = true; break;
-      case  0: m_Toggle3.isOn = true; break;
-      case  1: m_Toggle4.isOn = true; break;
-      case  2: m_Toggle5.isOn = true; break;
+    public void SetControl (IIncrementControl control) {
+      m_Control = control;
+      UpdateGUI ();
+      m_Control.RegisterUpdateAction (UpdateGUI);
     }
-    m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
-    m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
-    m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
-    m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
-    m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+
+    public void OnDestroy () {
+      m_Control.DeregisterUpdateAction (UpdateGUI);
+      m_Control = null;
+    }
+
+    public void IncrementAction (int num) {
+      m_Control.incrementChanged (num);
+    }
+
+    public void UpdateGUI () {
+      m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_Toggle1.isOn = m_Toggle2.isOn = m_Toggle3.isOn = m_Toggle4.isOn = m_Toggle5.isOn = false;
+      switch (m_Control.getRawIncrement) {
+        case -2: m_Toggle1.isOn = true; break;
+        case -1: m_Toggle2.isOn = true; break;
+        case 0: m_Toggle3.isOn = true; break;
+        case 1: m_Toggle4.isOn = true; break;
+        case 2: m_Toggle5.isOn = true; break;
+      }
+      m_Toggle1.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+      m_Toggle2.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+      m_Toggle3.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+      m_Toggle4.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+      m_Toggle5.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+    }
   }
-}
 }

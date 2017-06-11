@@ -89,7 +89,7 @@ namespace KSPPreciseManeuver {
         public void Start() {
             // Checkers are identified by the type name and version field name.
             FieldInfo[] fields =
-                getAllTypes()
+                GetAllTypes()
                 .Where(t => t.Name == "CompatibilityChecker")
                 .Select(t => t.GetField("_version", BindingFlags.Static | BindingFlags.NonPublic))
                 .Where(f => f != null)
@@ -183,7 +183,7 @@ namespace KSPPreciseManeuver {
             return IsCompatible() && IsUnityCompatible();// && !IsWin64();
         }
 
-        private static IEnumerable<Type> getAllTypes() {
+        private static IEnumerable<Type> GetAllTypes() {
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
                 Type[] types;
                 try {

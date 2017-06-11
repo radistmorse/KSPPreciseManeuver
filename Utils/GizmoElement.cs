@@ -63,7 +63,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
   private Vector3 _axisMult;
   private bool _axisMultReady = false;
 
-  private Vector3 axisMult {
+  private Vector3 AxisMult {
     get {
       if (!_axisMultReady) {
         switch (m_Type) {
@@ -115,7 +115,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
   public void OnBeginDrag (PointerEventData eventData) {
     m_BeginMousePosition = eventData.position;
     m_dragging = true;
-    m_Control.dragging = true;
+    m_Control.Dragging = true;
     GlowOn ();
   }
 
@@ -133,7 +133,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         ddv = Math.Pow (10, ((proj) / m_ClampDragMax) * 3.0 - 2.0) - 0.01;
       if (proj < 0)
         ddv = 0.01 - Math.Pow (10, ((-proj) / m_ClampDragMin) * 1.0 - 2.0);
-      m_Control.changeddv (axisMult.x * ddv, axisMult.y * ddv, axisMult.z * ddv, 0.0);
+      m_Control.ChangeddV (AxisMult.x * ddv, AxisMult.y * ddv, AxisMult.z * ddv, 0.0);
     } else {
       Vector2 pos = m_drag.localPosition;
       pos.x = m_startPos + proj;
@@ -144,7 +144,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         dut = Math.Pow (10, ((proj - 5) / m_ClampDragMax) * 5 - 1);
       if (proj < 0)
         dut = -Math.Pow (10, ((-proj - 5) / m_ClampDragMin) * 5 - 1);
-      m_Control.changeddv (0.0, 0.0, 0.0, dut);
+      m_Control.ChangeddV (0.0, 0.0, 0.0, dut);
     }
   }
 
@@ -159,8 +159,8 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
       m_drag.localPosition = pos;
     }
     m_dragging = false;
-    m_Control.changeddv (0.0, 0.0, 0.0, 0.0);
-    m_Control.dragging = false;
+    m_Control.ChangeddV (0.0, 0.0, 0.0, 0.0);
+    m_Control.Dragging = false;
     GlowOff ();
   }
 
@@ -175,7 +175,7 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
   }
 
   public void GlowOn () {
-    if (m_dragging || (m_floating && !m_Control.dragging))
+    if (m_dragging || (m_floating && !m_Control.Dragging))
       Select (0f, 1f, 1f, 1.5f);
   }
   public void GlowOff () {
@@ -190,8 +190,8 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     float current = m_glow.color.a;
 
     if (Math.Abs (current - glowto) < 0.1) {
-      setAlpha (glowto);
-      setScale (scaleto);
+      SetAlpha (glowto);
+      SetScale (scaleto);
     } else {
       float duration = m_duration*Math.Abs(glowto-current);
       m_SelectCoroutine = SelectCoroutine (current, glowto, scalefrom, scaleto, duration);
@@ -207,22 +207,22 @@ class GizmoElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     while (progress <= 1.0f) {
       progress += Time.deltaTime / duration;
-      setAlpha (Mathf.Lerp (glowfrom, glowto, progress));
-      setScale (Mathf.Lerp (scalefrom, scaleto, progress));
+      SetAlpha (Mathf.Lerp (glowfrom, glowto, progress));
+      SetScale (Mathf.Lerp (scalefrom, scaleto, progress));
       yield return null;
     }
 
     m_SelectCoroutine = null;
   }
 
-  private void setAlpha (float alpha) {
+  private void SetAlpha (float alpha) {
     if (m_glow != null) {
       var color = m_glow.color;
       color.a = alpha;
       m_glow.color = color;
     }
   }
-  private void setScale (float scale) {
+  private void SetScale (float scale) {
     if (m_scale != null) {
       Vector3 scalevec = new Vector3(scale, scale, 1);
       m_scale.localScale = scalevec;
