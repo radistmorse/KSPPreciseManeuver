@@ -131,14 +131,16 @@ internal class PreciseManeuver : MonoBehaviour {
       m_MainWindow.OnWindowPointerEnter = setWindow1InputLock;
       m_MainWindow.OnWindowPointerExit = resetWindow1InputLock;
     }
-    scaleMainWindow ();
-    config.listenToScaleChange (scaleMainWindow);
 
     GUIComponentManager.processStyle (m_MainWindowObject);
     GUIComponentManager.replaceLabelsWithTMPro (m_MainWindowObject);
 
     // set object as a child of the main canvas
     m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+
+    // do the scaling after the parent has been set
+    scaleMainWindow ();
+    config.listenToScaleChange (scaleMainWindow);
   }
 
   private void scaleMainWindow () {

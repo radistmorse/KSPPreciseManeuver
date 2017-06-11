@@ -506,8 +506,8 @@ internal class PreciseManeuverConfig {
           presets.Add (name, new Vector3d (dx, dy, dz));
         }
       }
-    } catch (Exception) {
-      // do nothing here, the defaults are already set
+    } catch (Exception e) {
+      Debug.Log ("There was an error reading config. That's OK if you're launching the mod the first time. " + e);
     }
   }
 

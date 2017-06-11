@@ -46,14 +46,11 @@ internal class MainWindow {
     internal string value { get; private set; } = "N/A";
     private double current = double.NaN;
     private const double epsilon = 1E-03;
-    private string format = "{0}";
-    private bool abs = false;
-    private bool abbriv = false;
-    internal FastString () { }
-    internal FastString (string format) {
-      this.format = format;
-    }
-    internal FastString (string format, bool abs, bool abbriv) {
+    private string format;
+    private bool abs;
+    private bool abbriv;
+    private FastString () { }
+    internal FastString (string format, bool abs = false, bool abbriv = false) {
       this.format = format;
       this.abs = abs;
       this.abbriv = abbriv;
@@ -1005,8 +1002,8 @@ internal class MainWindow {
 
     internal OrbitInfoControlInterface (MainWindow parent) {
       _parent = parent;
-      _apoapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), true, true);
-      _periapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), true, true);
+      _apoapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), false, true);
+      _periapsis = new FastString ("{0}" + Localizer.Format ("precisemaneuver_meter"), false, true);
     }
     public string ApoapsisValue {
       get {
