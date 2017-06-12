@@ -83,8 +83,12 @@ namespace KSPPreciseManeuver {
 
     public System.Collections.Generic.IList<UI.ISectionControl> GetSections () {
       var rez = new System.Collections.Generic.List<UI.ISectionControl>();
-      foreach (PreciseManeuverConfig.ModuleType type in System.Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType)))
+      foreach (PreciseManeuverConfig.ModuleType type in System.Enum.GetValues (typeof (PreciseManeuverConfig.ModuleType))) {
+        // TimeAlarm and Increment modules do not have a switch
+        if (type == PreciseManeuverConfig.ModuleType.TIME || type == PreciseManeuverConfig.ModuleType.INCR)
+          continue;
         rez.Add (new SectionModule (type));
+      }
       return rez;
     }
 
@@ -248,11 +252,12 @@ namespace KSPPreciseManeuver {
       if (m_MenuPrefab == null || m_MenuObject != null)
         return;
 
-      m_MenuObject = Instantiate (m_MenuPrefab, GetAnchor (), Quaternion.identity) as GameObject;
+      m_MenuObject = Instantiate (m_MenuPrefab);
       if (m_MenuObject == null)
         return;
 
       m_MenuObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+      m_MenuObject.transform.position = GetAnchor ();
       m_ToolbarMenu = m_MenuObject.GetComponent<UI.ToolbarMenu> ();
       if (m_ToolbarMenu != null) {
         m_ToolbarMenu.SetControl (this);

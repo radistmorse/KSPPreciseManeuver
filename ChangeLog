@@ -1,3 +1,9 @@
+2.3.1, 2017-06-12
+- Spanish localization
+- Fix the incorrect scale behaviour
+- Absolute values in orbit info fixed
+- +/- orbit buttons are now repeatable
+
 2.3.0, 2017-06-04
 - KSP 1.3.0
 - Localization support

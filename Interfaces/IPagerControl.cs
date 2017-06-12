@@ -33,7 +33,8 @@ public interface IPagerControl : IControl {
   int maneuverIdx { get; }
   UnityEngine.Canvas Canvas { get; }
 
-  string getManeuverNodeLocalized ();
+  string getLocalizedNode (int idx);
+  string getLocalizedNodeln (int idx);
   string getManeuverTime (int idx);
   string getManeuverDV (int idx);
 

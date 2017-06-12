@@ -125,17 +125,18 @@ namespace KSPPreciseManeuver {
         m_MainWindow.SetMainCanvasTransform (MainCanvasUtil.MainCanvasRect);
         mainWindow.ClearMainWindow ();
         mainWindow.UpdateMainWindow (m_MainWindow);
+        // should be done before moving to background
+        GUIComponentManager.ReplaceLabelsWithTMPro (m_MainWindowObject);
         m_MainWindow.MoveToBackground (config.IsInBackground);
         m_MainWindow.setWindowInputLock = SetWindow1InputLock;
         m_MainWindow.resetWindowInputLock = ResetWindow1InputLock;
       }
 
       GUIComponentManager.ProcessStyle (m_MainWindowObject);
-      GUIComponentManager.ReplaceLabelsWithTMPro (m_MainWindowObject);
 
       // set object as a child of the main canvas
-      m_MainWindowObject.transform.position = pos;
       m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+      m_MainWindowObject.transform.position = pos;
 
       // do the scaling after the parent has been set
       ScaleMainWindow ();
@@ -181,7 +182,7 @@ namespace KSPPreciseManeuver {
 
       // create window object
       Vector3 pos = new Vector3(config.KeymapperWindowPos.x, config.KeymapperWindowPos.y, MainCanvasUtil.MainCanvasRect.position.z);
-      m_KeybindingsWindowObject = Instantiate (m_WindowPrefab, pos, Quaternion.identity) as GameObject;
+      m_KeybindingsWindowObject = Instantiate (m_WindowPrefab);
       if (m_KeybindingsWindowObject == null)
         return;
 
@@ -201,6 +202,7 @@ namespace KSPPreciseManeuver {
 
       // set object as a child of the main canvas
       m_KeybindingsWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
+      m_KeybindingsWindowObject.transform.position = pos;
     }
 
     private void CloseKeybindingsWindow () {

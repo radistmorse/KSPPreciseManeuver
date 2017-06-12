@@ -425,7 +425,7 @@ namespace KSPPreciseManeuver {
     #region Save/Load
 
     internal void SaveConfig () {
-      Debug.Log ("Saving PreciseManeuver settings.");
+      Debug.Log ("[Precise Maneuver] Saving settings.");
       PluginConfiguration config = KSP.IO.PluginConfiguration.CreateForType<PreciseManeuver> (null);
 
       config["enabled"] = showMainWindow;
@@ -463,7 +463,7 @@ namespace KSPPreciseManeuver {
     }
 
     internal void LoadConfig () {
-      Debug.Log ("Loading PreciseManeuver settings.");
+      Debug.Log ("[Precise Maneuver] Loading settings.");
       PluginConfiguration config = KSP.IO.PluginConfiguration.CreateForType<PreciseManeuver> (null);
       config.load ();
 
@@ -504,7 +504,7 @@ namespace KSPPreciseManeuver {
           }
         }
       } catch (Exception e) {
-        Debug.Log ("There was an error reading config. That's OK if you're launching the mod the first time. " + e);
+        Debug.Log ("[Precise Maneuver] There was an error reading config. That's OK if you're launching the mod the first time. " + e);
       }
     }
 

@@ -177,7 +177,7 @@ namespace KSPPreciseManeuver {
       if (IncrementPrefab == null)
         return;
 
-      var incrementObj = UnityEngine.Object.Instantiate (IncrementPrefab) as GameObject;
+      var incrementObj = UnityEngine.Object.Instantiate (IncrementPrefab);
       GUIComponentManager.ProcessStyle (incrementObj);
       GUIComponentManager.ProcessLocalization (incrementObj);
       GUIComponentManager.ProcessTooltips (incrementObj);
@@ -197,7 +197,7 @@ namespace KSPPreciseManeuver {
       if (OrbitToolsPrefab == null)
         return;
 
-      var orbitToolsObj = UnityEngine.Object.Instantiate (OrbitToolsPrefab) as GameObject;
+      var orbitToolsObj = UnityEngine.Object.Instantiate (OrbitToolsPrefab);
       GUIComponentManager.ProcessStyle (orbitToolsObj);
       GUIComponentManager.ProcessLocalization (orbitToolsObj);
       GUIComponentManager.ProcessTooltips (orbitToolsObj);
@@ -217,7 +217,7 @@ namespace KSPPreciseManeuver {
       if (GizmoPrefab == null)
         return;
 
-      var gizmoObj = UnityEngine.Object.Instantiate (GizmoPrefab) as GameObject;
+      var gizmoObj = UnityEngine.Object.Instantiate (GizmoPrefab);
       GUIComponentManager.ProcessStyle (gizmoObj);
       GUIComponentManager.ProcessLocalization (gizmoObj);
       GUIComponentManager.ProcessTooltips (gizmoObj);
@@ -237,7 +237,7 @@ namespace KSPPreciseManeuver {
       if (EncounterPrefab == null)
         return;
 
-      var encounterObj = UnityEngine.Object.Instantiate (EncounterPrefab) as GameObject;
+      var encounterObj = UnityEngine.Object.Instantiate (EncounterPrefab);
       GUIComponentManager.ProcessStyle (encounterObj);
       GUIComponentManager.ProcessLocalization (encounterObj);
       GUIComponentManager.ProcessTooltips (encounterObj);
@@ -257,7 +257,7 @@ namespace KSPPreciseManeuver {
       if (EjectionPrefab == null)
         return;
 
-      var ejectionObj = UnityEngine.Object.Instantiate (EjectionPrefab) as GameObject;
+      var ejectionObj = UnityEngine.Object.Instantiate (EjectionPrefab);
       GUIComponentManager.ProcessStyle (ejectionObj);
       GUIComponentManager.ProcessLocalization (ejectionObj);
       GUIComponentManager.ProcessTooltips (ejectionObj);
@@ -276,7 +276,7 @@ namespace KSPPreciseManeuver {
     private void CreateOrbitInfoControls (GameObject panel) {
       if (OrbitInfoPrefab == null)
         return;
-      var orbitinfoObj = UnityEngine.Object.Instantiate (OrbitInfoPrefab) as GameObject;
+      var orbitinfoObj = UnityEngine.Object.Instantiate (OrbitInfoPrefab);
       GUIComponentManager.ProcessStyle (orbitinfoObj);
       GUIComponentManager.ProcessLocalization (orbitinfoObj);
       GUIComponentManager.ProcessTooltips (orbitinfoObj);

@@ -109,14 +109,14 @@ namespace KSPPreciseManeuver.UI {
       m_Chooser.SetValueNoInvoke (m_Control.maneuverIdx);
     }
     private void SetChooserText (int index, GameObject caption) {
-      chooserText (m_Control.getManeuverNodeLocalized () + " " + (index + 1).ToString ());
+      chooserText (m_Control.getLocalizedNode (index + 1));
     }
     private void SetChooserOption (PreciseManeuverDropdownItem item) {
       if (!(item is PreciseManeuverPagerItem))
         return;
       var pageritem = item as PreciseManeuverPagerItem;
       m_Control.ReplaceTextComponentWithTMPro (pageritem.NodeIdx.GetComponent<Text> ())?.
-          Invoke (m_Control.getManeuverNodeLocalized () + "\n" + (pageritem.Index + 1).ToString ());
+          Invoke (m_Control.getLocalizedNodeln (pageritem.Index + 1));
       m_Control.ReplaceTextComponentWithTMPro (pageritem.NodeTime.GetComponent<Text> ())?.
           Invoke (m_Control.getManeuverTime (pageritem.Index));
       m_Control.ReplaceTextComponentWithTMPro (pageritem.NodedV.GetComponent<Text> ())?.

@@ -181,8 +181,11 @@ namespace KSPPreciseManeuver {
     public void NextButtonPressed () {
       _parent.NodeManager.SwitchNextNode ();
     }
-    public string getManeuverNodeLocalized () {
-      return Localizer.Format ("precisemaneuver_node");
+    public string getLocalizedNode (int idx) {
+      return Localizer.Format ("precisemaneuver_node", idx);
+    }
+    public string getLocalizedNodeln (int idx) {
+      return Localizer.Format ("precisemaneuver_node_newline", idx);
     }
     public string getManeuverTime (int idx) {
       return NodeTools.ConvertUTtoHumanTime (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT, true);
