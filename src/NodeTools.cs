@@ -165,28 +165,7 @@ namespace KSPPreciseManeuver {
     }
 
     internal static string ConvertUTtoHumanTime (double UT, bool compact = false) {
-      long secs;
-      long mins;
-      long hour;
-      long day;
-      long year;
-
-      if (GameSettings.KERBIN_TIME) {
-        secs = (long)Math.Floor (UT % 60);
-        mins = (long)Math.Floor ((UT / 60) % 60);
-        hour = (long)Math.Floor ((UT / (60 * 60)) % 6);
-        day = (long)Math.Floor ((UT / (6 * 60 * 60)) % 426) + 1; // Ensure we don't get a "Day 0" here.
-        year = (long)Math.Floor (UT / (426 * 6 * 60 * 60)) + 1; // Ensure we don't get a "Year 0" here.
-      } else {
-        secs = (long)Math.Floor (UT % 60);
-        mins = (long)Math.Floor ((UT / 60) % 60);
-        hour = (long)Math.Floor ((UT / (60 * 60)) % 24);
-        day = (long)Math.Floor ((UT / (24 * 60 * 60)) % 365) + 1; // Ensure we don't get a "Day 0" here.
-        year = (long)Math.Floor (UT / (365 * 24 * 60 * 60)) + 1; // Ensure we don't get a "Year 0" here.
-      }
-
-      string format = compact ? "precisemaneuver_date_format_compact" : "precisemaneuver_date_format";
-      return Localizer.Format (format, year, day, hour, mins.ToString ("D2"), secs.ToString ("D2"));
+      return compact ? KSPUtil.dateTimeFormatter.PrintDateCompact(UT, true, true) : KSPUtil.dateTimeFormatter.PrintDate(UT, true, true);
     }
 
     internal static void CopyToClipboard (Orbit o, ManeuverNode node) {
