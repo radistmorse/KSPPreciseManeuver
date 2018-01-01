@@ -166,7 +166,7 @@ namespace KSPPreciseManeuver {
 
     internal static void CopyToClipboard (Orbit o, ManeuverNode node) {
       string message = "Precise Maneuver Information\r\n";
-      message += String.Format ("Depart at:      {0}\r\n", KSPUtil.dateTimeFormatter.PrintDate (node.UT, true, true));
+      message += String.Format ("Depart at:      {0}\r\n", KSPUtil.dateTimeFormatter.PrintTime (node.UT, 10, false, true));
       message += String.Format ("       UT:      {0:0}\r\n", node.UT);
       double eang = o.GetEjectionAngle(node);
       if (!double.IsNaN (eang)) {
