@@ -25,17 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
-//using System.Collections.Generic;
 using KSP.UI;
 using KSP.UI.Screens;
 using UnityEngine;
 
 namespace KSPPreciseManeuver {
-  [KSPAddon (KSPAddon.Startup.MainMenu, true)]
+  [KSPAddon (KSPAddon.Startup.SpaceCentre, true)]
   class PreciseManeuverToolbar : MonoBehaviour, UI.IMenuControl {
 
     private ApplicationLauncherButton appButton = null;
-    private Texture appButtonTexture;
+    private Texture appButtonTexture = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
 
     private UI.ToolbarMenu m_ToolbarMenu;
     private GameObject m_MenuObject;
@@ -95,17 +94,9 @@ namespace KSPPreciseManeuver {
     public bool IsOn {
       get {
         return appButton != null &&
+               appButton.isActiveAndEnabled &&
                appButton.toggleButton.Interactable &&
                appButton.toggleButton.CurrentState == UIRadioButton.State.True;
-      }
-      set {
-        if (appButton == null)
-          return;
-
-        if (value)
-          SetOn ();
-        else
-          SetOff ();
       }
     }
 
@@ -119,13 +110,11 @@ namespace KSPPreciseManeuver {
     }
 
     public void Disable () {
-      if (appButton != null && appButton.toggleButton.Interactable)
-        appButton.Disable ();
+      HideMenu ();
     }
 
     public void Enable () {
-      if (appButton != null && appButton.toggleButton.Interactable == false)
-        appButton.Enable ();
+      ShowMenuIfEnabled ();
     }
 
     public Vector3 GetAnchor () {
@@ -137,18 +126,6 @@ namespace KSPPreciseManeuver {
       anchor.x -= 3.0f;
 
       return anchor;
-    }
-
-    public void SetOff () {
-      Enable ();
-      if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.False)
-        appButton.SetFalse ();
-    }
-
-    public void SetOn () {
-      Enable ();
-      if (appButton != null && appButton.toggleButton.CurrentState != UIRadioButton.State.True)
-        appButton.SetTrue ();
     }
 
     public void OnMenuPointerEnter () {
@@ -163,10 +140,6 @@ namespace KSPPreciseManeuver {
 
     internal void Awake () {
       DontDestroyOnLoad (this);
-
-      // Precise Maneuver Icon
-      if (appButtonTexture == null)
-        appButtonTexture = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
 
       // subscribe event listeners
       GameEvents.onGUIApplicationLauncherReady.Add (OnGUIApplicationLauncherReady);
@@ -195,12 +168,8 @@ namespace KSPPreciseManeuver {
     }
 
     private void OnGUIApplicationLauncherUnreadifying (GameScenes scene) {
-      // remove button
-      if (appButton != null) {
-        Close ();
-        ApplicationLauncher.Instance.RemoveModApplication (appButton);
-        appButton = null;
-      }
+      // this actually means the game scene gets changed
+      Close ();
     }
 
     private void OnHideUI () {

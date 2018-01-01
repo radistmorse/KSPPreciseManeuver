@@ -1,3 +1,7 @@
+2.3.2, 2018-01-01
+- Small fixes
+- Use a library function for time display
+
 2.3.1, 2017-06-12
 - Spanish localization
 - Fix the incorrect scale behaviour

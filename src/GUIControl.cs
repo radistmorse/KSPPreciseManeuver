@@ -188,7 +188,7 @@ namespace KSPPreciseManeuver {
       return Localizer.Format ("precisemaneuver_node_newline", idx);
     }
     public string getManeuverTime (int idx) {
-      return NodeTools.ConvertUTtoHumanTime (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT, true);
+      return KSPUtil.dateTimeFormatter.PrintDateCompact (FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].UT, true, true);
     }
     public string getManeuverDV (int idx) {
       var dv = FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes[idx].DeltaV.magnitude;
@@ -454,7 +454,7 @@ namespace KSPPreciseManeuver {
     public string TimeValue {
       get {
         if (_localUT != _parent.NodeManager.CurrentNode.UT) {
-          _localUTstr = NodeTools.ConvertUTtoHumanTime (_parent.NodeManager.CurrentNode.UT);
+          _localUTstr = KSPUtil.dateTimeFormatter.PrintDate (_parent.NodeManager.CurrentNode.UT, true, true);
         }
         return _localUTstr;
       }

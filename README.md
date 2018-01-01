@@ -11,7 +11,7 @@ The modular structure allows you to disable all the unneded components and make 
 
 NOTES:
 --------------
-Works with KSP 1.2
+Works with KSP 1.3
 
 BUILD:
 --------------

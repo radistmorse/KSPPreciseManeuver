@@ -52,6 +52,8 @@ namespace KSPPreciseManeuver.UI {
     }
 
     public void OnDestroy () {
+      // safeguard
+      m_Control.UnlockKeyboard ();
       m_Control.DeregisterUpdateAction (UpdateGUI);
       m_Control = null;
     }

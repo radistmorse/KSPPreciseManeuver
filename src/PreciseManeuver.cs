@@ -63,7 +63,7 @@ namespace KSPPreciseManeuver {
       if (!NodeTools.PatchedConicsUnlocked)
         return;
 
-      if (config.ShowKeymapperWindow && config.UiActive)
+      if (config.ShowKeymapperWindow && config.UiActive && MapView.MapIsEnabled)
         OpenKeybindingsWindow ();
       else
         CloseKeybindingsWindow ();
