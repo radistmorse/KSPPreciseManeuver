@@ -1,3 +1,6 @@
+2.4.0, 2018-03-07
+- Recompile for KSP 1.4
+
 2.3.2, 2018-01-01
 - Small fixes
 - Use a library function for time display

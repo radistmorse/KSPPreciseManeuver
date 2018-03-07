@@ -158,6 +158,9 @@ namespace KSPPreciseManeuver {
       GameEvents.onShowUI.Remove (OnShowUI);
       GameEvents.OnMapEntered.Remove (ShowMenuIfEnabled);
       GameEvents.OnMapExited.Remove (HideMenu);
+
+      ApplicationLauncher.Instance.RemoveModApplication (appButton);
+      appButton = null;
     }
 
     private void OnGUIApplicationLauncherReady () {
