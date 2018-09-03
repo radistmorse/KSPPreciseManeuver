@@ -92,6 +92,7 @@ namespace KSPPreciseManeuver {
 
       currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
       currentAlarm.Notes = KSP.Localization.Localizer.Format ("precisemaneuver_KAC_note");
+      currentAlarm.AlarmMargin = 600;
     }
 
     internal void DeleteAlarm () {
