@@ -105,9 +105,7 @@ namespace KSPPreciseManeuver {
       t.fontSizeMin = resizeTextMinSize;
       t.fontSizeMax = resizeTextMaxSize;
       t.color = color;
-      if (horizontalOverflow == HorizontalWrapMode.Wrap) {
-        t.enableWordWrapping = true;
-      }
+      t.enableWordWrapping = horizontalOverflow == HorizontalWrapMode.Wrap;
       switch (fontStyle) {
         case FontStyle.Normal: {
             t.fontStyle = TMPro.FontStyles.Normal;

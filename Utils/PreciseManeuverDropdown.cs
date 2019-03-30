@@ -43,11 +43,7 @@ namespace KSPPreciseManeuver.UI {
       }
     }
 
-    private int m_Index = -1;
-    public int Index {
-      get { return m_Index; }
-      internal set { m_Index = value; }
-    }
+    public int Index { get; internal set; }
 
     public virtual void OnPointerEnter (PointerEventData eventData) {
       EventSystem.current.SetSelectedGameObject (gameObject);

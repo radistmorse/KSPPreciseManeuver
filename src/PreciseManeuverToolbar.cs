@@ -30,7 +30,7 @@ using KSP.UI.Screens;
 using UnityEngine;
 
 namespace KSPPreciseManeuver {
-  [KSPAddon (KSPAddon.Startup.SpaceCentre, true)]
+  [KSPAddon (KSPAddon.Startup.MainMenu, true)]
   class PreciseManeuverToolbar : MonoBehaviour, UI.IMenuControl {
 
     private ApplicationLauncherButton appButton = null;
@@ -168,6 +168,8 @@ namespace KSPPreciseManeuver {
       if (ApplicationLauncher.Ready && appButton == null)
         appButton = ApplicationLauncher.Instance.AddModApplication (ShowMenu, HideMenu, ShowMenu, HideMenuIfDisabled, Enable, Disable,
                                                                     ApplicationLauncher.AppScenes.MAPVIEW, appButtonTexture);
+      // Fix KSP bug where the button always shows
+      appButton.gameObject.SetActive(ApplicationLauncher.Instance.DetermineVisibility(appButton));
     }
 
     private void OnGUIApplicationLauncherUnreadifying (GameScenes scene) {

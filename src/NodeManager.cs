@@ -88,10 +88,11 @@ namespace KSPPreciseManeuver {
       string newID = KACWrapper.KAC.CreateAlarm (KACWrapper.KACAPI.AlarmTypeEnum.Maneuver,
                                                KSP.Localization.Localizer.Format ("precisemaneuver_KAC_name", FlightGlobals.ActiveVessel.GetName()),
                                                CurrentNode.UT - 600.0);
-      currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
+            currentAlarm = KACWrapper.KAC.Alarms.First (a => a.ID == newID);
 
       currentAlarm.VesselID = FlightGlobals.ActiveVessel.id.ToString ();
       currentAlarm.Notes = KSP.Localization.Localizer.Format ("precisemaneuver_KAC_note");
+      currentAlarm.AlarmMargin = 600;
     }
 
     internal void DeleteAlarm () {
