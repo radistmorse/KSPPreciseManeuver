@@ -1,3 +1,8 @@
+2.4.3, 2019-10-12
+- KSP 1.7
+- Small correction to maneuver select logic
+- Remove compatibility checker. It's more annoyance than help.
+
 2.4.2, 2019-03-23
 - KSP 1.6
 - German translation

@@ -38,6 +38,9 @@ namespace KSPPreciseManeuver {
         return null;
 
       Orbit o = tgt.GetOrbit ();
+      if (o == null)
+        return null;
+
       if (o.referenceBody == refbody)
         return o;
 

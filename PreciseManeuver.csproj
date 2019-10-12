@@ -57,7 +57,6 @@
     <Compile Include="src\PreciseManeuverToolbar.cs" />
     <Compile Include="src\KACWrapper.cs" />
     <Compile Include="src\PreciseManeuverHotkeys.cs" />
-    <Compile Include="src\CompatibilityChecker.cs" />
     <Compile Include="src\NodeManager.cs" />
     <Compile Include="src\NodeTools.cs" />
     <Compile Include="src\PreciseManeuverConfig.cs" />

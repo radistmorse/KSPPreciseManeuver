@@ -31,7 +31,7 @@ using UnityEngine;
 using KSP.Localization;
 
 namespace KSPPreciseManeuver {
-  [KSPAddon (KSPAddon.Startup.Flight, false)]
+  [KSPAddon (KSPAddon.Startup.Flight, true)]
   internal class PreciseManeuver : MonoBehaviour {
     private MainWindow mainWindow = new MainWindow();
     private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys();
@@ -47,10 +47,16 @@ namespace KSPPreciseManeuver {
 
     private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
 
-    private int waitForGizmo = 0;
-
     internal void Start () {
+      DontDestroyOnLoad (this);
+
+      GameEvents.onManeuverNodeSelected.Add (new EventVoid.OnEvent (manager.SearchNewGizmo));
+
       KACWrapper.InitKACWrapper ();
+    }
+
+    internal void OnDestroy() {
+      GameEvents.onManeuverNodeSelected.Remove (new EventVoid.OnEvent (manager.SearchNewGizmo));
     }
 
     internal void OnDisable () {
@@ -81,13 +87,6 @@ namespace KSPPreciseManeuver {
         if (m_MainWindowObject != null) {
           hotkeys.ProcessRegularHotkeys ();
 
-          if (Input.GetMouseButtonUp (0))
-            waitForGizmo = 3;
-          if (waitForGizmo > 0) {
-            if (waitForGizmo == 1)
-              manager.SearchNewGizmo ();
-            waitForGizmo--;
-          }
           manager.UpdateNodes ();
         }
       }

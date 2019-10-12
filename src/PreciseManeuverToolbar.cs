@@ -34,11 +34,11 @@ namespace KSPPreciseManeuver {
   class PreciseManeuverToolbar : MonoBehaviour, UI.IMenuControl {
 
     private ApplicationLauncherButton appButton = null;
-    private Texture appButtonTexture = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
+    private Texture appButtonTexture;
 
     private UI.ToolbarMenu m_ToolbarMenu;
     private GameObject m_MenuObject;
-    private GameObject m_MenuPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject>("PreciseManeuverMenu");
+    private GameObject m_MenuPrefab;
 
     private bool m_MenuPointerIn = false;
 
@@ -138,8 +138,11 @@ namespace KSPPreciseManeuver {
       InputLockManager.RemoveControlLock ("PreciseManeuverMenuControlLock");
     }
 
-    internal void Awake () {
+    internal void Start () {
       DontDestroyOnLoad (this);
+
+      appButtonTexture = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<Texture> ("PreciseManeuverIcon");
+      m_MenuPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject> ("PreciseManeuverMenu");
 
       // subscribe event listeners
       GameEvents.onGUIApplicationLauncherReady.Add (OnGUIApplicationLauncherReady);

@@ -60,8 +60,6 @@ namespace KSPPreciseManeuver {
     }
     internal int CurrentNodeIdx { get; private set; } = -1;
     private int nodeCount = 0;
-    /* list that helps find the newly selected nodes */
-    private List<ManeuverNode> prevGizmos = null;
     /* Internal copy of the node */
     private SavedNode currentSavedNode = null;
     private SavedNode CurrentSavedNode {
@@ -333,30 +331,11 @@ namespace KSPPreciseManeuver {
 
     internal void SearchNewGizmo () {
       var solver = FlightGlobals.ActiveVessel.patchedConicSolver;
-      var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null);
-      var tmp = curList.ToList ();
-      /* let's see if user is hovering a mouse *
-       * over any gizmo. That would be a hint. */
-      if (curList.Count (a => a.attachedGizmo.MouseOverGizmo) == 1) {
-        var node = curList.First (a => a.attachedGizmo.MouseOverGizmo);
-        if (node != currentNode) {
-          currentNode = node;
-          NotifyNodeChanged ();
-        }
-      } else {
-        /* then, let's see if we can find any     *
-         * new gizmos that were created recently. */
-        if (prevGizmos != null)
-          curList = curList.Except (prevGizmos);
-        if (curList.Count () == 1) {
-          var node = curList.First ();
-          if (node != currentNode) {
-            currentNode = node;
-            NotifyNodeChanged ();
-          }
-        }
+      var curList = solver.maneuverNodes.Where (a => a.attachedGizmo != null && a != currentNode).ToArray();
+
+      if (curList.Length == 1) {
+        currentNode = curList.First ();
       }
-      prevGizmos = tmp;
     }
 
     private void UpdateCurrentNode () {
