@@ -31,7 +31,7 @@ using UnityEngine;
 using KSP.Localization;
 
 namespace KSPPreciseManeuver {
-  [KSPAddon (KSPAddon.Startup.Flight, true)]
+  [KSPAddon (KSPAddon.Startup.Flight, false)]
   internal class PreciseManeuver : MonoBehaviour {
     private MainWindow mainWindow = new MainWindow();
     private PreciseManeuverHotkeys hotkeys = new PreciseManeuverHotkeys();
@@ -48,8 +48,6 @@ namespace KSPPreciseManeuver {
     private GameObject m_WindowPrefab = PreciseManeuverConfig.Instance.Prefabs.LoadAsset<GameObject> ("PreciseManeuverWindow");
 
     internal void Start () {
-      DontDestroyOnLoad (this);
-
       GameEvents.onManeuverNodeSelected.Add (new EventVoid.OnEvent (manager.SearchNewGizmo));
 
       KACWrapper.InitKACWrapper ();
