@@ -59,8 +59,8 @@ namespace KSPPreciseManeuver {
         if (prefabs == null) {
           var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
           path = path.Replace (System.IO.Path.GetFileName (path), "precisemaneuverprefabs");
-          var www = new WWW("file://"+path);
-          prefabs = www.assetBundle;
+
+          prefabs = AssetBundle.LoadFromFile (path);
         }
         return prefabs;
       }

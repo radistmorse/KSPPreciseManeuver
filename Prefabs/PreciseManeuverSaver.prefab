@@ -2205,6 +2205,7 @@ MonoBehaviour:
   m_Script: {fileID: 1166045596, guid: 25942e8abc817b2448501512b622f5c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_RectTransform: {fileID: 22465090}
   m_Toggle: {fileID: 11462312}
 --- !u!114 &114000011977558650
 MonoBehaviour:
@@ -2328,6 +2329,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.UI.Dropdown+DropdownEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
+  m_AlphaFadeSpeed: 0.15
 --- !u!114 &114000013665687904
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -150,11 +150,6 @@ namespace KSPPreciseManeuver {
         return _parent.NodeManager.CurrentNodeIdx;
       }
     }
-    public Canvas Canvas {
-      get {
-        return MainCanvasUtil.MainCanvas;
-      }
-    }
     public int maneuverCount {
       get {
         return FlightGlobals.ActiveVessel.patchedConicSolver.maneuverNodes.Count;
@@ -203,11 +198,6 @@ namespace KSPPreciseManeuver {
 
     MainWindow _parent;
 
-    public Canvas Canvas {
-      get {
-        return MainCanvasUtil.MainCanvas;
-      }
-    }
     public System.Collections.Generic.List<string> presetNames () {
       return _parent.Config.GetPresetNames ();
     }

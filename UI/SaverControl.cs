@@ -56,7 +56,6 @@ namespace KSPPreciseManeuver.UI {
       m_Control = control;
       m_Chooser.UpdateDropdownCaption = SetChooserText;
       m_Chooser.UpdateDropdownOption = SetChooserOption;
-      m_Chooser.SetRootCanvas (m_Control.Canvas);
 
       chooserText = m_Control.ReplaceTextComponentWithTMPro (m_Chooser.CaptionArea.GetComponent<Text> ());
       m_Control.ReplaceInputFieldWithTMPro (m_NameInput, InputFieldSubmit, InputFieldChange);
@@ -97,7 +96,7 @@ namespace KSPPreciseManeuver.UI {
         RepopulateChooser ();
         var items = presetCache.FindAll (a => (a == text));
         if (items.Count == 1)
-          m_Chooser.SetValueNoInvoke (presetCache.FindIndex (a => (a == text)) + 1);
+          m_Chooser.SetValueWithoutNotify (presetCache.FindIndex (a => (a == text)) + 1);
         SwitchChooser ();
         UpdateControls ();
       }
@@ -164,8 +163,8 @@ namespace KSPPreciseManeuver.UI {
 
     public void RepopulateChooser () {
       presetCache = m_Control.presetNames ();
-      m_Chooser.OptionCount = 1 + presetCache.Count;
-      m_Chooser.SetValueNoInvoke (0);
+      m_Chooser.OptionsCount = 1 + presetCache.Count;
+      m_Chooser.SetValueWithoutNotify (0);
       UpdateControls ();
     }
 

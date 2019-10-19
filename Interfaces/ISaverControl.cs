@@ -27,7 +27,6 @@
 
 namespace KSPPreciseManeuver.UI {
 public interface ISaverControl : IControl {
-  UnityEngine.Canvas Canvas { get; }
   string newPresetLocalized { get; }
 
   System.Collections.Generic.List<string> presetNames ();

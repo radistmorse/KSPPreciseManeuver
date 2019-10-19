@@ -31,7 +31,6 @@ public interface IPagerControl : IControl {
   bool nextManeuverExists { get; }
   int maneuverCount { get; }
   int maneuverIdx { get; }
-  UnityEngine.Canvas Canvas { get; }
 
   string getLocalizedNode (int idx);
   string getLocalizedNodeln (int idx);

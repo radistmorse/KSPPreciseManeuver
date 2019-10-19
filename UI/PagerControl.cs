@@ -62,7 +62,6 @@ namespace KSPPreciseManeuver.UI {
 
       m_Chooser.UpdateDropdownCaption = SetChooserText;
       m_Chooser.UpdateDropdownOption = SetChooserOption;
-      m_Chooser.SetRootCanvas (m_Control.Canvas);
       chooserText = m_Control.ReplaceTextComponentWithTMPro (m_Chooser.CaptionArea.GetComponent<Text> ());
       UpdateGUI ();
       m_Control.RegisterUpdateAction (UpdateGUI);
@@ -105,8 +104,8 @@ namespace KSPPreciseManeuver.UI {
         m_ButtonNext.interactable = false;
         m_ButtonNext.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
       }
-      m_Chooser.OptionCount = m_Control.maneuverCount;
-      m_Chooser.SetValueNoInvoke (m_Control.maneuverIdx);
+      m_Chooser.OptionsCount = m_Control.maneuverCount;
+      m_Chooser.SetValueWithoutNotify (m_Control.maneuverIdx);
     }
     private void SetChooserText (int index, GameObject caption) {
       chooserText (m_Control.getLocalizedNode (index + 1));
