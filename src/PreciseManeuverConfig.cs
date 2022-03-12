@@ -115,6 +115,20 @@ namespace KSPPreciseManeuver {
 
     internal bool IsInBackground { get; set; } = false;
 
+    internal bool IsTooltipsEnabled { get; set; } = true;
+
+    private bool tooltipsPrevious = true;
+
+    internal bool TooltipsChanged {
+      get {
+        if (tooltipsPrevious != IsTooltipsEnabled) {
+          tooltipsPrevious = IsTooltipsEnabled;
+          return true;
+        }
+        return false;
+      }
+    }
+
     internal Vector3 MainWindowPos { get; set; }
 
     #endregion
@@ -430,6 +444,7 @@ namespace KSPPreciseManeuver {
 
       config["enabled"] = showMainWindow;
       config["background"] = IsInBackground;
+      config["tooltips"] = IsTooltipsEnabled;
 
       foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
         config[type.ToString ()] = hotkeys[(int)type].ToString ();
@@ -470,6 +485,7 @@ namespace KSPPreciseManeuver {
       try {
         showMainWindow = config.GetValue<bool> ("enabled", showMainWindow);
         IsInBackground = config.GetValue<bool> ("background", IsInBackground);
+        IsTooltipsEnabled = config.GetValue<bool> ("tooltips", IsTooltipsEnabled);
 
         foreach (HotkeyType type in Enum.GetValues (typeof (HotkeyType)))
           hotkeys[(int)type] = (KeyCode)Enum.Parse (typeof (KeyCode), config.GetValue<string> (type.ToString (), hotkeys[(int)type].ToString ()));

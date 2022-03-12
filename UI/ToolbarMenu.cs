@@ -42,6 +42,9 @@ namespace KSPPreciseManeuver.UI {
     private Toggle m_BackgroundToggle = null;
 
     [SerializeField]
+    private Toggle m_TooltipsToggle = null;
+
+    [SerializeField]
     private Slider m_ScaleGUISlider = null;
 
     [SerializeField]
@@ -92,6 +95,10 @@ namespace KSPPreciseManeuver.UI {
       m_Control.IsInBackground = state;
     }
 
+    public void SetTooltips (bool state) {
+      m_Control.IsTooltipsEnabled = state;
+    }
+
     public void SetGUIScale (float scale) {
       m_Control.scaleGUIValue = scale;
     }
@@ -124,6 +131,7 @@ namespace KSPPreciseManeuver.UI {
       m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
       m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
       m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
+      m_TooltipsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.Off);
       m_ShowMainWindowToggle.isOn = m_Control.IsMainWindowVisible;
       m_ShowKeybindingsToggle.isOn = m_Control.IsKeybindingsVisible;
       m_ScaleGUISlider.value = m_Control.scaleGUIValue;
@@ -136,10 +144,12 @@ namespace KSPPreciseManeuver.UI {
         m_BackgroundToggle.interactable = false;
         m_BackgroundToggle.GetComponent<Image> ().color = new Color (0.0f, 0.0f, 0.0f, 0.25f);
       }
+      m_TooltipsToggle.isOn = m_Control.IsTooltipsEnabled;
       m_ShowMainWindowToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
       m_ShowKeybindingsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
       m_ScaleGUISlider.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
       m_BackgroundToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
+      m_TooltipsToggle.onValueChanged.SetPersistentListenerState (0, UnityEventCallState.RuntimeOnly);
     }
 
     public void DisableMainWindow () {

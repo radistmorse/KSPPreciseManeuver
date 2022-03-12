@@ -64,6 +64,15 @@ namespace KSPPreciseManeuver {
       }
     }
 
+    internal static void EnableTooltips (GameObject gameObject, bool enabled) { 
+      if (gameObject == null)
+        return;
+
+      foreach (var tooltip in gameObject.GetComponentsInChildren<KSP.UI.TooltipTypes.TooltipController_Text> (true)) {
+        tooltip.enabled = enabled;
+      }
+    }
+
     internal static void ReplaceLabelsWithTMPro (GameObject gameObject) {
       if (gameObject == null)
         return;

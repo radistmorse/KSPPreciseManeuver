@@ -16,14 +16,20 @@
 //     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //  
 
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 public class BuildAssetBundles : MonoBehaviour
 {
-    [MenuItem("Build/Asset Bundles")]
-    public static void Build()
+#if UNITY_EDITOR
+  [MenuItem("Build/Asset Bundles")]
+#endif
+  public static void Build()
     {
-        BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/", BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows64);
-    }
+#if UNITY_EDITOR
+    BuildPipeline.BuildAssetBundles (Application.dataPath + "/../output/", BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows64);
+#endif
+  }
 }

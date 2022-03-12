@@ -30,6 +30,7 @@ public interface IMenuControl {
   bool IsMainWindowVisible { get; set; }
   bool IsKeybindingsVisible { get; set; }
   bool IsInBackground { get; set; }
+  bool IsTooltipsEnabled { get; set; }
 
   bool IsOn { get; }
   float scaleGUIValue { get; set; }

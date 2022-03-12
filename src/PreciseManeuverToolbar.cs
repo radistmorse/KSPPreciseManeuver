@@ -59,6 +59,11 @@ namespace KSPPreciseManeuver {
       set { PreciseManeuverConfig.Instance.IsInBackground = value; }
     }
 
+    public bool IsTooltipsEnabled {
+      get { return PreciseManeuverConfig.Instance.IsTooltipsEnabled; }
+      set { PreciseManeuverConfig.Instance.IsTooltipsEnabled = value; }
+    }
+
     public void ClampToScreen (RectTransform rectTransform) {
       UIMasterController.ClampToScreen (rectTransform, Vector2.zero);
     }
@@ -155,14 +160,14 @@ namespace KSPPreciseManeuver {
 
     protected virtual void OnDestroy () {
       // unsubscribe event listeners
-      GameEvents.onGUIApplicationLauncherReady.Remove (OnGUIApplicationLauncherReady);
-      GameEvents.onGUIApplicationLauncherUnreadifying.Remove (OnGUIApplicationLauncherUnreadifying);
-      GameEvents.onHideUI.Remove (OnHideUI);
-      GameEvents.onShowUI.Remove (OnShowUI);
-      GameEvents.OnMapEntered.Remove (ShowMenuIfEnabled);
-      GameEvents.OnMapExited.Remove (HideMenu);
+      GameEvents.onGUIApplicationLauncherReady?.Remove (OnGUIApplicationLauncherReady);
+      GameEvents.onGUIApplicationLauncherUnreadifying?.Remove (OnGUIApplicationLauncherUnreadifying);
+      GameEvents.onHideUI?.Remove (OnHideUI);
+      GameEvents.onShowUI?.Remove (OnShowUI);
+      GameEvents.OnMapEntered?.Remove (ShowMenuIfEnabled);
+      GameEvents.OnMapExited?.Remove (HideMenu);
 
-      ApplicationLauncher.Instance.RemoveModApplication (appButton);
+      ApplicationLauncher.Instance?.RemoveModApplication (appButton);
       appButton = null;
     }
 

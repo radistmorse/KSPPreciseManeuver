@@ -104,6 +104,8 @@ namespace KSPPreciseManeuver {
           m_MainWindow.FadeIn ();
         if (config.ModulesChanged)
           mainWindow.UpdateMainWindow (m_MainWindow);
+        if (config.TooltipsChanged)
+          GUIComponentManager.EnableTooltips(m_MainWindowObject, config.IsTooltipsEnabled);
         return;
       }
 
@@ -130,6 +132,7 @@ namespace KSPPreciseManeuver {
       }
 
       GUIComponentManager.ProcessStyle (m_MainWindowObject);
+      GUIComponentManager.EnableTooltips(m_MainWindowObject, config.IsTooltipsEnabled);
 
       // set object as a child of the main canvas
       m_MainWindowObject.transform.SetParent (MainCanvasUtil.MainCanvas.transform);
